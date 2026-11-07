@@ -12,7 +12,7 @@
 #include <thread>
 #include <vector>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 
 /** Builds the NTP-backed realtime RTP synchronization datagram. */
 [[nodiscard]] std::array<std::byte, 20> buildRtpSyncPacket(
@@ -61,4 +61,4 @@ private:
     std::atomic<std::uint64_t> resentPackets_{0};
 };
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

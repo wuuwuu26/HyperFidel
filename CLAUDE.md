@@ -1,3 +1,3 @@
-# HyperFi — Projektregeln
+# HyperFidel — Projektregeln
 
 @AGENTS.md

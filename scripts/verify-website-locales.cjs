@@ -38,10 +38,10 @@ const server = http.createServer((req, res) => {
         assert.ok(overflow.width <= width, language + ': page overflow at ' + width + ': ' + JSON.stringify(overflow));
         if (language === 'hi') {
           assert.ok((await page.locator('h1').textContent()).includes('आपका संगीत'));
-          if (width === 1440 && process.env.HYPERFI_WEBSITE_SCREENSHOT) {
+          if (width === 1440 && process.env.HYPERFIDEL_WEBSITE_SCREENSHOT) {
             await page.evaluate(() => window.scrollTo({top:0,behavior:'instant'}));
             await page.waitForFunction(() => [...document.querySelectorAll('.hero .reveal')].every(e => getComputedStyle(e).opacity === '1'));
-            await page.screenshot({path:process.env.HYPERFI_WEBSITE_SCREENSHOT});
+            await page.screenshot({path:process.env.HYPERFIDEL_WEBSITE_SCREENSHOT});
           }
           if (width < 720) await page.locator('.nav-toggle').click();
           await page.locator('[data-language="en"]').click();

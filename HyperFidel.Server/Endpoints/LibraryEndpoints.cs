@@ -1,0 +1,1083 @@
+using System.Text.Json;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using HyperFidel.Audio;
+using HyperFidel.Library;
+using HyperFidel.Server.Services;
+using HyperFidel.Streaming;
+
+namespace HyperFidel.Server.Endpoints;
+
+/// <summary>
+/// Maps all library browsing endpoints under <c>/api/</c>.
+/// </summary>
+public static class LibraryEndpoints
+{
+    /// <summary>
+    /// Registers artist, album, track, playlist, and search routes on <paramref name="app"/>.
+    /// </summary>
+    /// <param name="app">The endpoint route builder to register routes on.</param>
+    public static void MapLibraryEndpoints(this IEndpointRouteBuilder app)
+    {
+        app.MapTrackCatalogEndpoints();
+        app.MapAlbumBatchEndpoints();
+        app.MapPlaylistCatalogEndpoints();
+        var api = app.MapGroup("/api");
+
+        // --- Aggregate library summary ----------------------------------
+
+        api.MapGet("/library/summary", () =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            return Results.Ok(db.GetDashboardLibrarySummary());
+        });
+
+        api.MapGet("/library/doctor", (HttpContext context, bool? inspectFiles) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            var candidates = LibraryMetadataRepairService.Analyze(
+                db.GetMetadataRepairTracks(),
+                cancellationToken: context.RequestAborted,
+                inspectFiles: inspectFiles ?? true);
+            return Results.Ok(candidates.Select(candidate => new HyperFidelLibraryDoctorCandidate(
+                candidate.FolderPath,
+                candidate.Tracks.Count,
+                candidate.HighestSeverity,
+                candidate.Findings.Select(finding => new HyperFidelLibraryDoctorFinding(
+                    finding.Code,
+                    finding.Severity,
+                    finding.AffectedTrackCount,
+                    finding.RepairCapability)).ToList())).ToList());
+        });
+
+        api.MapGet("/tracks/similarity-features", (int? page, int? pageSize) =>
+        {
+            var safePage = Math.Max(0, page ?? 0);
+            var safePageSize = Math.Clamp(pageSize ?? 500, 1, 2000);
+            using var db = AudioDatabase.OpenDefault();
+            var vectors = db.GetSimilarityTrackProfiles(
+                    "server",
+                    safePage * safePageSize,
+                    safePageSize)
+                .Select(SimilarityFeatureService.Create)
+                .ToList();
+            return Results.Ok(vectors);
+        });
+
+        api.MapPost("/tracks/audio-features/analyze", (int? limit, LibraryService libraryService) =>
+            libraryService.TriggerAudioFeatureAnalysis(
+                Math.Clamp(limit ?? 4, 1, 10))
+                ? Results.Accepted()
+                : Results.Conflict());
+
+        // --- Artists -------------------------------------------------------
+
+        api.MapGet("/artists", () =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            return Results.Ok(db.GetArtistsWithProfiles().Select(ArtistDto).ToList());
+        });
+
+        api.MapGet("/artists/{artistId:long}", (long artistId) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            var artist = db.GetArtistById(artistId);
+            return artist is null ? Results.NotFound() : Results.Ok(ArtistDto(artist));
+        });
+
+        api.MapPut("/artists/{artistId:long}/favorite", (long artistId, FavoriteUpdateRequest request) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            if (db.GetArtistById(artistId) is null)
+                return Results.NotFound();
+            db.SetArtistFavorite(artistId, request.IsFavorite);
+            return Results.Ok(new { artistId, request.IsFavorite });
+        });
+
+        api.MapPost("/artists/{artistId:long}/profile", async (
+            long artistId,
+            ArtistProfileUpdateRequest request,
+            HttpContext context) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            var artist = db.GetArtistById(artistId);
+            if (artist is null) return Results.NotFound();
+
+            string? imagePath = null;
+            if (request.ImageData is { Length: > 0 })
+            {
+                imagePath = await ArtistImageSearchService.SaveImageAsync(
+                    artistId,
+                    request.ImageData,
+                    request.ImageMimeType,
+                    context.RequestAborted);
+            }
+
+            db.UpdateArtistProfile(
+                artistId,
+                request.Biography,
+                imagePath,
+                request.SourceUrl,
+                request.Language ?? "en");
+
+            artist = db.GetArtistById(artistId);
+            return artist is null ? Results.NotFound() : Results.Ok(ArtistDto(artist));
+        });
+
+        api.MapPost("/artists/{artistId:long}/rename", (
+            long artistId,
+            ArtistRenameRequest request,
+            ServerLibraryChangeTracker libraryChangeTracker) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            var artist = db.GetArtistById(artistId);
+            if (artist is null)
+                return Results.NotFound();
+
+            var artistName = request.ArtistName?.Trim();
+            if (string.IsNullOrWhiteSpace(artistName))
+                return Results.BadRequest();
+
+            ArtistRenameResult result;
+            if (request.PreferredArtistId is long preferredArtistId)
+            {
+                var match = db.FindArtistByName(artistName, artistId);
+                if (match is null)
+                    return Results.BadRequest();
+                result = db.MergeArtists(artistId, match.Id, preferredArtistId, artistName);
+            }
+            else
+            {
+                var match = db.FindArtistByName(artistName, artistId);
+                if (match is not null)
+                    return Results.Ok(new ArtistRenameResponse(null, ArtistDto(match)));
+                result = db.RenameArtist(artistId, artistName);
+            }
+
+            TrackSearchIndex.UpdateMany(db.GetTracksForArtistSearchIndex(result.ArtistId));
+            libraryChangeTracker.Touch();
+            return Results.Ok(new ArtistRenameResponse(result, null));
+        });
+
+        api.MapGet("/artists/{artistId:long}/albums", (long artistId) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            var artist = db.GetArtistById(artistId);
+            if (artist is null) return Results.NotFound();
+            var albums = db.GetAlbumsByArtist(artistId, includeArtwork: true);
+            return Results.Ok(albums.Select(AlbumDto).ToList());
+        });
+
+        // --- Albums --------------------------------------------------------
+
+        api.MapGet("/albums", () =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            return Results.Ok(db.GetAlbumsLite(includeArtwork: true).Select(AlbumDto).ToList());
+        });
+
+        api.MapGet("/albums/recent", (int limit = 12) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            return Results.Ok(db.GetRecentAlbums(limit).Select(RecentAlbumDto).ToList());
+        });
+
+        api.MapGet("/albums/{albumId:long}", (long albumId) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            var album = db.GetAlbumById(albumId);
+            return album is null ? Results.NotFound() : Results.Ok(AlbumDto(album));
+        });
+
+        api.MapPut("/albums/{albumId:long}/favorite", (long albumId, FavoriteUpdateRequest request) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            if (db.GetAlbumById(albumId) is null)
+                return Results.NotFound();
+            db.SetAlbumFavorite(albumId, request.IsFavorite);
+            return Results.Ok(new { albumId, request.IsFavorite });
+        });
+
+        api.MapGet("/albums/recommendation-candidates", () =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            return Results.Ok(db.GetRecommendationAlbums());
+        });
+
+        api.MapGet("/albums/{albumId:long}/tracks", (long albumId) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            var tracks = db.GetTrackListByAlbum(albumId);
+            return tracks.Count == 0
+                ? Results.NotFound()
+                : Results.Ok(tracks.Select(TrackDto).ToList());
+        });
+
+        // --- Tracks --------------------------------------------------------
+
+        api.MapGet("/tracks/facets", () =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            return Results.Ok(db.GetTrackFacets());
+        });
+
+        api.MapGet("/genres/cloud", (string? parent, int candidates = 250, int offset = 0) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            return Results.Ok(GenreCloudService.BuildSnapshot(db.GetTrackFacets(), parent, candidates, offset));
+        });
+
+        api.MapGet("/tracks/{trackId:long}/waveform", async (long trackId, HttpContext ctx) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            var track = db.GetTrackById(trackId);
+            if (track is null || track.Duration is not > 0)
+                return Results.NotFound();
+
+            var data = await WaveformCache.GetOrCreateAsync(
+                track.Path,
+                string.IsNullOrWhiteSpace(track.SourcePath) ? null : track.SourcePath,
+                TimeSpan.FromSeconds(track.Duration.Value),
+                900,
+                track.SegmentStart is double start ? TimeSpan.FromSeconds(start) : null,
+                track.SegmentEnd is double end ? TimeSpan.FromSeconds(end) : null,
+                ctx.RequestAborted);
+            return data is null ? Results.NotFound() : Results.Ok(data);
+        });
+
+        api.MapGet("/tracks/{trackId:long}/lyrics", (long trackId) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            var track = db.GetTrackById(trackId);
+            if (track is null) return Results.NotFound();
+            return Results.Ok(new
+            {
+                plainLyrics = track.DownloadedLyrics ?? track.Lyrics,
+                syncedLyrics = track.SyncedLyrics,
+                fetchedAt = track.LyricsFetchedAt
+            });
+        });
+
+        api.MapPut("/tracks/{trackId:long}/lyrics", (long trackId, TrackLyricsUpdateRequest request) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            var updated = db.UpdateDownloadedLyricsById(
+                trackId,
+                request.PlainLyrics,
+                request.SyncedLyrics,
+                "LRCLIB");
+            return updated ? Results.Ok() : Results.NotFound();
+        });
+
+        // Cross-device resume: the last playback position of a track, scoped to the
+        // authenticated profile so another device can continue where this one stopped.
+        api.MapGet("/tracks/{trackId:long}/position", (long trackId) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            if (db.GetTrackById(trackId) is null)
+                return Results.NotFound();
+            return Results.Ok(new TrackPositionDto(db.GetProfileTrackPosition(trackId)));
+        });
+
+        api.MapPut("/tracks/{trackId:long}/position", (long trackId, TrackPositionUpdateRequest request) =>
+        {
+            if (request.PositionSeconds is double position &&
+                (double.IsNaN(position) || double.IsInfinity(position) || position < 0))
+            {
+                return Results.BadRequest();
+            }
+
+            using var db = AudioDatabase.OpenDefault();
+            if (db.GetTrackById(trackId) is null)
+                return Results.NotFound();
+            db.SaveProfileTrackPosition(trackId, request.PositionSeconds ?? 0);
+            return Results.Ok();
+        });
+
+        api.MapPut("/tracks/{trackId:long}/rating", (long trackId, TrackRatingUpdateRequest request) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            if (db.GetTrackById(trackId) is null)
+                return Results.NotFound();
+            if (request.UserRating is int userRating)
+            {
+                if (userRating is < 0 or > 5)
+                    return Results.BadRequest();
+                db.SetTrackUserRating(trackId, userRating);
+            }
+            if (!string.IsNullOrWhiteSpace(request.MusicBrainzTrackId) &&
+                request.MusicBrainzRatingFetchedAt is long fetchedAt)
+            {
+                db.SetTrackMusicBrainzRating(
+                    trackId,
+                    request.MusicBrainzTrackId,
+                    request.MusicBrainzRating,
+                    request.MusicBrainzRatingVotes,
+                    fetchedAt,
+                    request.MusicBrainzGenres,
+                    request.MusicBrainzTags);
+                if (db.GetTrackById(trackId) is { } updatedTrack)
+                    TrackSearchIndex.UpdateMany([updatedTrack]);
+            }
+            else if (request.MusicBrainzRatingFetchedAt is long attemptedAt)
+            {
+                db.SetTrackMusicBrainzLookupAttempt(trackId, attemptedAt);
+            }
+            return Results.Ok(db.GetTrackRating(trackId));
+        });
+
+        api.MapPut("/tracks/{trackId:long}/genre", (long trackId, TrackGenreUpdateRequest request) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            if (db.GetTrackById(trackId) is null)
+                return Results.NotFound();
+            // Library-only override: the server never rewrites the media file.
+            db.SetTrackGenres([trackId], request.Genre);
+            if (db.GetTrackById(trackId) is { } updatedTrack)
+                TrackSearchIndex.UpdateMany([updatedTrack]);
+            return Results.Ok(new { trackId, request.Genre });
+        });
+
+        api.MapGet("/history/sync", (int limit = 500) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            return Results.Ok(db.GetHistoryForSync(Math.Clamp(limit, 1, 5000)).Select(entry =>
+                new HyperFidelHistorySyncEntry(entry.SyncId, entry.Path, entry.StartedAtUnix,
+                    entry.PositionSeconds, entry.DurationSeconds, entry.MediaType, entry.Title,
+                    entry.Subtitle, entry.Album, entry.ExternalId, entry.Genre)).ToList());
+        });
+
+        api.MapPost("/history/sync", (IReadOnlyList<HyperFidelHistorySyncEntry> entries) =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            foreach (var entry in entries.Take(5000))
+                db.ImportSyncedHistory(new SyncedPlaybackHistoryEntry(entry.SyncId, entry.Path,
+                    entry.StartedAtUnix, entry.PositionSeconds, entry.DurationSeconds, entry.MediaType,
+                    entry.Title, entry.Subtitle, entry.Album, entry.ExternalId, entry.Genre));
+            return Results.Ok(new { imported = Math.Min(entries.Count, 5000) });
+        });
+
+        // --- Folders -------------------------------------------------------
+
+        api.MapGet("/folders/tracks", () =>
+        {
+            using var db = AudioDatabase.OpenDefault();
+            var rowsByPath = db.GetTrackList().ToDictionary(t => t.Path, StringComparer.OrdinalIgnoreCase);
+            var tracks = db.GetTracksLite().Select(t =>
+            {
+                rowsByPath.TryGetValue(t.Path, out var row);
+                return new
+                {
+                    Id = row?.Id ?? db.GetTrackIdByPath(t.Path) ?? 0,
+                    t.Path,
+                    t.SourcePath,
+                    t.FileName,
+                    Title = row?.Title ?? t.Title,
+                    t.DiscNumber,
+                    t.TrackNumber,
+                    Artist = row?.Artist,
+                    AlbumArtist = row?.AlbumArtist,
+                    Album = row?.Album,
+                    Duration = row?.Duration,
+                    Format = row?.Format,
+                    IsFavorite = row?.IsFavorite ?? false,
+                    ArtistId = row?.ArtistId,
+                    AlbumId = row?.AlbumId
+                };
+            }).ToList();
+            return Results.Ok(tracks);
+        });
+
+        // --- Search --------------------------------------------------------
+
+        api.MapGet("/search", (string q, int limit = 50) =>
+        {
+            if (string.IsNullOrWhiteSpace(q))
+                return Results.BadRequest(new { error = "Query parameter 'q' is required." });
+
+            var ids = TrackSearchIndex.Search(q, limit);
+            if (ids.Count == 0) return Results.Ok(new { tracks = Array.Empty<object>() });
+
+            using var db = AudioDatabase.OpenDefault();
+            return Results.Ok(new { tracks = db.GetTrackListByIds(ids).Select(TrackDto).ToList() });
+        });
+
+        api.MapGet("/search/full", (string q, int limit = 30) =>
+        {
+            if (string.IsNullOrWhiteSpace(q))
+                return Results.BadRequest(new { error = "Query parameter 'q' is required." });
+
+            var results = TrackSearchIndex.SearchByCategory(q, limit);
+            var trackIds = results.Tracks.Ids;
+            var albumTrackIds = results.Albums.Ids;
+            var artistTrackIds = results.Artists.Ids;
+            var albumArtistTrackIds = results.AlbumArtists.Ids;
+
+            if (trackIds.Count == 0 && albumTrackIds.Count == 0 && artistTrackIds.Count == 0 && albumArtistTrackIds.Count == 0)
+                return Results.Ok(new
+                {
+                    tracks  = Array.Empty<object>(),
+                    albums  = Array.Empty<object>(),
+                    artists = Array.Empty<object>()
+                });
+
+            using var db = AudioDatabase.OpenDefault();
+            var artistIds = db.GetArtistIdsByTrackIds(artistTrackIds)
+                .Values
+                .Concat(db.GetAlbumArtistIdsByTrackIds(albumArtistTrackIds).Values)
+                .Distinct()
+                .ToHashSet();
+
+            var tracks  = trackIds.Count > 0 ? db.GetTrackListByIds(trackIds).Select(TrackDto).ToList() : [];
+            var albums  = albumTrackIds.Count > 0 ? db.GetAlbumsByTrackIds(albumTrackIds).Select(AlbumDto).ToList() : [];
+            var artists = artistIds.Count > 0
+                ? db.GetArtistsByIds(artistIds).Select(a => new { a.Id, Name = a.Artist, a.IsFavorite }).ToList()
+                : [];
+
+            return Results.Ok(new { tracks, albums, artists });
+        });
+
+        api.MapGet("/search/structured", (
+            string? q,
+            string? type,
+            int? yearFrom,
+            int? yearTo,
+            long? addedFrom,
+            long? addedBefore,
+            string? sort,
+            int limit = 30) =>
+        {
+            if (string.IsNullOrWhiteSpace(q) && !yearFrom.HasValue && !yearTo.HasValue &&
+                !addedFrom.HasValue && !addedBefore.HasValue && string.IsNullOrWhiteSpace(sort))
+            {
+                return Results.BadRequest(new { error = "Provide a query, filter, or sort order." });
+            }
+            if (yearFrom.HasValue && yearTo.HasValue && yearFrom > yearTo)
+                return Results.BadRequest(new { error = "yearFrom must not be later than yearTo." });
+            if (addedFrom.HasValue && addedBefore.HasValue && addedFrom >= addedBefore)
+                return Results.BadRequest(new { error = "addedFrom must be earlier than addedBefore." });
+
+            limit = Math.Clamp(limit, 1, 50);
+            var resultType = NormalizeResultType(type);
+            var sortOrder = ParseSearchSort(sort, string.IsNullOrWhiteSpace(q));
+            var searchIds = string.IsNullOrWhiteSpace(q)
+                ? null
+                : TrackSearchIndex.SearchByCategory(q, 5000);
+
+            using var db = AudioDatabase.OpenDefault();
+            var allCandidates = db.GetSmartPlaylistTracks();
+            var options = new LibrarySearchFilterOptions(yearFrom, yearTo, addedFrom, addedBefore, sortOrder);
+            var trackCandidates = FilterSearchCandidates(
+                allCandidates,
+                searchIds?.Tracks.Ids,
+                options);
+            var albumCandidates = FilterSearchCandidates(
+                allCandidates,
+                searchIds?.Albums.Ids,
+                options);
+
+            var tracks = resultType is "all" or "tracks"
+                ? db.GetTrackListByIds(trackCandidates.Take(limit).Select(static track => track.Id))
+                    .Select(TrackDto).ToList()
+                : [];
+            var albumSeedTracks = SelectAlbumSeedTracks(albumCandidates, limit);
+            var albums = resultType is "all" or "albums"
+                ? OrderAlbums(
+                    db.GetAlbumsByTrackIds(albumSeedTracks.Select(static track => track.Id)),
+                    albumSeedTracks,
+                    sortOrder)
+                    .Take(limit).Select(AlbumDto).ToList()
+                : [];
+
+            object artists;
+            if (resultType is "all" or "artists")
+            {
+                var hasTemporalFilter = yearFrom.HasValue || yearTo.HasValue ||
+                                        addedFrom.HasValue || addedBefore.HasValue;
+                var artistTrackIds = searchIds is null || hasTemporalFilter
+                    ? trackCandidates.Take(limit * 10).Select(static track => track.Id)
+                    : searchIds.Artists.Ids.Concat(searchIds.AlbumArtists.Ids).Take(400);
+                artists = db.GetArtistsByTrackIds(artistTrackIds).Take(limit)
+                    .Select(a => new { a.Id, Name = a.Artist, a.IsFavorite }).ToList();
+            }
+            else
+            {
+                artists = Array.Empty<object>();
+            }
+
+            return Results.Ok(new { tracks, albums, artists });
+        });
+    }
+
+    /// <summary>Maps regular and smart playlist routes without starting library background services.</summary>
+    /// <param name="app">The endpoint builder for the authenticated middleware pipeline.</param>
+    /// <param name="openDatabase">Optional factory; every request owns and disposes its connection.</param>
+    public static void MapPlaylistCatalogEndpoints(this IEndpointRouteBuilder app, Func<AudioDatabase>? openDatabase = null)
+    {
+        openDatabase ??= AudioDatabase.OpenDefault;
+        var api = app.MapGroup("/api");
+        // --- Playlists -----------------------------------------------------
+
+        api.MapGet("/playlists", () =>
+        {
+            using var db = openDatabase();
+            var playlists = db.GetAllPlaylists().Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.TrackCount,
+                p.IsSmartPlaylist,
+                p.FilterCriteria,
+                p.CreatedAt,
+                p.ModifiedAt
+            }).ToList();
+            return Results.Ok(playlists);
+        });
+
+        api.MapGet("/playlists/{playlistId:long}/tracks", (long playlistId) =>
+        {
+            using var db = openDatabase();
+            var playlist = db.GetPlaylistById(playlistId);
+            if (playlist is null) return Results.NotFound();
+
+            if (playlist.IsSmartPlaylist && playlist.FilterCriteria is not null)
+                return ResolveSmartPlaylistTracks(db, playlist, favoriteOverride: null);
+
+            var entries = db.GetPlaylistTracks(playlistId).ToList();
+            var playlistTracks = entries.Select(e => new
+            {
+                PlaylistEntryId = e.Id,
+                e.Path,
+                e.Position,
+                Track = e.TrackId is long trackId
+                    ? db.GetTrackListByIds([trackId]).FirstOrDefault()
+                    : db.GetTrackListByPaths([e.Path]).FirstOrDefault()
+            }).ToList();
+            return Results.Ok(playlistTracks.Select(e => new
+            {
+                e.PlaylistEntryId,
+                e.Position,
+                e.Path,
+                Track = e.Track is null ? null : TrackDto(e.Track)
+            }).ToList());
+        });
+
+        api.MapPost("/playlists/{playlistId:long}/resolve", (long playlistId, SmartPlaylistResolveRequest request) =>
+        {
+            using var db = openDatabase();
+            var playlist = db.GetPlaylistById(playlistId);
+            if (playlist is null) return Results.NotFound();
+            if (!playlist.IsSmartPlaylist || playlist.FilterCriteria is null)
+                return Results.BadRequest(new { error = "Not a smart playlist." });
+
+            // Remote favourites are client-side: the client supplies its favourite
+            // track IDs so a FavoritesOnly criterion resolves against them instead of
+            // the server's own (unset) is_favorite flags.
+            var favoriteOverride = new HashSet<long>(request.FavoriteTrackIds ?? []);
+            return ResolveSmartPlaylistTracks(db, playlist, favoriteOverride);
+        });
+
+        api.MapPost("/playlists/resolve-count", (SmartCriteriaResolveRequest request) =>
+        {
+            if (string.IsNullOrWhiteSpace(request.Criteria))
+                return Results.BadRequest();
+            SmartPlaylistCriteria? criteria;
+            try { criteria = JsonSerializer.Deserialize<SmartPlaylistCriteria>(request.Criteria); }
+            catch { return Results.BadRequest(new { error = "Invalid smart playlist criteria." }); }
+            if (criteria is null)
+                return Results.BadRequest();
+
+            using var db = openDatabase();
+            var favoriteOverride = new HashSet<long>(request.FavoriteTrackIds ?? []);
+            var candidates = db.GetSmartPlaylistTracks()
+                .Select(t => t with { IsFavorite = favoriteOverride.Contains(t.Id) })
+                .ToList();
+            return Results.Ok(new { Count = SmartPlaylistResolver.Resolve(db, criteria, candidates).Count });
+        });
+
+        api.MapPost("/playlists", (PlaylistCreateRequest request) =>
+        {
+            var name = request.Name?.Trim();
+            if (string.IsNullOrWhiteSpace(name))
+                return Results.BadRequest();
+
+            using var db = openDatabase();
+            var playlistId = db.CreatePlaylist(name);
+            foreach (var trackId in request.TrackIds ?? [])
+            {
+                var track = db.GetTrackById(trackId);
+                if (track is not null)
+                    db.AddTrackToPlaylist(playlistId, track.Path, track.Id);
+            }
+
+            var playlist = db.GetPlaylistById(playlistId);
+            return playlist is null ? Results.NotFound() : Results.Ok(PlaylistDto(playlist));
+        });
+
+        api.MapPost("/playlists/smart", (SmartPlaylistSaveRequest request) =>
+        {
+            var name = request.Name?.Trim();
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(request.FilterCriteria))
+                return Results.BadRequest();
+            if (!TryNormalizeSmartCriteria(request.FilterCriteria, out var json))
+                return Results.BadRequest(new { error = "Invalid smart playlist criteria." });
+
+            using var db = openDatabase();
+            var playlistId = db.CreateSmartPlaylist(name, json);
+            var playlist = db.GetPlaylistById(playlistId);
+            return playlist is null ? Results.NotFound() : Results.Ok(PlaylistDto(playlist));
+        });
+
+        api.MapPut("/playlists/{playlistId:long}/smart", (long playlistId, SmartPlaylistSaveRequest request) =>
+        {
+            var name = request.Name?.Trim();
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(request.FilterCriteria))
+                return Results.BadRequest();
+            if (!TryNormalizeSmartCriteria(request.FilterCriteria, out var json))
+                return Results.BadRequest(new { error = "Invalid smart playlist criteria." });
+
+            using var db = openDatabase();
+            var playlist = db.GetPlaylistById(playlistId);
+            if (playlist is null || !playlist.IsSmartPlaylist)
+                return Results.NotFound();
+
+            db.UpdateSmartPlaylist(playlistId, name, json);
+            var updated = db.GetPlaylistById(playlistId);
+            return updated is null ? Results.NotFound() : Results.Ok(PlaylistDto(updated));
+        });
+
+        api.MapPost("/playlists/{playlistId:long}/tracks", (long playlistId, PlaylistTrackAppendRequest request) =>
+        {
+            using var db = openDatabase();
+            var playlist = db.GetPlaylistById(playlistId);
+            if (playlist is null || playlist.IsSmartPlaylist)
+                return Results.NotFound();
+
+            foreach (var trackId in request.TrackIds ?? [])
+            {
+                var track = db.GetTrackById(trackId);
+                if (track is not null)
+                    db.AddTrackToPlaylist(playlistId, track.Path, track.Id);
+            }
+
+            return Results.NoContent();
+        });
+
+        api.MapDelete("/playlists/{playlistId:long}", (long playlistId) =>
+        {
+            using var db = openDatabase();
+            if (db.GetPlaylistById(playlistId) is null)
+                return Results.NotFound();
+            db.DeletePlaylist(playlistId);
+            return Results.NoContent();
+        });
+
+        api.MapDelete("/playlist-tracks/{playlistEntryId:long}", (long playlistEntryId) =>
+        {
+            using var db = openDatabase();
+            db.RemoveTrackFromPlaylist(playlistEntryId);
+            return Results.NoContent();
+        });
+
+    }
+
+    /// <summary>Maps database-backed track browsing and personal favorites without starting library services.</summary>
+    /// <param name="app">The endpoint builder for the authenticated middleware pipeline.</param>
+    /// <param name="openDatabase">Optional connection factory; each request owns and disposes its connection.</param>
+    public static void MapTrackCatalogEndpoints(this IEndpointRouteBuilder app, Func<AudioDatabase>? openDatabase = null)
+    {
+        openDatabase ??= AudioDatabase.OpenDefault;
+        var api = app.MapGroup("/api");
+        api.MapGet("/tracks", (int page = 0, int pageSize = 500) =>
+        {
+            using var db = openDatabase();
+            var tracks = db.GetTrackListPage(Math.Max(0, page), Math.Clamp(pageSize, 1, 5000))
+                .Select(TrackDto)
+                .ToList();
+            return Results.Ok(tracks);
+        });
+
+        api.MapPost("/tracks/by-ids", (long[] ids) =>
+        {
+            using var db = openDatabase();
+            return Results.Ok(db.GetTrackListByIds(ids).Select(TrackDto).ToList());
+        });
+
+        api.MapGet("/tracks/{trackId:long}", (long trackId) =>
+        {
+            using var db = openDatabase();
+            var track = db.GetTrackById(trackId);
+            return track is null ? Results.NotFound() : Results.Ok(TrackRecordDto(track));
+        });
+
+        api.MapPut("/tracks/{trackId:long}/favorite", (long trackId, FavoriteUpdateRequest request) =>
+        {
+            using var db = openDatabase();
+            if (db.GetTrackById(trackId) is null)
+                return Results.NotFound();
+            db.SetTrackFavorite(trackId, request.IsFavorite);
+            return Results.Ok(new { trackId, request.IsFavorite });
+        });
+    }
+
+    private static object TrackDto(TrackListInfo t) => new
+    {
+        t.Id,
+        t.Path,
+        SourcePath = t.Path,
+        FileName = Path.GetFileName(t.Path),
+        t.Title,
+        t.SortTitle,
+        t.Artist,
+        t.AlbumArtist,
+        t.Album,
+        Genre = MusicBrainzGenreMetadata.Combine(t.Genre, t.MusicBrainzGenres, t.MusicBrainzTags),
+        t.Year,
+        t.TrackNumber,
+        t.TrackTotal,
+        t.DiscNumber,
+        t.DiscTotal,
+        t.Duration,
+        t.Bitrate,
+        t.SampleRate,
+        t.BitDepth,
+        t.Channels,
+        t.Composer,
+        t.Bpm,
+        t.FileSize,
+        t.AddedAt,
+        t.ReplayGainTrack,
+        t.ReplayGainAlbum,
+        t.Format,
+        t.IsFavorite,
+        t.ArtistId,
+        t.AlbumId,
+        t.UserRating,
+        t.MusicBrainzRating,
+        t.MusicBrainzRatingVotes,
+        t.MusicBrainzTrackId,
+        t.MusicBrainzRatingFetchedAt,
+        t.MusicBrainzGenres,
+        t.MusicBrainzTags,
+        t.CamelotKey,
+        IsCueTrack = IsVirtualSegmentPath(t.Path)
+    };
+
+    private static object TrackRecordDto(TrackRecord t) => new
+    {
+        t.Id,
+        t.Path,
+        t.SourcePath,
+        t.CuePath,
+        t.SegmentStart,
+        t.SegmentEnd,
+        t.FileName,
+        t.Title,
+        t.Artist,
+        t.Album,
+        t.AlbumArtist,
+        t.Year,
+        t.TrackNumber,
+        t.TrackTotal,
+        t.DiscNumber,
+        t.DiscTotal,
+        Genre = MusicBrainzGenreMetadata.Combine(t.Genre, t.MusicBrainzGenres, t.MusicBrainzTags),
+        t.Duration,
+        t.Bitrate,
+        t.SampleRate,
+        t.BitDepth,
+        t.Channels,
+        t.Format,
+        t.FileSize,
+        t.UserRating,
+        t.MusicBrainzRating,
+        t.MusicBrainzRatingVotes,
+        t.MusicBrainzTrackId,
+        t.MusicBrainzRatingFetchedAt,
+        t.MusicBrainzGenres,
+        t.MusicBrainzTags,
+        IsCueTrack = IsVirtualSegmentPath(t.Path)
+    };
+
+    private static bool IsVirtualSegmentPath(string path) =>
+        path.StartsWith("cue://", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWith("mka://", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Maps bounded album resolution without transferring the complete catalog.</summary>
+    /// <param name="app">Authenticated endpoint route builder.</param>
+    /// <param name="openDatabase">Optional per-request owned connection factory for isolated tests.</param>
+    public static void MapAlbumBatchEndpoints(this IEndpointRouteBuilder app, Func<AudioDatabase>? openDatabase = null)
+    {
+        var factory = openDatabase ?? AudioDatabase.OpenDefault;
+        app.MapPost("/api/albums/by-ids", (long[] ids) =>
+        {
+            if (ids.Length > 100) return Results.BadRequest();
+            using var db = factory();
+            return Results.Ok(db.GetAlbumsByIds(ids).Select(AlbumDto).ToList());
+        });
+    }
+
+    private static object AlbumDto(AlbumInfo a) => new
+    {
+        a.Id,
+        a.Album,
+        a.DisplayArtist,
+        a.Year,
+        a.ArtworkPath,
+        a.ThumbnailPath,
+        a.IsFavorite,
+        a.ArtistId,
+        a.AddedAt
+    };
+
+    private static string NormalizeResultType(string? resultType) =>
+        resultType?.Trim().ToLowerInvariant() switch
+        {
+            "tracks" => "tracks",
+            "albums" => "albums",
+            "artists" => "artists",
+            _ => "all"
+        };
+
+    private static LibrarySearchSortOrder ParseSearchSort(string? sort, bool defaultToNewest) =>
+        sort?.Trim().ToLowerInvariant() switch
+        {
+            "added_asc" => LibrarySearchSortOrder.AddedOldest,
+            "added_desc" => LibrarySearchSortOrder.AddedNewest,
+            "year_asc" => LibrarySearchSortOrder.YearOldest,
+            "year_desc" => LibrarySearchSortOrder.YearNewest,
+            "title" => LibrarySearchSortOrder.Title,
+            _ => defaultToNewest ? LibrarySearchSortOrder.AddedNewest : LibrarySearchSortOrder.Relevance
+        };
+
+    private static List<SmartPlaylistTrackInfo> FilterSearchCandidates(
+        IReadOnlyList<SmartPlaylistTrackInfo> candidates,
+        IReadOnlyList<long>? relevantIds,
+        LibrarySearchFilterOptions options)
+    {
+        IEnumerable<SmartPlaylistTrackInfo> selected = candidates;
+        if (relevantIds is not null)
+        {
+            var byId = candidates.ToDictionary(static track => track.Id);
+            selected = relevantIds.Where(byId.ContainsKey).Select(id => byId[id]);
+        }
+        return LibrarySearchFilter.Apply(selected, options);
+    }
+
+    private static IEnumerable<AlbumInfo> OrderAlbums(
+        IEnumerable<AlbumInfo> albums,
+        IReadOnlyList<SmartPlaylistTrackInfo> candidates,
+        LibrarySearchSortOrder sortOrder)
+    {
+        if (sortOrder == LibrarySearchSortOrder.Title)
+            return albums.OrderBy(static album => album.Album, StringComparer.CurrentCultureIgnoreCase);
+        if (sortOrder == LibrarySearchSortOrder.YearNewest)
+            return albums.OrderByDescending(static album => album.Year.HasValue).ThenByDescending(static album => album.Year);
+        if (sortOrder == LibrarySearchSortOrder.YearOldest)
+            return albums.OrderByDescending(static album => album.Year.HasValue).ThenBy(static album => album.Year);
+
+        var order = candidates
+            .Where(static track => track.AlbumId.HasValue)
+            .Select(static track => track.AlbumId!.Value)
+            .Distinct()
+            .Select((id, index) => (id, index))
+            .ToDictionary(static item => item.id, static item => item.index);
+        return albums.OrderBy(album => order.GetValueOrDefault(album.Id, int.MaxValue));
+    }
+
+    private static List<SmartPlaylistTrackInfo> SelectAlbumSeedTracks(
+        IEnumerable<SmartPlaylistTrackInfo> candidates,
+        int limit)
+    {
+        var seen = new HashSet<long>();
+        return candidates
+            .Where(track => track.AlbumId is long albumId && seen.Add(albumId))
+            .Take(limit)
+            .ToList();
+    }
+
+    private static object RecentAlbumDto(RecentAlbumInfo a) => new
+    {
+        a.Id,
+        Title = a.Title,
+        Artist = a.Artist,
+        a.ArtistId,
+        a.AddedAt,
+        HasArtwork = !string.IsNullOrEmpty(a.ThumbPath)
+    };
+
+    private static object ArtistDto(ArtistInfo a) => new
+    {
+        a.Id,
+        Name = a.Artist,
+        a.IsFavorite,
+        a.Biography,
+        a.SourceUrl,
+        a.ProfileLanguage,
+        a.ProfileFetchedAt,
+        HasBiography = !string.IsNullOrEmpty(a.Biography),
+        HasImage = !string.IsNullOrEmpty(a.ImagePath),
+        a.ImageIsManual
+    };
+
+    private static object PlaylistDto(PlaylistRecord p) => new
+    {
+        p.Id,
+        p.Name,
+        p.Description,
+        p.TrackCount,
+        p.IsSmartPlaylist,
+        p.FilterCriteria,
+        p.CreatedAt,
+        p.ModifiedAt
+    };
+
+    /// <summary>Resolves a smart playlist's tracks, optionally overriding favourite state with a client-supplied set.</summary>
+    /// <param name="db">Open library database.</param>
+    /// <param name="playlist">Smart playlist whose <see cref="PlaylistRecord.FilterCriteria"/> is resolved.</param>
+    /// <param name="favoriteOverride">Track IDs the requesting client treats as favourites, or <see langword="null"/> to use the server's stored favourite flags.</param>
+    /// <returns>An HTTP result with the resolved playlist track rows.</returns>
+    private static IResult ResolveSmartPlaylistTracks(
+        AudioDatabase db,
+        PlaylistRecord playlist,
+        HashSet<long>? favoriteOverride)
+    {
+        SmartPlaylistCriteria criteria;
+        try { criteria = JsonSerializer.Deserialize<SmartPlaylistCriteria>(playlist.FilterCriteria!)!; }
+        catch { return Results.BadRequest(new { error = "Invalid smart playlist criteria." }); }
+
+        var candidates = favoriteOverride is null
+            ? db.GetSmartPlaylistTracks()
+            : db.GetSmartPlaylistTracks()
+                .Select(t => t with { IsFavorite = favoriteOverride.Contains(t.Id) })
+                .ToList();
+        var resolved = SmartPlaylistResolver.Resolve(db, criteria, candidates);
+        var ids = resolved.Select(t => t.Id).ToList();
+        var tracks = db.GetTrackListByIds(ids);
+        return Results.Ok(tracks.Select((track, index) => new
+        {
+            PlaylistEntryId = 0L,
+            Position = index + 1,
+            track.Path,
+            Track = TrackDto(track)
+        }).ToList());
+    }
+
+    /// <summary>Validates client-supplied smart-playlist criteria and returns a canonical serialized form.</summary>
+    /// <param name="filterCriteria">Raw criteria JSON from the client.</param>
+    /// <param name="normalized">Re-serialized criteria when valid; otherwise an empty string.</param>
+    /// <returns><see langword="true"/> when <paramref name="filterCriteria"/> is valid smart-playlist criteria.</returns>
+    private static bool TryNormalizeSmartCriteria(string filterCriteria, out string normalized)
+    {
+        try
+        {
+            var criteria = JsonSerializer.Deserialize<SmartPlaylistCriteria>(filterCriteria);
+            if (criteria is null)
+            {
+                normalized = string.Empty;
+                return false;
+            }
+            normalized = JsonSerializer.Serialize(criteria);
+            return true;
+        }
+        catch
+        {
+            normalized = string.Empty;
+            return false;
+        }
+    }
+}
+
+/// <summary>Request body for storing a client-refreshed artist profile on the server.</summary>
+/// <param name="Biography">Downloaded artist biography, or <see langword="null"/> when no biography was found.</param>
+/// <param name="SourceUrl">Canonical source URL, or <see langword="null"/>.</param>
+/// <param name="Language">Preferred profile language.</param>
+/// <param name="ImageData">Optional client-downloaded artist image bytes.</param>
+/// <param name="ImageMimeType">MIME type for <paramref name="ImageData"/>.</param>
+public sealed record ArtistProfileUpdateRequest(
+    string? Biography,
+    string? SourceUrl,
+    string? Language,
+    byte[]? ImageData,
+    string? ImageMimeType);
+
+/// <summary>Request body for renaming or merging an artist.</summary>
+/// <param name="ArtistName">Requested artist display name.</param>
+/// <param name="PreferredArtistId">Artist ID whose profile should survive a merge, or <see langword="null"/> to only rename or detect a collision.</param>
+public sealed record ArtistRenameRequest(string? ArtistName, long? PreferredArtistId);
+
+/// <summary>Response body for an artist rename or merge operation.</summary>
+/// <param name="Result">Committed rename result, or <see langword="null"/> when a matching artist must be confirmed first.</param>
+/// <param name="MatchingArtist">Matching artist DTO, or <see langword="null"/> when the rename was committed.</param>
+public sealed record ArtistRenameResponse(ArtistRenameResult? Result, object? MatchingArtist);
+
+/// <summary>Request body for storing client-downloaded lyrics on the server.</summary>
+/// <param name="PlainLyrics">Unsynchronised plain-text lyrics, or <see langword="null"/>.</param>
+/// <param name="SyncedLyrics">LRC-formatted synchronised lyrics, or <see langword="null"/>.</param>
+public sealed record TrackLyricsUpdateRequest(
+    string? PlainLyrics,
+    string? SyncedLyrics);
+
+/// <summary>Response body for the profile-scoped cross-device playback position.</summary>
+/// <param name="PositionSeconds">
+/// Stored position in seconds, or <see langword="null"/> when the track was never
+/// played on another device.
+/// </param>
+public sealed record TrackPositionDto(double? PositionSeconds);
+
+/// <summary>Request body for storing a profile-scoped cross-device playback position.</summary>
+/// <param name="PositionSeconds">
+/// Position in seconds; zero or negative clears the stored entry.
+/// </param>
+public sealed record TrackPositionUpdateRequest(double? PositionSeconds);
+
+/// <summary>Request body for personal and cached MusicBrainz track ratings.</summary>
+/// <param name="UserRating">Optional personal zero-to-five-star rating.</param>
+/// <param name="MusicBrainzTrackId">Optional resolved MusicBrainz recording identifier.</param>
+/// <param name="MusicBrainzRating">Optional cached MusicBrainz community rating.</param>
+/// <param name="MusicBrainzRatingVotes">Optional MusicBrainz vote count.</param>
+/// <param name="MusicBrainzRatingFetchedAt">Optional MusicBrainz lookup timestamp.</param>
+/// <param name="MusicBrainzGenres">Optional JSON array of supplemental MusicBrainz genres.</param>
+/// <param name="MusicBrainzTags">Optional JSON array of supplemental positively voted tags.</param>
+public sealed record TrackRatingUpdateRequest(
+    int? UserRating,
+    string? MusicBrainzTrackId,
+    double? MusicBrainzRating,
+    int? MusicBrainzRatingVotes,
+    long? MusicBrainzRatingFetchedAt,
+    string? MusicBrainzGenres,
+    string? MusicBrainzTags);
+
+/// <summary>Request body for a profile-scoped server track favorite.</summary>
+public sealed record FavoriteUpdateRequest(bool IsFavorite);
+
+/// <summary>Library-only genre update sent by an authenticated client.</summary>
+/// <param name="Genre">
+/// Replacement genre, or <see langword="null"/>/empty to clear the override so the
+/// next scan restores the embedded value.
+/// </param>
+public sealed record TrackGenreUpdateRequest(string? Genre);
+
+/// <summary>Request body for creating a regular server playlist.</summary>
+/// <param name="Name">Playlist display name.</param>
+/// <param name="TrackIds">Initial server-side track IDs.</param>
+public sealed record PlaylistCreateRequest(string? Name, IReadOnlyList<long>? TrackIds);
+
+/// <summary>Request body for appending tracks to a server playlist.</summary>
+/// <param name="TrackIds">Server-side track IDs to append.</param>
+public sealed record PlaylistTrackAppendRequest(IReadOnlyList<long>? TrackIds);
+
+/// <summary>Request body for creating or updating a smart server playlist.</summary>
+/// <param name="Name">Playlist display name.</param>
+/// <param name="FilterCriteria">Serialized <see cref="SmartPlaylistCriteria"/> JSON.</param>
+public sealed record SmartPlaylistSaveRequest(string? Name, string? FilterCriteria);
+
+/// <summary>Request body for resolving a smart playlist with client-side favourite state.</summary>
+/// <param name="FavoriteTrackIds">Track IDs the requesting client treats as favourites.</param>
+public sealed record SmartPlaylistResolveRequest(IReadOnlyList<long>? FavoriteTrackIds);
+
+/// <summary>Request body for counting matches of ad-hoc smart-playlist criteria (editor live preview).</summary>
+/// <param name="Criteria">Serialized <see cref="SmartPlaylistCriteria"/> JSON.</param>
+/// <param name="FavoriteTrackIds">Track IDs the requesting client treats as favourites.</param>
+public sealed record SmartCriteriaResolveRequest(string? Criteria, IReadOnlyList<long>? FavoriteTrackIds);

@@ -1,11 +1,11 @@
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
-using HyperFi.Audio;
+using HyperFidel.Audio;
 
 // Real FFmpeg, synthetic sources only. Never opens an output device or a library.
 var parent = Path.GetFullPath(Path.GetTempPath());
-var root = Path.GetFullPath(Path.Combine(parent, "hyperfi-browser-audio-" + Guid.NewGuid().ToString("N")));
+var root = Path.GetFullPath(Path.Combine(parent, "hyperfidel-browser-audio-" + Guid.NewGuid().ToString("N")));
 Directory.CreateDirectory(root);
 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(45));
 try
@@ -100,7 +100,7 @@ try
 }
 finally
 {
-    if (!root.StartsWith(parent, StringComparison.OrdinalIgnoreCase) || !Path.GetFileName(root).StartsWith("hyperfi-browser-audio-", StringComparison.Ordinal))
+    if (!root.StartsWith(parent, StringComparison.OrdinalIgnoreCase) || !Path.GetFileName(root).StartsWith("hyperfidel-browser-audio-", StringComparison.Ordinal))
         throw new InvalidOperationException("Unexpected fixture cleanup path.");
     Directory.Delete(root, recursive: true);
 }

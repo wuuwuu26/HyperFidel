@@ -6,7 +6,7 @@
 #include <span>
 #include <vector>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 
 /** Encodes and decodes the authenticated HAP framing used by AirPlay 2 control channels. */
 class EncryptedControl final {
@@ -26,4 +26,4 @@ private:
     std::uint64_t counter_ = 0;
 };
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

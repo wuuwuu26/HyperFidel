@@ -1,6 +1,6 @@
 using System;
 using System.Diagnostics;
-using HyperFi.Library;
+using HyperFidel.Library;
 
 using var db = AudioDatabase.OpenDefault();
 void Time(string name, Action action)

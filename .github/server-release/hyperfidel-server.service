@@ -1,0 +1,33 @@
+[Unit]
+Description=HyperFidel Music Server
+Documentation=https://github.com/wuuwuu26/HyperFidel
+After=network.target
+
+[Service]
+Type=simple
+User=hyperfidel-server
+Group=hyperfidel-server
+WorkingDirectory=/usr/lib/hyperfidel-server
+ExecStart=/usr/lib/hyperfidel-server/HyperFidel.Server
+# systemd creates /var/lib/hyperfidel-server owned by the service user; the server
+# stores its database, caches, and downloaded artwork there. Without a writable
+# data directory the --no-create-home service user cannot create the SQLite
+# database under $HOME and the process aborts on startup.
+StateDirectory=hyperfidel-server
+Environment=HYPERFIDEL_DATA_DIR=/var/lib/hyperfidel-server
+# Keep long ReplayGain maintenance subordinate to SSH, Kestrel, and normal
+# system activity. Administrators may override these values in the environment file.
+Environment=HyperFidel__ReplayGainFfmpegThreads=1
+Environment=HyperFidel__ReplayGainDelayMilliseconds=250
+EnvironmentFile=-/etc/default/hyperfidel-server
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hyperfidel-server
+
+[Install]
+WantedBy=multi-user.target

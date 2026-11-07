@@ -9,8 +9,8 @@
 
 int main() {
     std::array<std::uint8_t, 32> key{};
-    hyperfi::airplay2::BufferedAudioPacketizer packetizer(44100, key, 0xac44f1a3, 0x4eb9e585);
-    std::vector<std::byte> pcm(hyperfi::airplay2::BufferedAudioPacketizer::PcmBytesPerPacket);
+    hyperfidel::airplay2::BufferedAudioPacketizer packetizer(44100, key, 0xac44f1a3, 0x4eb9e585);
+    std::vector<std::byte> pcm(hyperfidel::airplay2::BufferedAudioPacketizer::PcmBytesPerPacket);
     const auto packet = packetizer.packetize(pcm);
     const auto declared =
         std::to_integer<std::uint32_t>(packet[0]) << 24 |

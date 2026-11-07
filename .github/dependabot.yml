@@ -24,7 +24,7 @@ updates:
           - "version-update:semver-major"
       # SkiaSharp is pinned to the 3.119 line because Avalonia.Skia 12.1.2 depends
       # on SkiaSharp 3.119.4 and SkiaSharp.NativeAssets.Linux 3.119.4. Raising it
-      # independently in HyperFi.Core/HyperFi.Server would force the desktop app to
+      # independently in HyperFidel.Core/HyperFidel.Server would force the desktop app to
       # render through an incompatible managed/native Skia pair.
       - dependency-name: "SkiaSharp*"
         update-types:

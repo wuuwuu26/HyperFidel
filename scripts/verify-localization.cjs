@@ -14,11 +14,11 @@ assert.ok(!data.source.includes('English with'), 'No language may inherit Englis
 const web = require('../html/i18n.js');
 web.validateTranslations();
 assert.equal(Object.keys(web.languageUrls).length, Object.keys(data.result).length, 'Desktop/website locale parity');
-const profileSource = fs.readFileSync(path.join(root, 'HyperFi.Core/Library/ArtistProfileService.cs'), 'utf8');
+const profileSource = fs.readFileSync(path.join(root, 'HyperFidel.Core/Library/ArtistProfileService.cs'), 'utf8');
 const profileLanguageLine = profileSource.split('\n').find(line => line.includes('language = language is'));
 for (const locale of Object.keys(web.languageUrls))
   assert.ok(profileLanguageLine.includes('"' + locale + '"'), locale + ': artist profile language support');
-const mobile = JSON.parse(fs.readFileSync(path.join(root, 'HyperFi/Localization/MobileRemote.json'), 'utf8'));
+const mobile = JSON.parse(fs.readFileSync(path.join(root, 'HyperFidel/Localization/MobileRemote.json'), 'utf8'));
 for (const [language, values] of Object.entries(mobile)) {
   assert.deepEqual(Object.keys(values).sort(), Object.keys(mobile.en).sort(), language + ': mobile key coverage');
   assert.ok(Object.values(values).every(value => value.trim()), language + ': mobile empty value');

@@ -7,8 +7,8 @@
 #include <cstring>
 
 int main() {
-    hyperfi::airplay2::NtpTimingResponder responder;
-    auto client = hyperfi::airplay2::Socket::bindUdp();
+    hyperfidel::airplay2::NtpTimingResponder responder;
+    auto client = hyperfidel::airplay2::Socket::bindUdp();
     std::array<std::byte, 32> request{};
     request[1] = std::byte{0xD2};
     request[2] = std::byte{0x12};

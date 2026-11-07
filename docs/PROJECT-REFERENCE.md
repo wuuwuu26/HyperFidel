@@ -13,12 +13,12 @@ implementation.
 
 Avalonia desktop music library with:
 
-- Cross-platform core library in `HyperFi.Core/` (library scan, database,
+- Cross-platform core library in `HyperFidel.Core/` (library scan, database,
   search, streaming models)
-- Avalonia 12.1.2 frontend in `HyperFi/` (Windows, Linux, and macOS; references
-  `HyperFi.Core`)
-- Cross-platform headless music server in `HyperFi.Server/` (ASP.NET Core;
-  references `HyperFi.Core`; exposes REST + streaming over the local network)
+- Avalonia 12.1.2 frontend in `HyperFidel/` (Windows, Linux, and macOS; references
+  `HyperFidel.Core`)
+- Cross-platform headless music server in `HyperFidel.Server/` (ASP.NET Core;
+  references `HyperFidel.Core`; exposes REST + streaming over the local network)
 - Native Steinberg ASIO bridge in `Native/AsioBridge/`
 - MIT-licensed cwASIO bridge in `Native/CwAsioBridge/`
 - Static localized product website in `html/`; edit the German source page and
@@ -39,14 +39,14 @@ complete WASAPI/ASIO playback implementation. The current Linux `net10.0` build
 supports PCM playback through selectable direct ALSA hardware and OpenAL output
 devices in addition to the library and network/UI feature set; it excludes
 Windows audio, endpoint-volume, and SMTC implementations and uses compatibility
-types under `HyperFi/Compatibility/Linux`. System-media control on Linux is
-provided by MPRIS 2 (`org.mpris.MediaPlayer2.hyperfi`) instead of SMTC. Linux
+types under `HyperFidel/Compatibility/Linux`. System-media control on Linux is
+provided by MPRIS 2 (`org.mpris.MediaPlayer2.hyperfidel`) instead of SMTC. Linux
 credentials use the desktop client's AES-GCM current-user credential container
 and must never persist secrets in plaintext.
 
 Linux native DSD does not use either Windows ASIO bridge. Local and
 HTTP-range-streamed stereo DSF and uncompressed stereo DFF/DSDIFF use the
-compatibility players under `HyperFi/Compatibility/Linux`, open ALSA
+compatibility players under `HyperFidel/Compatibility/Linux`, open ALSA
 `DSD_U32_BE` directly, and fall back to DoP when native DSD is unavailable.
 
 Linux output-profile editing presents OpenAL and direct exclusive ALSA as
@@ -57,14 +57,14 @@ ID uses OpenAL. Existing profiles must be classified from that ID.
 
 Direct ALSA bypasses the system mixer, so while such a profile is selected the
 client mirrors the PipeWire/PulseAudio default sink volume through `pactl`:
-system volume and mute changes drive the software PCM gain, and HyperFi volume
+system volume and mute changes drive the software PCM gain, and HyperFidel volume
 changes are written back to the default sink. The synchronizer is a mirror, not
 part of the audio path, and OpenAL profiles keep their normal system-mixed
 volume.
 
 Before opening a direct ALSA device, `AlsaHardwareVolume` sets every playback
 mixer control on that card to its maximum and unmutes it. A hardware control
-left low by the system mixer is outside HyperFi's software volume path and
+left low by the system mixer is outside HyperFidel's software volume path and
 would otherwise cap the maximum volume. The control is left at unity so the
 software mixer remains the single volume stage for PCM.
 
@@ -80,22 +80,22 @@ the application and per-user cache, inherited `PATH`, and conventional Homebrew,
 MacPorts, pkgsrc, Fink, and per-user binary directories because Finder-launched
 apps receive a minimal `PATH`; missing tools are downloaded for the current
 architecture into the per-user cache. ALSA and native DSD output remain
-Linux-only. Tagged releases package self-contained `HyperFi.app` bundles for
+Linux-only. Tagged releases package self-contained `HyperFidel.app` bundles for
 both Mac architectures as installable PKGs, portable ZIPs, and tar archives.
-Each bundle generates `HyperFi.icns` from `Logo/icon.png`, stores it under
+Each bundle generates `HyperFidel.icns` from `Logo/icon.png`, stores it under
 `Contents/Resources`, and declares it through `CFBundleIconFile`; every package
 is included in the signed release manifest. The desktop updater selects the
 current process architecture's signed `pkg`, verifies its digest, and opens it
-through `/usr/bin/open`; HyperFi must never invoke a privileged installer
+through `/usr/bin/open`; HyperFidel must never invoke a privileged installer
 command directly.
 
-## HyperFi.Core
+## HyperFidel.Core
 
-`HyperFi.Core` is a `net10.0` class library with no platform-specific
+`HyperFidel.Core` is a `net10.0` class library with no platform-specific
 dependencies. It holds everything needed to scan, store, index, and serve the
 music library:
 
-**HyperFi.Core/Library/**: `AudioDatabase`, `LibraryScanner`,
+**HyperFidel.Core/Library/**: `AudioDatabase`, `LibraryScanner`,
 `LibraryWatcherService`, `LibraryBackupService`, `TrackSearchIndex`,
 `GenreCloudService` plus its embedded `GenreTaxonomy.json` multi-parent graph,
 `CueSheetParser`, `M3u8PlaylistService`, `LyricsService`, `RadioBrowserService`,
@@ -103,7 +103,7 @@ music library:
 `ArtistImageSearchService`, `ArtistNameNormalizer`, `ArtworkCache`,
 `MusicBrainzCoverSearch`, model records, `ArtistInfoSource` enum.
 
-**HyperFi.Core/Audio/**: `ReplayGain`, `ReplayGainMode`, `EqualizerApoParser`,
+**HyperFidel.Core/Audio/**: `ReplayGain`, `ReplayGainMode`, `EqualizerApoParser`,
 `ParametricEqualizer`, `FfmpegPcmDecoder`, `FfmpegLocator` (cross-platform:
 downloads missing FFmpeg/FFprobe on Windows and macOS; Linux uses
 system-installed tools), `WaveformCache` (cached compact FFmpeg-generated peak
@@ -114,15 +114,15 @@ FFmpeg decoder, and server-side transcode diagnostics under `logs/seek.log`),
 `StreamingLoudnessNormalizer` (optional loudness matching for radio and podcast
 streams).
 
-**HyperFi.Core/Web/**: `WebBrowsingService` (SSRF-guarded page fetch + SearXNG
+**HyperFidel.Core/Web/**: `WebBrowsingService` (SSRF-guarded page fetch + SearXNG
 search), `WebBrowsingOptions` (persisted config), `HtmlContentExtractor`
 (HTML→text/Markdown). Backs the `search_web`, `fetch_page`, and
 `fetch_page_as_markdown` tools for MCP and the AI chat.
 
-**HyperFi.Core/Streaming/**: `IStreamingCatalog`, `IStreamingPlaybackProvider`,
+**HyperFidel.Core/Streaming/**: `IStreamingCatalog`, `IStreamingPlaybackProvider`,
 `IStreamingCredentialStore`, `StreamingModels` (all streaming model records,
-enums, `PlexServerSettings`, and `HyperFiServerSettings`), `PlexServerClient`,
-`HyperFiServerClient` (HTTP client for browsing and streaming a remote HyperFi
+enums, `PlexServerSettings`, and `HyperFidelServerSettings`), `PlexServerClient`,
+`HyperFidelServerClient` (HTTP client for browsing and streaming a remote HyperFidel
 Server library — provides `GetArtistsAsync`, `GetAlbumsByArtistAsync`,
 `GetAlbumsAsync`, `GetTracksByAlbumAsync`, `GetTracksAsync`,
 `GetLibrarySummaryAsync`, `TestConnectionAsync`, and static URL helpers
@@ -135,9 +135,9 @@ supports them. It also exposes `GetArtistAsync` for a single cached artist
 profile and per-track lyrics caching via `GetTrackLyricsAsync` /
 `UploadTrackLyricsAsync`).
 
-**Access control:** `InternalsVisibleTo("HyperFi")` is set in `AssemblyInfo.cs`
-so the HyperFi Windows app can access internal Core members (audio-processing
-internals). `HyperFi.Server` does **not** have this grant and uses only the
+**Access control:** `InternalsVisibleTo("HyperFidel")` is set in `AssemblyInfo.cs`
+so the HyperFidel Windows app can access internal Core members (audio-processing
+internals). `HyperFidel.Server` does **not** have this grant and uses only the
 public Core surface.
 
 `SmartPlaylistCriteria.Resolve(candidates)` evaluates stored filter criteria
@@ -146,11 +146,11 @@ returns ordered, optionally limited results. Both the app and the server use
 this method so the filtering logic lives only in Core.
 
 `LibraryWatcherService(Action)` and `UpdatePaths(paths)` are public so
-`HyperFi.Server` can start watching configured library roots.
+`HyperFidel.Server` can start watching configured library roots.
 `AudioDatabase.GetTrackById(long)` is public for track-by-ID lookup in the
 stream endpoint.
 
-Windows-only items that remain exclusively in `HyperFi/`:
+Windows-only items that remain exclusively in `HyperFidel/`:
 
 - `Audio/SteinbergAsioStream`, `FfmpegAudioPlayer`, `WasapiAudioPlayer`,
   `WasapiDeviceProvider`, `DsfAudioPlayer`, `DffAudioPlayer`,
@@ -171,17 +171,17 @@ shader error; retain production budgets in application code.
 
 ```powershell
 .\build.ps1
-.\HyperFi\bin\Debug\net10.0-windows10.0.19041.0\HyperFi.exe
+.\HyperFidel\bin\Debug\net10.0-windows10.0.19041.0\HyperFidel.exe
 ```
 
 Run the managed unit tests with
-`dotnet test HyperFi.Core.Tests/HyperFi.Core.Tests.csproj`,
-`dotnet test HyperFi.Tests/HyperFi.Tests.csproj`, and
-`dotnet test HyperFi.Server.Tests/HyperFi.Server.Tests.csproj`.
-`HyperFi.Core.Tests` covers the cross-platform core library; `HyperFi.Tests`
+`dotnet test HyperFidel.Core.Tests/HyperFidel.Core.Tests.csproj`,
+`dotnet test HyperFidel.Tests/HyperFidel.Tests.csproj`, and
+`dotnet test HyperFidel.Server.Tests/HyperFidel.Server.Tests.csproj`.
+`HyperFidel.Core.Tests` covers the cross-platform core library; `HyperFidel.Tests`
 covers pure desktop helpers that do not require a running Avalonia UI;
-`HyperFi.Server.Tests` covers middleware and isolated in-memory endpoint hosts.
-Do not move shared behavior into a UI-only class when a `HyperFi.Core` type can
+`HyperFidel.Server.Tests` covers middleware and isolated in-memory endpoint hosts.
+Do not move shared behavior into a UI-only class when a `HyperFidel.Core` type can
 own it and stay cross-platform testable. The Windows build workflow runs all
 three test projects plus the isolated Windows headless workflow smoke suite.
 `scripts/verify-all.ps1` runs the same checks locally in one command (managed
@@ -198,7 +198,7 @@ state, so a leaked profile makes unrelated profile-scoped queries (playback
 history, the year-in-review summary, cross-device positions) silently return
 nothing, and the resulting failure looks like a query bug instead of a
 test-isolation bug. Every test that opens a library database must use
-`HyperFi.Core.Tests.CoreTestDatabase`, which owns a unique temporary directory
+`HyperFidel.Core.Tests.CoreTestDatabase`, which owns a unique temporary directory
 per test and clears only that database's SQLite pool on disposal. Never call
 `AudioDatabase.OpenDefault()`, reference `AppPaths.DataRoot`, delete a shared
 database file, or call `SqliteConnection.ClearAllPools()` from a test: xUnit
@@ -250,8 +250,8 @@ end of support on 10 November 2026, the same day as .NET 8.
 `Avalonia.Controls.DataGrid` is part of the Avalonia 12 line again, so it moves
 with the other Avalonia packages; the earlier "no release beyond 11.3.13" note
 was wrong and is corrected here. SkiaSharp moves with Avalonia too:
-`Avalonia.Skia` 12.1.2 depends on SkiaSharp 3.119.4, so `HyperFi.Core` and
-`HyperFi.Server` use that line and must not be raised independently. The
+`Avalonia.Skia` 12.1.2 depends on SkiaSharp 3.119.4, so `HyperFidel.Core` and
+`HyperFidel.Server` use that line and must not be raised independently. The
 deliberate migration triggers, steps, and required checks for every held-back
 line are recorded in [`DEPENDENCY-MIGRATION.md`](../DEPENDENCY-MIGRATION.md);
 keep that record and the Dependabot `ignore` list in agreement, and never merge
@@ -267,7 +267,7 @@ run fine in CI, so nothing else catches the drift.
 `scripts/verify-github-actions-pins.ps1` enforces this and runs in both
 `scripts/verify-all.ps1` and the CI verify job. The Windows
 `.github/workflows/release.yml` workflow is the sole creator of the canonical
-`HyperFi <version>` draft release. Linux, macOS, and server matrix jobs must
+`HyperFidel <version>` draft release. Linux, macOS, and server matrix jobs must
 locate that exact draft through its numeric release ID and upload their assets
 to it; they must never independently create a draft by tag because concurrent
 draft lookup can create duplicate releases. The shared uploader validates the
@@ -280,7 +280,7 @@ success, tag changes and bounded failure in the CI verify job.
 `.github/workflows/player-linux-release.yml` publishes tagged self-contained
 desktop builds for `linux-x64` and `linux-arm64` as portable tarballs, DEB, and
 RPM packages, plus an Arch Linux `x86_64` package. These packages install the
-player under `/usr/lib/hyperfi`, add `/usr/bin/hyperfi`, and register its
+player under `/usr/lib/hyperfidel`, add `/usr/bin/hyperfidel`, and register its
 desktop launcher. Every Linux player artifact is required by and included in the
 signed release manifest. The Arch `.pkg.tar.zst` must store `.PKGINFO` as an
 exact root-level archive entry (not `./.PKGINFO`), and the workflow must
@@ -293,17 +293,17 @@ preserves upstream binaries with `!strip` and `!debug`; CoreCLR tracing is
 optional. Keep its generated `.SRCINFO` synchronized with every recipe change.
 See `packaging/README.md` for validation evidence and remaining acceptance.
 
-## HyperFi.Server
+## HyperFidel.Server
 
-`HyperFi.Server` is a `net10.0` ASP.NET Core Minimal API server that exposes the
-local music library over the network. It references `HyperFi.Core` and has no
+`HyperFidel.Server` is a `net10.0` ASP.NET Core Minimal API server that exposes the
+local music library over the network. It references `HyperFidel.Core` and has no
 Windows-specific dependencies; it runs on Windows, Linux, and macOS. The server
 project references `SkiaSharp.NativeAssets.Linux.NoDependencies` so Linux
 packages include the native SkiaSharp library required for artwork thumbnail
 generation; do not replace this with an external ImageMagick/convert runtime
 dependency.
 
-**Configuration** (`appsettings.json`, section `HyperFi`):
+**Configuration** (`appsettings.json`, section `HyperFidel`):
 
 - `ApiKey` — pre-shared key required in every request (`X-Api-Key` header or
   `?key=` query param; query param enables direct use in FFmpeg URLs)
@@ -317,21 +317,21 @@ dependency.
 
 **Key files:**
 
-- `HyperFi.Server/Program.cs`: builds and starts the server; calls
+- `HyperFidel.Server/Program.cs`: builds and starts the server; calls
   `FfmpegLocator.EnsureAvailableAsync()`, registers `LibraryWatcherService` and
   the `LibraryService` hosted service, maps all endpoints including remote
   configuration and directory browsing
-- `HyperFi.Server/ServerSettings.cs`: configuration POCO bound from the
-  `HyperFi` config section
-- `HyperFi.Server/Middleware/ApiKeyMiddleware.cs`: skips `/api/health`,
+- `HyperFidel.Server/ServerSettings.cs`: configuration POCO bound from the
+  `HyperFidel` config section
+- `HyperFidel.Server/Middleware/ApiKeyMiddleware.cs`: skips `/api/health`,
   validates `X-Api-Key` header or `?key=` query param, returns 401 JSON
-- `HyperFi.Server/Services/LibraryService.cs`: `IHostedService` that calls
+- `HyperFidel.Server/Services/LibraryService.cs`: `IHostedService` that calls
   `LibraryWatcherService.UpdatePaths` on start and runs full scans via the
   static `LibraryScanner.ScanAsync`; exposes `TriggerScan()` for manual trigger
   and `ScanStatus` with current root, processed/total counts, current file, last
   result, errors, and a persisted `LibraryChangedAt` Unix timestamp that updates
   when scans or watcher runs add, update, or remove indexed tracks
-- `HyperFi.Server/Endpoints/LibraryEndpoints.cs`: artists, albums, tracks,
+- `HyperFidel.Server/Endpoints/LibraryEndpoints.cs`: artists, albums, tracks,
   playlists (smart playlists resolved via `SmartPlaylistCriteria.Resolve`), and
   Lucene search endpoints; `GET /api/albums/recent` returns the most recently
   added albums (id, title, artist, `ArtistId`, `AddedAt`, `HasArtwork`) for the
@@ -378,7 +378,7 @@ dependency.
   the remote server library folder tree and must materialize the response before
   disposing the SQLite connection because JSON serialization runs after the
   route handler returns
-- `HyperFi.Server/Endpoints/StreamEndpoints.cs`: byte-range streaming for
+- `HyperFidel.Server/Endpoints/StreamEndpoints.cs`: byte-range streaming for
   regular audio files; on-the-fly FLAC transcode via FFmpeg pipe for CUE virtual
   tracks; `GET /api/stream/{trackId}?ss=<seconds>` performs a fast server-side
   seek by transcoding the local file from that offset to FLAC (used by remote
@@ -394,25 +394,25 @@ dependency.
   `/api/artwork/album/{id}` and `/api/artwork/artist/{id}` accept raw image
   bytes from authenticated clients and store them in the server-side artwork
   caches
-- `HyperFi.Server/Endpoints/ConfigurationEndpoints.cs`: authenticated
+- `HyperFidel.Server/Endpoints/ConfigurationEndpoints.cs`: authenticated
   `/api/settings/library-paths` GET/PUT and `/api/files/directories?path=`
   endpoints plus authenticated `/api/settings/replaygain` GET/PUT for the
   server-owned scan-time ReplayGain preference; the ReplayGain PUT updates the
   live watcher and persists the value immediately. The library-path PUT persists
-  `HyperFi:LibraryPaths`, refreshes `LibraryWatcherService`, and starts a scan.
+  `HyperFidel:LibraryPaths`, refreshes `LibraryWatcherService`, and starts a scan.
   Settings are written to the editable, service-writable config
-  (`/etc/hyperfi-server/appsettings.json` via
+  (`/etc/hyperfidel-server/appsettings.json` via
   `ConfigurationEndpoints.LinuxConfigFilePath` when that directory exists,
   otherwise the content-root `appsettings.json`); the content-root copy under
-  `/usr/lib/hyperfi-server` is root-owned/read-only and overwritten on package
+  `/usr/lib/hyperfidel-server` is root-owned/read-only and overwritten on package
   upgrades. `Program.cs` layers the same `/etc` file on top of the bundled
   defaults at startup (optional, so it is a no-op on Windows/dev)
 
 **Build:**
 
 ```bash
-dotnet build HyperFi.Server/HyperFi.Server.csproj
-dotnet run --project HyperFi.Server/HyperFi.Server.csproj
+dotnet build HyperFidel.Server/HyperFidel.Server.csproj
+dotnet run --project HyperFidel.Server/HyperFidel.Server.csproj
 ```
 
 **Linux packages** — `.github/workflows/server-release.yml` (triggered on the
@@ -420,20 +420,20 @@ same `v*` tags as the Windows release) builds self-contained binaries for
 `linux-x64` and `linux-arm64` and publishes four packages to the draft GitHub
 Release: `amd64`/`arm64` DEB and `x86_64`/`aarch64` RPM. Support files live in
 `.github/server-release/` (systemd unit, postinst/prerm scripts). The packages
-install to `/usr/lib/hyperfi-server/`, expose a `/usr/bin/hyperfi-server`
-symlink, ship a default config at `/etc/hyperfi-server/appsettings.json`, and
-register `hyperfi-server.service` running as the `hyperfi-server` system user.
+install to `/usr/lib/hyperfidel-server/`, expose a `/usr/bin/hyperfidel-server`
+symlink, ship a default config at `/etc/hyperfidel-server/appsettings.json`, and
+register `hyperfidel-server.service` running as the `hyperfidel-server` system user.
 The signed update-manifest workflow waits for the Windows installer and portable
 archive, every Linux and macOS desktop artifact, and all four server packages
 before signing, refuses partial manifests, and supports a manual tag input for
 rebuilding an already published release.
 
-The `hyperfi-server` service user is created with `--no-create-home` and has no
-writable `$HOME`, so the default data directory (`$HOME/.local/share/HyperFi`)
-cannot be created. `AppPaths.DataRoot` therefore honours the `HYPERFI_DATA_DIR`
+The `hyperfidel-server` service user is created with `--no-create-home` and has no
+writable `$HOME`, so the default data directory (`$HOME/.local/share/HyperFidel`)
+cannot be created. `AppPaths.DataRoot` therefore honours the `HYPERFIDEL_DATA_DIR`
 environment variable, and the systemd unit sets
-`HYPERFI_DATA_DIR=/var/lib/hyperfi-server` plus `StateDirectory=hyperfi-server`
-(the post-install also creates `/var/lib/hyperfi-server` owned by the service
+`HYPERFIDEL_DATA_DIR=/var/lib/hyperfidel-server` plus `StateDirectory=hyperfidel-server`
+(the post-install also creates `/var/lib/hyperfidel-server` owned by the service
 user). The server's SQLite database, caches, and downloaded artwork live there.
 Explicit data roots never import legacy Player settings or caches. Default roots
 copy missing legacy files once, guarded by `.legacy-data-migrated`. A removed
@@ -472,10 +472,10 @@ format within the limit, selection fails before output starts; advertised higher
 rates must never bypass an explicit cap. Pure desktop tests cover 384-kHz
 WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
 
-- `HyperFi/OutputProfile.cs`: named audio output configuration (backend, device
+- `HyperFidel/OutputProfile.cs`: named audio output configuration (backend, device
   IDs, display name); multiple profiles allow switching between output devices
   without reconfiguring each time
-- `HyperFi/Audio/AudioPlayerRetirement.cs`: UI-free ownership of detached-player
+- `HyperFidel/Audio/AudioPlayerRetirement.cs`: UI-free ownership of detached-player
   background disposal. Each synchronous backend disposal uses an independent
   LongRunning worker on TaskScheduler.Default with DenyChildAttach, so blocked
   drivers do not occupy shared thread-pool workers needed by timeout callbacks,
@@ -492,7 +492,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   remain window-owned; pending-start tracking is separate from this retirement
   helper. No backend selection, PCM/DSD processing or native output changes are
   introduced here.
-- `HyperFi/Audio/PlaybackSessionCoordinator.cs`: single dispatcher-affine active
+- `HyperFidel/Audio/PlaybackSessionCoordinator.cs`: single dispatcher-affine active
   output and linked cancellation owner. TryBegin admits current uncancelled
   intents only with empty output. TryAttach rejects stale or occupied handoffs;
   rejected players remain caller-owned. DetachForRetry checks intent and player
@@ -512,7 +512,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   System, slider and MCP/mobile seek adapters hold preparation leases, capture
   output identity and guard completion. Full release drains pending seeks;
   superseded remote acknowledgement cancels while current errors propagate.
-- `HyperFi/Audio/PlaybackOutputDrain.cs`: composes preparation completion and
+- `HyperFidel/Audio/PlaybackOutputDrain.cs`: composes preparation completion and
   detached-player retirement after the window's synchronous stop cleanup.
   Register retirement before awaiting preparation, then await initial disposal
   and a second retirement pass to include late factory results. Ordinary waits
@@ -520,7 +520,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   active player, cancellation, admission or UI; release publication remains
   guarded by the window. Tests use real trackers and controlled fake disposal
   without an Avalonia window or audio hardware.
-- `HyperFi/Audio/PlaybackShutdownCoordinator.cs`: dispatcher-owned permanent
+- `HyperFidel/Audio/PlaybackShutdownCoordinator.cs`: dispatcher-owned permanent
   admission closure and shared shutdown outcome. Publish the result task before
   invoking synchronous hooks or output drain; reentrant and later requests must
   return that task without repeating hooks. Success, faults and cancellation
@@ -528,7 +528,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   its adapter closes queue edits and disables the window before full release.
   Actual Close remains window-owned. Unit tests cover these boundaries without a
   window; isolated window checks include reentrant queue cancellation.
-- `HyperFi/Audio/PlaybackStartOwnership.cs`: dispatcher-affine intent generation
+- `HyperFidel/Audio/PlaybackStartOwnership.cs`: dispatcher-affine intent generation
   and late-factory cleanup. Start captures ownership before remote lookup; stop
   invalidates it. Backend creation receives a fixed token, including native DSD
   fallbacks. Check ownership after retirement, creation and resume seeks before
@@ -536,7 +536,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   helper; obsolete lifetime errors do not reach caller stop handlers. Guard
   remote lookup registration on the dispatcher. Active output is session-owned;
   the queue remains window-owned.
-- `HyperFi/Audio/PlaybackReadiness.cs`: dispatcher-owned prepared-player result
+- `HyperFidel/Audio/PlaybackReadiness.cs`: dispatcher-owned prepared-player result
   separate from track completion. Initial seek and paused state precede
   readiness; abandoned starts return null, preparation errors reach the awaiting
   caller, and later failures reach an active-player-guarded observer. Output
@@ -544,7 +544,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   track. Selection generation guards retirement completion; fades bind to their
   own ready player and guard every volume write, including after the final
   delay. Failed reacquisition drains output before publishing release and
-  preserves retry context. `HyperFi/Audio/PlaybackPlayerFactory.cs` is the
+  preserves retry context. `HyperFidel/Audio/PlaybackPlayerFactory.cs` is the
   creation adapter used by production routing and isolated fake-factory window
   checks; it does not introduce another active player or queue.
 - Single-track MCP Play forwards the original opaque reference to the owning
@@ -590,7 +590,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   creation already incorporated admitted changes. Position/pause apply to the
   final player; obsolete retries remain part of full preparation drain.
 
-- `HyperFi/Audio/GaplessQueueRefreshCoordinator.cs` owns dispatcher-affine
+- `HyperFidel/Audio/GaplessQueueRefreshCoordinator.cs` owns dispatcher-affine
   refresh joining, revision changes and retry decisions without owning a player,
   queue, or UI. Inject active-output eligibility, existing preparation, guarded
   readiness, intent ownership and snapshot checks. Window adapters retain
@@ -667,7 +667,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   whole-track await. Pending independent append/next lookups remain a separate
   queue-edit ownership concern.
 
-- `HyperFi/Audio/PlaybackPreparationTracker.cs`: dispatcher-owned cancellation
+- `HyperFidel/Audio/PlaybackPreparationTracker.cs`: dispatcher-owned cancellation
   and completion leases for lookup, creation and initial/resume seek. They end
   before waiting for track completion. Cancellation never removes an unresolved
   factory; late player cleanup must be registered before ending preparation.
@@ -679,7 +679,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   Update installation and library import await the shared
   `MainWindow.PreparePlaybackShutdownAsync` drain before direct lifetime
   shutdown.
-- `HyperFi/Audio/AirPlayDeviceDiscovery.cs` and `AirPlayAudioPlayer.cs`:
+- `HyperFidel/Audio/AirPlayDeviceDiscovery.cs` and `AirPlayAudioPlayer.cs`:
   cross-platform classic AirPlay/RAOP output. Profiles retain the stable DNS-SD
   service name and last resolved endpoint, discovery refreshes it before
   playback, and FFmpeg-decoded 44.1 kHz stereo PCM is piped to a separately
@@ -699,13 +699,13 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   clock without an additional fast sender prefill. Read `Native/AGENTS.md` for
   the detailed protocol invariants. Other receivers remain experimental; see
   `README.md` for supported behavior and limitations.
-- `HyperFi/OutputProfileDialog.axaml/.cs`: dialog for creating or editing an
+- `HyperFidel/OutputProfileDialog.axaml/.cs`: dialog for creating or editing an
   output profile; loads available devices asynchronously, validates unique
   names, and exposes the confirmed result via `Result`
-- `HyperFi/Audio/SteinbergAsioStream.cs`: runtime-selecting C# wrapper for
+- `HyperFidel/Audio/SteinbergAsioStream.cs`: runtime-selecting C# wrapper for
   `AsioBridge.dll` and `CwAsioBridge.dll`
-- `HyperFi/Audio/FfmpegAudioPlayer.cs`: PCM path
-- `HyperFi.Core/Audio/FfmpegPcmDecoder.cs`: FFmpeg PCM decoder process with an
+- `HyperFidel/Audio/FfmpegAudioPlayer.cs`: PCM path
+- `HyperFidel.Core/Audio/FfmpegPcmDecoder.cs`: FFmpeg PCM decoder process with an
   initial prefetched block used for gapless transitions. For `http(s)` inputs it
   caps FFmpeg's stream analysis (`-analyzeduration`/`-probesize`) and adds
   reconnect options so the first decode of a remote/HTTP track does not block on
@@ -715,17 +715,17 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   the stream characteristics it can skip the probe entirely: a
   `GaplessPlaybackItem.KnownInfo` (`KnownAudioInfo`) lets both players build the
   `AudioFileInfo` from cached metadata instead of running `ffprobe`.
-  `MainWindow` supplies it for remote HyperFi Server PCM tracks from the
+  `MainWindow` supplies it for remote HyperFidel Server PCM tracks from the
   server-reported sample rate/channels/format (via `BuildRemotePcmKnownInfo`),
   removing one HTTP round-trip on the initial start and on gapless prefetch; DSD
   sources and tracks without a reported sample rate leave `KnownInfo` unset and
-  probe as before. Seeking a remote HyperFi Server stream (URL contains
+  probe as before. Seeking a remote HyperFidel Server stream (URL contains
   `/api/stream/`) uses **server-side seek**: the decoder appends `?ss=<seconds>`
   and decodes the offset stream from position 0 instead of seeking the HTTP
   stream itself (which binary-searches seektable-less files over many range
   round-trips). Plex and other HTTP inputs keep client-side `-ss` seeking.
-- `HyperFi.Core/Audio/FfmpegLocator.cs`: checks `AppContext.BaseDirectory`,
-  `%LOCALAPPDATA%\HyperFi\ffmpeg`, and PATH for `ffmpeg.exe`/`ffprobe.exe` at
+- `HyperFidel.Core/Audio/FfmpegLocator.cs`: checks `AppContext.BaseDirectory`,
+  `%LOCALAPPDATA%\HyperFidel\ffmpeg`, and PATH for `ffmpeg.exe`/`ffprobe.exe` at
   startup; when absent on Windows, resolves the current BtbN Windows LGPL ZIP
   asset through the GitHub release API, extracts `ffmpeg.exe` and `ffprobe.exe`
   into the per-user cache, and prepends that directory to the current-process
@@ -737,8 +737,8 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   leave the process current directory pointing to a deleted install path.
   `FfmpegLocator.IsAvailable()` is the shared platform-aware availability check
   used by Settings; do not duplicate Windows executable names in UI code.
-- `HyperFi/Audio/DsfAudioPlayer.cs`: native DSF-to-DSD path
-- `HyperFi/Compatibility/Linux/DsfDopAudioPlayer.cs`: local stereo DSF-to-DoP
+- `HyperFidel/Audio/DsfAudioPlayer.cs`: native DSF-to-DSD path
+- `HyperFidel/Compatibility/Linux/DsfDopAudioPlayer.cs`: local stereo DSF-to-DoP
   path for direct ALSA. It preserves the DSF payload, alternates `0x05`/`0xFA`
   marker bytes, derives the PCM carrier as DSD rate divided by 16, and bypasses
   volume, ReplayGain, boost, and equalizer processing. Its ALSA `S32_LE` frame
@@ -746,55 +746,55 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   significant byte. Direct ALSA DSF startup first tries the hardware-advertised
   `DSD_U32_BE` format at DSD-rate/32 and falls back to `S32_LE` DoP at
   DSD-rate/16.
-- `HyperFi/Compatibility/Linux/RemoteDsfDopAudioPlayer.cs`: matching Linux DoP
+- `HyperFidel/Compatibility/Linux/RemoteDsfDopAudioPlayer.cs`: matching Linux DoP
   path for authenticated HTTP-range DSF streams. It incrementally reads the
   remote planar DSF blocks and applies the same direct-ALSA marker framing.
-- `HyperFi/Audio/RemoteDsfAudioPlayer.cs`: native DSF-to-DSD path for
-  authenticated HyperFi Server streams. It reads DSF headers and audio blocks
+- `HyperFidel/Audio/RemoteDsfAudioPlayer.cs`: native DSF-to-DSD path for
+  authenticated HyperFidel Server streams. It reads DSF headers and audio blocks
   through HTTP byte ranges and feeds the existing ASIO/cwASIO DSD stream without
   downloading the complete file first. Transport text may claim native DSD only
   when this player or the local native DSD players are actually active.
-- `HyperFi/Audio/DffAudioPlayer.cs`: native DFF/DSDIFF-to-DSD path
-- `HyperFi/Audio/RemoteDffAudioPlayer.cs`: native uncompressed DFF/DSDIFF-to-DSD
-  path for authenticated HyperFi Server streams. It parses the remote `FRM8`,
+- `HyperFidel/Audio/DffAudioPlayer.cs`: native DFF/DSDIFF-to-DSD path
+- `HyperFidel/Audio/RemoteDffAudioPlayer.cs`: native uncompressed DFF/DSDIFF-to-DSD
+  path for authenticated HyperFidel Server streams. It parses the remote `FRM8`,
   `PROP`, and `DSD` chunks through HTTP byte ranges, rejects DST-compressed DFF,
   bit-reverses the DSD payload like the local DFF player, and feeds ASIO/cwASIO
   without downloading the complete file first.
-- `HyperFi/Audio/WasapiAudioPlayer.cs`: exclusive-mode WASAPI PCM path; converts
+- `HyperFidel/Audio/WasapiAudioPlayer.cs`: exclusive-mode WASAPI PCM path; converts
   DSD sources to PCM in real time and selects the highest supported output
   sample rate up to the source rate plus the highest supported output precision
-- `HyperFi/Audio/WasapiDeviceProvider.cs`: WASAPI devices and capability queries
-- `HyperFi/WindowsMediaTransportService.cs`: optional Windows System Media
+- `HyperFidel/Audio/WasapiDeviceProvider.cs`: WASAPI devices and capability queries
+- `HyperFidel/WindowsMediaTransportService.cs`: optional Windows System Media
   Transport Controls host for global media buttons, lock-screen/system-overlay
   metadata, artwork, playback status, and timeline updates; its `MediaPlayer`
-  instance is control-only and never outputs HyperFi audio
-- `HyperFi/LibraryCatalogProviders.cs`: shared catalog abstraction for local and
-  remote HyperFi libraries. `ILibraryCatalogProvider` exposes common artist,
+  instance is control-only and never outputs HyperFidel audio
+- `HyperFidel/LibraryCatalogProviders.cs`: shared catalog abstraction for local and
+  remote HyperFidel libraries. `ILibraryCatalogProvider` exposes common artist,
   album, track, search, and album-artwork operations;
   `LocalLibraryCatalogProvider` maps `AudioDatabase` rows, and
-  `HyperFiServerLibraryCatalogProvider` maps `HyperFiServerClient` responses
+  `HyperFidelServerLibraryCatalogProvider` maps `HyperFidelServerClient` responses
   into the same UI-facing models so library masks can be reused instead of
   branching on local vs. server rows.
-- `HyperFi/NowPlayingMetadataProviders.cs`: reusable abstraction for the
+- `HyperFidel/NowPlayingMetadataProviders.cs`: reusable abstraction for the
   transport lyrics, artist-info, and cover views. `INowPlayingMetadataProvider`
   exposes `GetCachedLyricsAsync`/`DownloadLyricsAsync`, `GetArtistProfileAsync`,
   and `GetArtworkAsync` (the transport cover + lyrics background, returned as
   local file paths; the remote implementation downloads the server track artwork
   into the local remote-artwork cache); `LocalNowPlayingMetadataProvider`
   reads/writes the local SQLite library, and
-  `HyperFiServerNowPlayingMetadataProvider` reads/writes a remote server's
+  `HyperFidelServerNowPlayingMetadataProvider` reads/writes a remote server's
   lyrics and artist-profile caches. The client always performs the external
   LRCLIB/Wikipedia/Last.fm fetch and uploads the result; the server only caches
   it. `MainWindow` selects the provider for the currently playing track
   (`_currentNowPlayingProvider`) so lyrics and artist info work identically for
   local and remote tracks. For a remote track the now-playing artist button
-  navigates within that track's server library (`OpenHyperFiArtistAlbumsAsync`
-  using the row's `HyperFiServer` and `ArtistId`), not the local album view.
-- `HyperFi/MainWindow.*.cs`: `MainWindow` remains one Avalonia partial class,
+  navigates within that track's server library (`OpenHyperFidelArtistAlbumsAsync`
+  using the row's `HyperFidelServer` and `ArtistId`), not the local album view.
+- `HyperFidel/MainWindow.*.cs`: `MainWindow` remains one Avalonia partial class,
   split into domain-sized partials without changing ownership or runtime
   behavior. `MainWindow.xaml.cs` is intentionally reduced to shared state:
   fields, nested types/records, and the constructor. Domain partials (all under
-  `HyperFi/`): `MainWindow.Dashboard.cs`, `MainWindow.History.cs`,
+  `HyperFidel/`): `MainWindow.Dashboard.cs`, `MainWindow.History.cs`,
   `MainWindow.Radio.cs`, `MainWindow.Podcasts.cs`, `MainWindow.Playlists.cs`,
   `MainWindow.GenreCloud.cs`, `MainWindow.InfiniteMix.cs`,
   `MainWindow.Similarity.cs`, `MainWindow.AirPlay.cs`,
@@ -807,10 +807,10 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   `MainWindow.AlbumDetail.cs`, `MainWindow.ArtistInfo.cs`,
   `MainWindow.Sidebar.cs`, `MainWindow.Navigation.cs`, `MainWindow.Playback.cs`,
   `MainWindow.CoverSearch.cs`, `MainWindow.Favorites.cs`, `MainWindow.Plex.cs`,
-  `MainWindow.RemoteHyperFi.cs`, `MainWindow.LibraryViews.cs`,
+  `MainWindow.RemoteHyperFidel.cs`, `MainWindow.LibraryViews.cs`,
   `MainWindow.TableRendering.cs`, `MainWindow.Startup.cs`,
   `MainWindow.ContentLoading.cs`, `MainWindow.EntityFavorites.cs`,
-  `MainWindow.NavigationLinks.cs`, `MainWindow.HyperFiNavigation.cs`,
+  `MainWindow.NavigationLinks.cs`, `MainWindow.HyperFidelNavigation.cs`,
   `MainWindow.ContextMenus.cs`, `MainWindow.Helpers.cs`,
   `MainWindow.RatingColumns.cs`, `MainWindow.ArtistAlbums.cs`, and
   `MainWindow.AppShell.cs`. The largest domains are themselves split into
@@ -823,40 +823,40 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   (`CreateFavoriteColumn`, `CreateSourceBadgeColumn`, `CreateEntityLinkColumn`,
   `GetContentRowSortMemberPath`) in dedicated helper/rendering partials rather
   than a single domain. Pure, UI-free logic must live in a standalone testable
-  type instead (for example `HyperFi.Controls.ArtworkAccentColor` or
-  `HyperFi.Controls.ListeningTrendGeometry`), covered by `HyperFi.Tests`.
-- `HyperFi/Audio/WindowsEndpointVolumeSynchronizer.cs`: bidirectional
+  type instead (for example `HyperFidel.Controls.ArtworkAccentColor` or
+  `HyperFidel.Controls.ListeningTrendGeometry`), covered by `HyperFidel.Tests`.
+- `HyperFidel/Audio/WindowsEndpointVolumeSynchronizer.cs`: bidirectional
   synchronization between the transport volume slider and the selected Windows
   render endpoint's master volume
-- `HyperFi.Core/Audio/ReplayGain.cs` and `ReplayGainMode.cs`: parse persisted
+- `HyperFidel.Core/Audio/ReplayGain.cs` and `ReplayGainMode.cs`: parse persisted
   track/album gain values, select the configured fallback mode, and calculate
   the linear PCM gain factor
-- `HyperFi.Core/Audio/EqualizerApoParser.cs`: imports Equalizer APO and AutoEQ
+- `HyperFidel.Core/Audio/EqualizerApoParser.cs`: imports Equalizer APO and AutoEQ
   preamp, parametric filter, and `GraphicEQ` text profiles. Recognized malformed
   directives, unsupported filter parameters and non-finite values reject the
   complete import. Explicit zero-gain profiles are valid. Files are limited to
   four MiB and profiles to 512 active filters. Parametric imports accept `Fc`,
   `Gain` and `Q`; `BW Oct` is rejected rather than silently using a default Q.
-- `HyperFi.Core/Audio/ParametricEqualizer.cs`: stereo biquad PCM equalizer with
+- `HyperFidel.Core/Audio/ParametricEqualizer.cs`: stereo biquad PCM equalizer with
   a short crossfade when the active profile changes and filter-state reset after
   seeks
-- `HyperFi.Core/Audio/CrossfeedProcessor.cs`: optional headphone crossfeed
+- `HyperFidel.Core/Audio/CrossfeedProcessor.cs`: optional headphone crossfeed
   applied after ReplayGain and the equalizer in the ASIO and WASAPI PCM paths,
   wired through `ICrossfeedAudioPlayer`. It is off by default, must keep
   correlated (mono) content centered, must not change native DSD output, and
   must reset its filter history after a seek
-- `HyperFi.Core/Audio/StreamingLoudnessNormalizer.cs`: optional slow, bounded
+- `HyperFidel.Core/Audio/StreamingLoudnessNormalizer.cs`: optional slow, bounded
   loudness matching applied last in the ASIO and WASAPI PCM paths, wired through
   `ILoudnessNormalizerAudioPlayer`. It is off by default, runs **only** for
   radio and podcast streams (never library tracks, which use ReplayGain, or
   native DSD), must not pump on short passages, and must reset after a seek
-- `HyperFi/Controls/EqualizerResponseControl.cs`: logarithmic frequency-response
+- `HyperFidel/Controls/EqualizerResponseControl.cs`: logarithmic frequency-response
   graph for the editable parametric equalizer profile in Settings, including a
   20 Hz–20 kHz scale and numbered dashed markers that map filter frequencies to
   dynamic editor rows. Marker bubbles sit below the scale; colliding numbers
   remain bottom-aligned and shift horizontally with a short leader instead of
   moving upward.
-- `HyperFi/Controls/InitialsAvatar.cs`: reusable `TemplatedControl` placeholder
+- `HyperFidel/Controls/InitialsAvatar.cs`: reusable `TemplatedControl` placeholder
   for missing album/artist artwork. It derives one or two initials plus a
   deterministic diagonal gradient (seeded from the display name) so empty cover
   slots look intentional instead of flat grey. Its default template lives in
@@ -870,20 +870,20 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   complete source outcomes, zero displayed rows, configured sources and the
   original reload/detail exclusion guard. Its localized text refers to this view
   and suggests filters/source setup, not a definitive empty catalog. Settings
-  routes server-only profiles to HyperFiServers and others to Library.
+  routes server-only profiles to HyperFidelServers and others to Library.
   Navigation clearing hides both empty and failed-load notices. Empty guidance
   also retains the coordinator Request that published its result. Version,
   generation and cancellation must remain current; new load admission and
   catalog invalidation refresh visibility. Watcher changes do this in their
   existing coalesced dispatcher pass, never on the worker.
 
-- The empty-library sidebar hint offers localized Directories, HyperFi servers
+- The empty-library sidebar hint offers localized Directories, HyperFidel servers
   and Output device actions through `MainWindow.Settings.cs`. They open the
-  existing Library, HyperFiServers and AudioDevice sections of embedded
+  existing Library, HyperFidelServers and AudioDevice sections of embedded
   Settings. The output entry shares the transport Settings action. The row has
   no height cap or transition; both captions wrap and provide explicit
   accessible names. Existing source visibility rules hide the hint when a local
-  folder or HyperFi Server is configured. The navigation ListBox uses Continue
+  folder or HyperFidel Server is configured. The navigation ListBox uses Continue
   tab traversal so all nested setup buttons are reachable with Tab/Shift+Tab and
   activate through normal Enter handling rather than being skipped by the
   default single-entry tab policy. The setupAction class adds focus-visible
@@ -911,32 +911,32 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   the existing create/configure/delete actions. Their captions wrap with bounded
   widths and flexible heights; selection and callbacks are unchanged.
 
-- `HyperFi/Controls/StatusBadge.cs`: small pill indicator (`TemplatedControl`,
+- `HyperFidel/Controls/StatusBadge.cs`: small pill indicator (`TemplatedControl`,
   default template in `App.axaml`) with a coloured dot and short label, driven
   by `Text` and a `State` (`StatusBadgeState.Ok`/`Warning`/`Off`). Settings uses
   it to surface FFmpeg, Steinberg ASIO, cwASIO, and MCP server availability;
   `SettingsView` populates the badges in `UpdateSubsystemStatusBadges()` /
-  `UpdateMcpStatusBadge()`. Each HyperFi Server and Plex server row also carries
+  `UpdateMcpStatusBadge()`. Each HyperFidel Server and Plex server row also carries
   a live connection badge probed asynchronously (`CheckServerStatusAsync` +
-  `ProbeHyperFiServerAsync`/`ProbePlexServerAsync`), so opening Settings never
+  `ProbeHyperFidelServerAsync`/`ProbePlexServerAsync`), so opening Settings never
   blocks on network calls; pending probes are cancelled per-list on rebuild and
   in `Deactivate()`. When a probe succeeds the timestamp is persisted through
   `ServerConnectionStore`; when it fails the row badge shows "Unreachable" and a
   muted detail line reports the last successful connection (or "Never
   connected").
-- `HyperFi/ServerConnectionStore.cs`: standalone JSON store
-  (`%LOCALAPPDATA%\HyperFi\server-status.json`) mapping a server ID to the Unix
+- `HyperFidel/ServerConnectionStore.cs`: standalone JSON store
+  (`%LOCALAPPDATA%\HyperFidel\server-status.json`) mapping a server ID to the Unix
   timestamp of its last successful connection. Kept separate from
   `settings.json` so recording a connection never contends with the
   settings-save flow.
-- `HyperFi/RemoteServerCache.cs`: single source of truth for the remote-server
+- `HyperFidel/RemoteServerCache.cs`: single source of truth for the remote-server
   caches (`remote-artworks`, `remote-track-cache`, `remote-folder-cache`).
   Exposes the per-server track-list/folder-track cache file paths (used by
   `MainWindow`), `GetTotalSizeBytes()`, `ClearAll()`, and `ClearServer(server)`
   (clears the server's hashed track/folder caches plus its `track-art-<id>-*` /
   `artist-info-<id>-*` artwork). Settings shows the total size and offers a
   per-server "Clear cache" button and a clear-all button.
-- Remote server compatibility: `HyperFiServerClient.GetCapabilitiesAsync` probes
+- Remote server compatibility: `HyperFidelServerClient.GetCapabilitiesAsync` probes
   whether the newer endpoints exist (`/api/tracks/facets`, `/api/albums/recent`,
   `/api/tracks/{id}/waveform`) by sending an unsupported method and reading
   `405` (route exists) vs `404` (missing) — every server reports the same
@@ -951,7 +951,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   view. Settings additionally exposes separate per-server **Scan library** and
   **Calculate ReplayGain** row actions. Both trigger only their owning server
   and display operation-specific progress in the row until completion.
-- `HyperFi/EqualizerProfileNameDialog.*`: themed unique-name dialog used when
+- `HyperFidel/EqualizerProfileNameDialog.*`: themed unique-name dialog used when
   creating a new persisted equalizer profile
 - `Native/AsioBridge/bridge.cpp`: shared Steinberg/cwASIO initialization,
   PCM/DSD ring buffers, and callback
@@ -959,7 +959,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   vendored cwASIO
 - `third_party/cwasio/`: pinned MIT-licensed cwASIO host and compatibility
   sources
-- `HyperFi/SettingsView.*`: two-column settings view embedded in the main
+- `HyperFidel/SettingsView.*`: two-column settings view embedded in the main
   content area, with navigation on the left and the selected section on the
   right; the output-profile dropdown shows a compact `Backend  ·  Device`
   summary line (`OutputProfileSummaryTextBlock`) beneath it when a profile is
@@ -972,23 +972,23 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   tool `UniformGrid` has `Rows="19"` for 37 tools (2 columns). The MCP section
   also holds the **Web browsing** configuration (enable toggle, SearXNG URL,
   block-private-networks toggle, and timeout/response-size/result limits) edited
-  via `WebBrowsingValue` Remote HyperFi Server connection management belongs
-  under its own **HyperFi Server** navigation item in the **BIBLIOTHEK**
+  via `WebBrowsingValue` Remote HyperFidel Server connection management belongs
+  under its own **HyperFidel Server** navigation item in the **BIBLIOTHEK**
   settings group, not under local directories or Streaming.
-- `HyperFi/Mcp/McpPlayerBridge.cs`: thread-safe bridge between the MCP layer and
+- `HyperFidel/Mcp/McpPlayerBridge.cs`: thread-safe bridge between the MCP layer and
   Avalonia's UI thread; `MainWindow` populates all delegate properties at
   startup; `OnUiAsync` dispatches to `Dispatcher.UIThread` at
   `DispatcherPriority.Normal`; records `PlayerState` and `QueueEntry` are
   returned by the state and queue delegates; `DisabledTools`
   (`HashSet<string>?`) and `IsToolEnabled(name)` control per-tool gating;
   `RefreshPlaylistsFunc` triggers `LoadNavPlaylists` after MCP creates a
-  playlist; `WebBrowsing` (`HyperFi.Web.WebBrowsingService`) backs the web
-  tools; `GetHyperFiServersFunc` returns the configured remote HyperFi Servers
-  and `ResolveRemoteTrackFunc` turns an `hyperfi://serverId/track/trackId`
+  playlist; `WebBrowsing` (`HyperFidel.Web.WebBrowsingService`) backs the web
+  tools; `GetHyperFidelServersFunc` returns the configured remote HyperFidel Servers
+  and `ResolveRemoteTrackFunc` turns an `hyperfidel://serverId/track/trackId`
   reference into the real playable stream URL (registering the track's metadata
-  in `_hyperfiTracksByUrl`), so MCP and AI-chat playback of remote tracks work
+  in `_hyperfidelTracksByUrl`), so MCP and AI-chat playback of remote tracks work
   without exposing the server API key
-- `HyperFi.Core/Web/WebBrowsingService.cs` (+ `WebBrowsingOptions`,
+- `HyperFidel.Core/Web/WebBrowsingService.cs` (+ `WebBrowsingOptions`,
   `HtmlContentExtractor`): the controlled internet layer used by both MCP and
   the AI chat. `SearchAsync` queries the configured SearXNG JSON API (trusted
   endpoint, not SSRF-guarded, so a LAN/Docker instance works after the user
@@ -999,22 +999,22 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   DNS-rebinding window), manual redirect following with a limit, response
   size-cap, non-text content refused (no arbitrary downloads), per-request
   timeout, optional domain allowlist, and per-request audit logging to
-  `%LOCALAPPDATA%\HyperFi\logs\web-browsing.log`. Configured through
+  `%LOCALAPPDATA%\HyperFidel\logs\web-browsing.log`. Configured through
   `AppSettings.WebBrowsing` (`WebBrowsingOptions`); `MainWindow` creates the
   service, wires the logger, and updates `Options` on settings save.
-- `HyperFi/Mcp/McpTools.cs`: 37 MCP tools annotated with `[McpServerToolType]`
+- `HyperFidel/Mcp/McpTools.cs`: 37 MCP tools annotated with `[McpServerToolType]`
   and `[McpServerTool]`; read-only tools are marked
   `ReadOnly = true, Idempotent = true`; every tool guards with
   `bridge.IsToolEnabled(name)` and returns `"Tool is disabled."` when off;
   `get_current_time` returns the current local/UTC date, time, day of week, and
   time-zone name; the web tools `search_web`, `fetch_page`, and
   `fetch_page_as_markdown` delegate to `bridge.WebBrowsing` (a
-  `HyperFi.Web.WebBrowsingService`); `search_library` calls
+  `HyperFidel.Web.WebBrowsingService`); `search_library` calls
   `TrackSearchIndex.SearchByCategory` then `AudioDatabase.OpenDefault()` for id
-  resolution, and additionally queries every configured remote HyperFi Server
-  through `HyperFiServerClient.SearchFullAsync`
+  resolution, and additionally queries every configured remote HyperFidel Server
+  through `HyperFidelServerClient.SearchFullAsync`
   (`AppendRemoteSearchResultsAsync`), emitting remote tracks as opaque
-  `hyperfi://serverId/track/trackId` references (`BuildHyperFiTrackReference`)
+  `hyperfidel://serverId/track/trackId` references (`BuildHyperFidelTrackReference`)
   rather than credential-bearing stream URLs;
   `play`/`queue_append`/`queue_play_next`/`replace_queue` first pass each path
   through `ResolvePlayablePathAsync` (→ `bridge.ResolveRemoteTrackFunc`) so a
@@ -1030,7 +1030,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   `SmartPlaylistCriteria` JSON; `clear_queue` empties the queue without stopping
   the current track; `replace_queue` atomically replaces the queue and starts
   playback of the first new track
-- `HyperFi/Mcp/McpServerService.cs`: starts/stops an embedded Kestrel HTTP/SSE
+- `HyperFidel/Mcp/McpServerService.cs`: starts/stops an embedded Kestrel HTTP/SSE
   server using `WebApplication`; binds to `http://localhost:{port}` by default
   or `http://0.0.0.0:{port}` only when `McpNetworkAccessEnabled` is explicitly
   enabled; network mode requires `Authorization: Bearer <McpAccessToken>` and
@@ -1038,7 +1038,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   logging is cleared so Kestrel output does not appear in the player console;
   `IAsyncDisposable` — `DisposeAsync` delegates to `StopAsync`
 - Mobile radio and podcast browsing uses
-  `HyperFi/MainWindow.MobileRemote.Media.cs` and dispatcher-bound bridge
+  `HyperFidel/MainWindow.MobileRemote.Media.cs` and dispatcher-bound bridge
   adapters. Authenticated `GET /remote/api/media/radio` and
   `GET /remote/api/media/podcasts` accept optional `q` (maximum 250 characters).
   An empty query reads saved stations or pinned podcasts off-thread; a search
@@ -1048,7 +1048,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   episodes with optional publication dates/durations. Unknown podcasts return
   404; provider errors return a sanitized 502 rather than an empty success.
   Browsing responses are not cached.
-- `HyperFi/Remote/MobileRemoteMediaCatalog.cs` retains at most 2,048 opaque GUID
+- `HyperFidel/Remote/MobileRemoteMediaCatalog.cs` retains at most 2,048 opaque GUID
   identities in memory on the dispatcher. Sources remain desktop-owned: DTOs
   contain no feed/audio URLs, paths or credentials. FIFO eviction never rebinds
   an old ID. Episode records retain the original podcast, and podcast search
@@ -1171,15 +1171,15 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   fallback, with a 1280-pixel JPEG cap. A single navigation row offers Now
   playing, Artists, Albums and More, whose menu contains the remaining
   destinations.
-- `HyperFi/AI/AiChatSettings.cs`: persisted configuration for the embedded AI
+- `HyperFidel/AI/AiChatSettings.cs`: persisted configuration for the embedded AI
   chat (endpoint URL, optional API key, model name, max tokens); stored as
   `AppSettings.AiChat`
-- `HyperFi/AI/AiEndpointService.cs`: validates credential-free absolute HTTP/S
+- `HyperFidel/AI/AiEndpointService.cs`: validates credential-free absolute HTTP/S
   base URLs and queries the OpenAI-compatible `/models` endpoint with the
   optional bearer token. It accepts standard `data[].id` and Ollama-compatible
   `models[].name`/`model` response shapes and never exposes response bodies,
   endpoint URLs, or credentials through Settings errors.
-- `HyperFi/AI/AiChatService.cs`: HTTP client for OpenAI-compatible
+- `HyperFidel/AI/AiChatService.cs`: HTTP client for OpenAI-compatible
   `/v1/chat/completions` endpoints using streaming SSE; internal tool-call loop
   accumulates streamed function arguments, executes tools via `AiToolExecutor`,
   and continues until the model emits `stop`; returns
@@ -1191,10 +1191,10 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   refresh and connection-test actions. The persisted free-form model name stays
   independent of the transient list so compatibility endpoints without a model
   catalog remain usable.
-- `HyperFi/AI/AiToolDefinitions.cs`: builds the OpenAI function-calling schema
-  (`JsonObject` list) for all 37 HyperFi tools; definitions match the method
+- `HyperFidel/AI/AiToolDefinitions.cs`: builds the OpenAI function-calling schema
+  (`JsonObject` list) for all 37 HyperFidel tools; definitions match the method
   signatures in `McpTools.cs`
-- `HyperFi/AI/AiToolExecutor.cs`: dispatches tool calls received from the LLM to
+- `HyperFidel/AI/AiToolExecutor.cs`: dispatches tool calls received from the LLM to
   `McpTools` methods by name; parses JSON arguments from the model; no MCP
   transport involved — tools are invoked directly against the bridge and
   database
@@ -1204,8 +1204,8 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   filters use an inclusive local-calendar `addedFrom`/`addedTo` contract and are
   converted to a half-open Unix timestamp range. Returned tracks and albums
   include release year and library-addition date; remote playback identities
-  remain opaque `hyperfi://` references.
-- `HyperFi/AI/AiChatView.axaml/.cs`: embedded chat UI; user bubbles right-
+  remain opaque `hyperfidel://` references.
+- `HyperFidel/AI/AiChatView.axaml/.cs`: embedded chat UI; user bubbles right-
   aligned (accent color), assistant bubbles left-aligned (surface brush),
   tool-call status centered and muted; streams tokens into the last assistant
   message; Enter sends, Shift+Enter inserts a newline; Clear button wipes
@@ -1224,48 +1224,48 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   as a manual scroll-up and disable auto-scroll. The view is hosted in the
   bounded content row (`Grid.Row="2"`), never spanning the Auto filter row,
   so its `ScrollViewer` is measured with a bounded height.
-- `HyperFi/AI/MarkdownTextBlock.cs`: lightweight Markdown renderer for assistant
+- `HyperFidel/AI/MarkdownTextBlock.cs`: lightweight Markdown renderer for assistant
   messages. Block level: headings, bullet/numbered lists, block quotes,
   dividers, and fenced code blocks (rendered verbatim). Inline level
   (`AppendInlines`): `**bold**`/`__bold__`, `*italic*`/`_italic_`, `` `code` ``,
   and `[label](url)` become styled `Run`s — applied to paragraphs, list items,
   and quotes alike, so no raw `**markers**` leak through. Code blocks use
   `CreateLiteralText` so inline Markdown is not interpreted inside them.
-- `HyperFi/ThemeManager.cs`: sets global Avalonia resources for light and dark
+- `HyperFidel/ThemeManager.cs`: sets global Avalonia resources for light and dark
   themes
-- `HyperFi/Controls/DataGridColumnWidthStore.cs`: validates, captures, and
+- `HyperFidel/Controls/DataGridColumnWidthStore.cs`: validates, captures, and
   restores per-table pixel widths
-- `HyperFi/Controls/DataGridColumnOrderStore.cs`: captures and restores
+- `HyperFidel/Controls/DataGridColumnOrderStore.cs`: captures and restores
   identified data-column display order while retaining fixed-column slots
-- `HyperFi/Controls/DataGridColumnChooser.cs`: opens the themed `MenuFlyout` for
+- `HyperFidel/Controls/DataGridColumnChooser.cs`: opens the themed `MenuFlyout` for
   column visibility at the clicked header; entries remain open while toggling
   multiple columns
-- `HyperFi/Localization/*`: language model and localized German, English,
+- `HyperFidel/Localization/*`: language model and localized German, English,
   French, Spanish, Russian, Simplified Chinese, and Hindi strings
-- `HyperFi/StartupWindow.*`: lightweight splash screen shown during initial
+- `HyperFidel/StartupWindow.*`: lightweight splash screen shown during initial
   database preparation and migration
-- `HyperFi/Assets/HyperFi_Logo.png`: embedded full logo used by the splash
+- `HyperFidel/Assets/HyperFidel_Logo.png`: embedded full logo used by the splash
   screen and About dialog in the dark theme
-- `HyperFi/Assets/hyperfi_about_light.png`: embedded full logo used by the splash
+- `HyperFidel/Assets/hyperfidel_about_light.png`: embedded full logo used by the splash
   screen and About dialog in the light theme
-- `HyperFi/Assets/DashboardLogo.png`: embedded program wordmark used at the top of
+- `HyperFidel/Assets/DashboardLogo.png`: embedded program wordmark used at the top of
   the main sidebar in the dark theme
-- `HyperFi/Assets/DashboardLogo.png`: embedded program wordmark used at the top of
+- `HyperFidel/Assets/DashboardLogo.png`: embedded program wordmark used at the top of
   the main sidebar in both themes
-- `HyperFi/Assets/HyperFi.ico`: multi-resolution application and window icon
+- `HyperFidel/Assets/HyperFidel.ico`: multi-resolution application and window icon
   generated from `Logo/icon.png`
-- The process uses the explicit Windows AppUserModelID `HyperFi.AudioPlayer`;
+- The process uses the explicit Windows AppUserModelID `HyperFidel.AudioPlayer`;
   the startup window is excluded from the taskbar so the main window owns the
   taskbar identity
-- `HyperFi/CrashLogger.cs`: writes unhandled UI, AppDomain, and task exception
-  reports to `%LOCALAPPDATA%\HyperFi\logs\`
-- `HyperFi/DailyHistoryDialog.*`: themed modal dashboard dialog that lists
+- `HyperFidel/CrashLogger.cs`: writes unhandled UI, AppDomain, and task exception
+  reports to `%LOCALAPPDATA%\HyperFidel\logs\`
+- `HyperFidel/DailyHistoryDialog.*`: themed modal dashboard dialog that lists
   playback-history entries for a selected calendar day and returns track, album,
   or artist navigation actions to the main window. A source-filter chip row
   (`HistorySource`: Track/Radio/Podcast/Remote/Plex, classified via
   `ClassifySource`) toggles which categories are shown; only categories present
   that day get a chip. Album/artist links are available for local, remote
-  HyperFi Server, and Plex entries; Plex clickability requires the stored Plex
+  HyperFidel Server, and Plex entries; Plex clickability requires the stored Plex
   context (album/artist rating keys) and a still-configured Plex server
 - Plex page, child and folder requests retain their own cancellation identity,
   copied connection, token, library section, sidebar identity and enclosing
@@ -1294,38 +1294,38 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   text and restores root paging. Top-level cancellation detaches top/cloud/Plex
   sources before callbacks so newly admitted replacements cannot be cancelled by
   older cleanup.
-- `HyperFi/SettingsStore.cs`: persists non-secret settings in
-  `%LOCALAPPDATA%\HyperFi\settings.json`, overlays secrets from
+- `HyperFidel/SettingsStore.cs`: persists non-secret settings in
+  `%LOCALAPPDATA%\HyperFidel\settings.json`, overlays secrets from
   `ApplicationCredentialStore`, and migrates legacy plaintext JSON credentials
-- `HyperFi/ApplicationCredentialStore.cs`: the single encrypted current-user
+- `HyperFidel/ApplicationCredentialStore.cs`: the single encrypted current-user
   credential container for Last.fm (artist info, API secret, and scrobbling
-  session key), Fanart.tv, AI Chat, HyperFi Server, Plex, and generic streaming
+  session key), Fanart.tv, AI Chat, HyperFidel Server, Plex, and generic streaming
   credentials. Windows uses current-user DPAPI; Linux and macOS use AES-GCM with
   a separate random key restricted to user read/write. Last.fm scrobbling lives
-  in `HyperFi/Scrobbling/` (`LastFmScrobblingService`, `PendingScrobbleStore`);
+  in `HyperFidel/Scrobbling/` (`LastFmScrobblingService`, `PendingScrobbleStore`);
   it must never block or fail playback, and its settings are configured under
   **Artist information**.
-- `HyperFi.Core/Streaming/IStreamingCatalog.cs` and
+- `HyperFidel.Core/Streaming/IStreamingCatalog.cs` and
   `IStreamingPlaybackProvider.cs`: provider-neutral contracts for future
   streaming catalog and playback integrations
-- `HyperFi/Streaming/QobuzStreamingProvider.cs`: inactive Qobuz scaffold; do not
+- `HyperFidel/Streaming/QobuzStreamingProvider.cs`: inactive Qobuz scaffold; do not
   add unofficial endpoints, enable it only with approved partner API
   documentation
-- `HyperFi/Streaming/WindowsStreamingCredentialStore.cs`: compatibility facade
+- `HyperFidel/Streaming/WindowsStreamingCredentialStore.cs`: compatibility facade
   that stores future provider secrets through `ApplicationCredentialStore`
-- `HyperFi/PlaylistProviders.cs`: provider-neutral playlist persistence for
+- `HyperFidel/PlaylistProviders.cs`: provider-neutral playlist persistence for
   local SQLite mixed playlists plus retained legacy remote-server operations.
   Current track, album, and folder context menus always target the local mixed
-  playlist list; remote selections persist stable `hyperfi://` references while
+  playlist list; remote selections persist stable `hyperfidel://` references while
   their queue paths remain immediately playable authenticated URLs.
-- `HyperFi.Core/Streaming/PlexServerClient.cs`: queries configured Plex Media
+- `HyperFidel.Core/Streaming/PlexServerClient.cs`: queries configured Plex Media
   Servers, exposes only music library sections (`type=artist`), pages
   artists/albums/tracks, resolves drill-down children, browses folders lazily,
   and builds authenticated direct-part URLs. `PlexMediaItem` also carries the
   optional `ParentRatingKey` (album) and `GrandparentRatingKey` (artist) so a
   played Plex track can record a stable album/artist context in playback history
-- `HyperFi.Core/Streaming/HyperFiServerClient.cs`: HTTP client for a remote
-  HyperFi Server; methods load artists, a single artist profile
+- `HyperFidel.Core/Streaming/HyperFidelServerClient.cs`: HTTP client for a remote
+  HyperFidel Server; methods load artists, a single artist profile
   (`GetArtistAsync`), aggregate library totals (`GetLibrarySummaryAsync`),
   albums by artist, albums, tracks by album, all tracks, tracks by ID list
   (`GetTracksByIdsAsync`), track facet rows (`GetTrackFacetsAsync`), lightweight
@@ -1351,7 +1351,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   or Avalonia's image loader
 - The main sidebar library accordion is labelled **Library**/**Bibliothek**. Its
   shared Genre Cloud view merges compact snapshots from the local library and
-  every configured HyperFi Server; remote recommendations retain their server
+  every configured HyperFidel Server; remote recommendations retain their server
   context and client-side favorite state. Older servers fall back to
   `/api/tracks/facets` when `/api/genres/cloud` is unavailable. Foreground cloud
   loads own their admission token, taxonomy, catalog/source identity, enclosing
@@ -1371,42 +1371,42 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   Folder structure, and a nested local Playlists group. The complete **Local**
   child node (and its rows/playlists) is hidden whenever no local library
   directory is configured (`AppSettings.LibraryPaths` empty). When neither a
-  local directory nor any HyperFi Server is configured, a hint row
+  local directory nor any HyperFidel Server is configured, a hint row
   (`LibraryEmptyHintItem`, `L_LibraryEmptyHint`) is shown directly under the
   Library header telling the user to add local directories or one or more
-  HyperFi Servers in Settings. The hint disappears immediately when a directory
+  HyperFidel Servers in Settings. The hint disappears immediately when a directory
   or server is added because `ApplyLibrarySectionVisibility` re-runs on every
   settings save, navigation rebuild, and the live directory-change callback.
-  Configured remote HyperFi Server entries are rendered in that same Library
+  Configured remote HyperFidel Server entries are rendered in that same Library
   accordion, after the local media rows, as one collapsible server-name row
   followed by Artists, Albums, Tracks, and Folder structure. Legacy server
   playlists are not displayed in the current sidebar; all sources use the shared
   mixed playlist list. The local Playlists group is a child of the Local node,
   indented to align with the local Artists/Albums/Tracks/Folder rows, and its
-  entries are indented one level deeper. There is no separate HyperFi Server
-  sidebar accordion or separate HyperFi Server sidebar visibility setting;
+  entries are indented one level deeper. There is no separate HyperFidel Server
+  sidebar accordion or separate HyperFidel Server sidebar visibility setting;
   `ShowLocalLibrarySection` and `IsLocalLibrarySectionExpanded` control the
-  complete Library accordion, including remote HyperFi Server rows.
+  complete Library accordion, including remote HyperFidel Server rows.
   `IsLocalMediaLibraryGroupExpanded` persists the Local child group state,
   `IsPlaylistsSectionExpanded` persists the local Playlists child group state,
-  `CollapsedHyperFiServerLibraryGroups` persists collapsed server child groups;
-  `CollapsedHyperFiServerPlaylistGroups` is retained only for persisted settings
+  `CollapsedHyperFidelServerLibraryGroups` persists collapsed server child groups;
+  `CollapsedHyperFidelServerPlaylistGroups` is retained only for persisted settings
   compatibility. Remote Artists, Albums, and Tracks reuse the **same** local
   table/artwork column masks (`ApplyColumns("Artists"/"Albums"/"Tracks")`),
-  per-entity Favorites-only toggle, and A-Z index as the local library. There are no separate `HyperFi*` column masks.
+  per-entity Favorites-only toggle, and A-Z index as the local library. There are no separate `HyperFidel*` column masks.
   Server artwork hydrates lazily as rows or artwork cards become visible;
   downloaded remote artwork is cached client-side under
-  `%LOCALAPPDATA%\HyperFi\remote-artworks\`. In the shared Artists view and
-  global search, local and HyperFi Server artists with the same
+  `%LOCALAPPDATA%\HyperFidel\remote-artworks\`. In the shared Artists view and
+  global search, local and HyperFidel Server artists with the same
   `ArtistNameNormalizer.CreateComparisonKey` are represented by one
   `UnifiedArtist` row with an `Local+OS` source badge. Opening that row loads and
   combines the matching artist's albums from the local library and every
-  configured HyperFi Server; each album row must retain its own source IDs and
-  `HyperFiServer` context so album navigation, artwork, and favorites continue
+  configured HyperFidel Server; each album row must retain its own source IDs and
+  `HyperFidelServer` context so album navigation, artwork, and favorites continue
   to route correctly. The unified row uses the best available cached biography
   and image from any matching identity. New profile downloads and manual artist
   image selections are synchronized to every matching local and reachable
-  HyperFi Server identity; automatic image synchronization must preserve manual
+  HyperFidel Server identity; automatic image synchronization must preserve manual
   images. Manual artist-image uploads and deletions use the same synchronized
   identity set. Opening a unified artist or logical album performs a bounded,
   best-effort artwork reconciliation: copy an existing local or remote image
@@ -1428,9 +1428,9 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   binding strategy: diagnostics showed that replacing an already-visible large
   mixed table's `ItemsSource` can stall Avalonia's UI thread during scrolling.
   Artist/album entity links and double-click navigate **within** the remote
-  library via `OpenHyperFiArtistAlbumsAsync`/`OpenHyperFiAlbumTracksAsync` (the
+  library via `OpenHyperFidelArtistAlbumsAsync`/`OpenHyperFidelAlbumTracksAsync` (the
   link handlers `ArtistLinkButton_OnClick`/`AlbumLinkButton_OnClick` dispatch by
-  `EntityType` prefix `"HyperFi"`). This requires remote rows to carry IDs:
+  `EntityType` prefix `"HyperFidel"`). This requires remote rows to carry IDs:
   remote track rows have `ArtistId`/`AlbumId`, remote album rows have
   `ArtistId`. Remote album drill-downs use the shared provider-backed
   album-track detail surface with the same album header/card, cover actions,
@@ -1439,7 +1439,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   a remote artist's album list, the detail view must initially scope tracks to
   that artist and expose the same **Show all album tracks** checkbox used by
   local album details. Persisting remote album tracks in mixed local playlists
-  uses stable `hyperfi://serverId/track/trackId` references and must never store
+  uses stable `hyperfidel://serverId/track/trackId` references and must never store
   the credential-bearing playback URL. Smart playlists work identically for
   local and remote libraries: the remote Tracks **Save smart playlist** action
   and the sidebar **Edit smart playlist** context entry persist criteria on the
@@ -1450,7 +1450,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   (`POST /api/playlists/{id}/resolve`), sending its favourite track IDs so a
   `FavoritesOnly` criterion matches the client's favourites; regular remote
   playlists still use `GetPlaylistTracksAsync`. Back navigation must capture
-  remote album details as remote states carrying the HyperFi Server navigation
+  remote album details as remote states carrying the HyperFidel Server navigation
   tag. `NavigationCaptureDecision` selects typed capture routes from a scalar
   `NavigationCaptureContext`, preserving visible search/cloud precedence,
   logical album parts and provider-bound album/artist routes. The decision owns
@@ -1543,30 +1543,30 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   Remote artist-info views must use the bound remote row/server profile data,
   not local `AudioDatabase.GetArtistById`, because server IDs can collide with
   local artist IDs. The remote artist-info rename/merge and Wikimedia image
-  actions must call the HyperFi Server API (`RenameArtistAsync`,
+  actions must call the HyperFidel Server API (`RenameArtistAsync`,
   `UploadArtistImageAsync`) and update the remote row/detail view rather than
   writing to the local database. Remote Tracks offers the same
   Genre/Audio-Type/Bitrate facet filters as local, reusing the client's
   `MatchesTrackFilters`/facet-popup logic fed by the server aggregation endpoint
   `/api/tracks/facets` (favorite state overridden with the client-side
   favorites); filtered results load via `/api/tracks/by-ids`
-  (`ResolveHyperFiTrackRowsAsync`). Typing in the header search box while a
+  (`ResolveHyperFidelTrackRowsAsync`). Typing in the header search box while a
   remote Tracks view is active shows the shared three-section search result
-  (Tracks, Albums, Artists) via `ShowHyperFiSearchResultsAsync`, backed by the
-  server `/api/search/full` endpoint (`HyperFiServerClient.SearchFullAsync` /
-  `HyperFiServerLibraryCatalogProvider.SearchFullAsync`), mirroring the local
-  `ShowSearchResultsAsync`. Result rows carry `HyperFi*` entity types so the
+  (Tracks, Albums, Artists) via `ShowHyperFidelSearchResultsAsync`, backed by the
+  server `/api/search/full` endpoint (`HyperFidelServerClient.SearchFullAsync` /
+  `HyperFidelServerLibraryCatalogProvider.SearchFullAsync`), mirroring the local
+  `ShowSearchResultsAsync`. Result rows carry `HyperFidel*` entity types so the
   shared link columns and the `SearchAlbumsDataGrid`/`SearchArtistsDataGrid`
   double-click handlers navigate within the remote library, and remote tracks
   play directly from the result list. Clearing the search box restores the
   remote Tracks list. The three search-result sections use the shared
-  accent-bordered card style for local and remote results. The facet rows live in `_hyperfiTrackFacets` while a remote
+  accent-bordered card style for local and remote results. The facet rows live in `_hyperfidelTrackFacets` while a remote
   Tracks view is active and are cleared otherwise. Remote folder tree file nodes
   must register the same `ContentRow` metadata as remote Tracks rows before
   queuing playback. This is required so the transport shows title/artist/artwork
   instead of authenticated stream URLs and enables lyrics, artist-info,
   favorite, and mixed-playlist actions. Remote folder playlist persistence must
-  convert registered server track IDs to stable `hyperfi://` references in local
+  convert registered server track IDs to stable `hyperfidel://` references in local
   SQLite, never credential-bearing stream URLs. When `/api/folders/tracks` lacks
   the newer playback metadata because an older server is connected, the client
   may batch-hydrate folder track metadata through `/api/tracks/by-ids` before
@@ -1574,16 +1574,16 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   existing local folder nodes and show the localized server-loading placeholder;
   do not display stale local tree data while the remote request is in flight.
   Cache remote folder-track lists under
-  `%LOCALAPPDATA%\HyperFi\remote-folder-cache\` and reuse them only while the
+  `%LOCALAPPDATA%\HyperFidel\remote-folder-cache\` and reuse them only while the
   server's `LibraryChangedAt` scan status timestamp matches the cached value.
   The top-level **Folder structure** view (`ShowUnifiedFolderTreeAsync`) merges
   sources into one tree: a top-level **Local** group (only when a local library
-  directory is configured and has tracks) plus one group per configured HyperFi
+  directory is configured and has tracks) plus one group per configured HyperFidel
   Server (only when it reports folder tracks), each built through
   `AddFolderRootsInto`/`BuildUnifiedFolderTree`. The sidebar item remains
-  visible whenever either local media or at least one HyperFi Server is
+  visible whenever either local media or at least one HyperFidel Server is
   configured; server-only setups must not require a local library path to open
-  this view. `FolderTag` carries an optional `HyperFiServerSettings? Server` so
+  this view. `FolderTag` carries an optional `HyperFidelServerSettings? Server` so
   remote directory nodes are resolved through the in-memory `FolderTree`
   (`_folderTreesBySource[sourceKey].AllFilePathsUnder`) instead of the local
   database — this is required because folder child nodes are built lazily and
@@ -1597,52 +1597,52 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   the Plex lazy folders use. Eagerly building the whole tree froze the UI for ~9
   s on a ~150k-track merged library. The server folder-track cache file is
   read/deserialized and written off the UI thread
-  (`LoadHyperFiFolderTracksAsync` wraps the cache I/O in `Task.Run`). The
-  per-server sidebar Folders view still uses `BuildHyperFiFolderTree`, which
-  shares the `MapHyperFiFolderTrackLites` mapping so remote folder file nodes
+  (`LoadHyperFidelFolderTracksAsync` wraps the cache I/O in `Task.Run`). The
+  per-server sidebar Folders view still uses `BuildHyperFidelFolderTree`, which
+  shares the `MapHyperFidelFolderTrackLites` mapping so remote folder file nodes
   register the same transport metadata. The unfiltered remote Tracks list is
   loaded in pages of at most 5,000 rows, matching the server cap and is likewise
-  cached under `%LOCALAPPDATA%\HyperFi\remote-track-cache\`, reused while the
+  cached under `%LOCALAPPDATA%\HyperFidel\remote-track-cache\`, reused while the
   server's `LibraryChangedAt` matches the cached value. That cache stores mapped
-  `LibraryCatalogTrack` rows with stable `hyperfi://` playback references. Its
+  `LibraryCatalogTrack` rows with stable `hyperfidel://` playback references. Its
   filename hashes only the server ID and base URL, never the API key.
   Authenticated playback URLs are rebuilt in memory after loading; client-side
   favourites are re-applied instead of trusting cached flags. Legacy
   credential-bearing track caches are cleared during migration. While a remote
   track plays, the transport lyrics and artist-info buttons work through
-  `HyperFiServerNowPlayingMetadataProvider` (see
-  `HyperFi/NowPlayingMetadataProviders.cs`): lyrics and the artist
+  `HyperFidelServerNowPlayingMetadataProvider` (see
+  `HyperFidel/NowPlayingMetadataProviders.cs`): lyrics and the artist
   biography/image are fetched on the client and cached on that track's server.
   The remote track's server and primary artist ID are carried on its
-  `ContentRow` (`HyperFiServer`, `ArtistId`); the now-playing artist button is
+  `ContentRow` (`HyperFidelServer`, `ArtistId`); the now-playing artist button is
   enabled for a remote track and navigates within that track's server library
-  (`OpenHyperFiArtistAlbumsAsync`) rather than the local album view. Remote
+  (`OpenHyperFidelArtistAlbumsAsync`) rather than the local album view. Remote
   transport waveform loading first asks the server for cached peaks and falls
   back to client-side FFmpeg analysis of the authenticated stream URL when the
   server cannot analyse the format; this keeps DFF waveforms available without
   requiring the server's FFmpeg build to support every source format. The
   transport favourite (heart) button is enabled for a playing remote track and
-  toggles the client-side favourite (`HyperFiServerFavorites`) for that track
-  via `CurrentHyperFiFavoriteTarget`; the change is written to `settings.json`
+  toggles the client-side favourite (`HyperFidelServerFavorites`) for that track
+  via `CurrentHyperFidelFavoriteTarget`; the change is written to `settings.json`
   and reflected in any visible remote track rows. For local tracks it still
   writes `tracks.is_favorite`.
-- `HyperFi/HyperFiServerDialog.axaml/.cs`: themed dialog for adding or editing a
-  remote HyperFi Server (name, URL, API key, per-server streaming quality, Test
+- `HyperFidel/HyperFidelServerDialog.axaml/.cs`: themed dialog for adding or editing a
+  remote HyperFidel Server (name, URL, API key, per-server streaming quality, Test
   Connection); it can load, add, remove, and save the remote server's music
   directories through the server API, start a remote scan, and show live scan
-  progress; returned server record is stored in `AppSettings.HyperFiServers`
-- `HyperFi/RemoteDirectoryBrowserDialog.axaml/.cs`: browses the remote server
+  progress; returned server record is stored in `AppSettings.HyperFidelServers`
+- `HyperFidel/RemoteDirectoryBrowserDialog.axaml/.cs`: browses the remote server
   filesystem through `/api/files/directories?path=` and returns a server-side
-  directory path for `HyperFiServerDialog`
-- `AppSettings.HyperFiServers` stores configured remote server connections; API
+  directory path for `HyperFidelServerDialog`
+- `AppSettings.HyperFidelServers` stores configured remote server connections; API
   keys are overlaid from `ApplicationCredentialStore` and excluded from
-  `settings.json`; `AppSettings.HyperFiServerFavorites` stores client-side
+  `settings.json`; `AppSettings.HyperFidelServerFavorites` stores client-side
   favorite keys for remote artists, albums, and tracks. Legacy
-  `ShowHyperFiServerSection` and `IsHyperFiServerSectionExpanded` settings may
+  `ShowHyperFidelServerSection` and `IsHyperFidelServerSectionExpanded` settings may
   still exist in persisted JSON for compatibility, but the current sidebar
   renders remote servers under the main Library accordion controlled by
   `ShowLocalLibrarySection` and `IsLocalLibrarySectionExpanded`.
-- `HyperFi/Streaming/WindowsPlexCredentialStore.cs`: compatibility facade that
+- `HyperFidel/Streaming/WindowsPlexCredentialStore.cs`: compatibility facade that
   stores per-server Plex access tokens through `ApplicationCredentialStore`
 - `AppSettings.PlexServers` stores Plex server IDs, display names, and base
   URLs; Plex tokens must not be added to `settings.json`
@@ -1660,7 +1660,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   (`playback_queue` table), not in `settings.json`. Legacy
   `AppSettings.PlaybackQueuePaths` and `PlaybackQueueIndex` values are imported
   once and then cleared. Local paths and non-credential HTTP/HTTPS URLs may be
-  stored; Plex-token, HyperFi Server `?key=`, and user-info URLs must never be
+  stored; Plex-token, HyperFidel Server `?key=`, and user-info URLs must never be
   persisted.
 - `AppSettings.OutputProfiles` persists all named output profiles;
   `SelectedOutputProfileName` identifies the active one.
@@ -1735,16 +1735,16 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   and defaults new profiles to 50 percent
 - `AppSettings.Language` stores `German`, `English`, `French`, `Spanish`,
   `Russian`, `ChineseSimplified`, or `Hindi`
-- `HyperFi.Core/Library/TrackRecord.cs`: database track model containing tags
+- `HyperFidel.Core/Library/TrackRecord.cs`: database track model containing tags
   and technical metadata
-- `HyperFi.Core/Library/PlaylistRecord.cs`: playlist model including
+- `HyperFidel.Core/Library/PlaylistRecord.cs`: playlist model including
   denormalized `TrackCount`, `IsSmartPlaylist`, and `FilterCriteria`
-- `HyperFi.Core/Library/SmartPlaylistCriteria.cs`: backward-compatible
+- `HyperFidel.Core/Library/SmartPlaylistCriteria.cs`: backward-compatible
   serialized smart-playlist criteria covering favourites, a free-text
   `SearchText` (matched case-insensitively against title, artist, and album),
   genres, formats, bitrates, source keys, metadata ranges, library/play-history
   rules, ordering, and result limits
-- `HyperFi/SmartPlaylistDialog.*`: localized editor for the name and advanced
+- `HyperFidel/SmartPlaylistDialog.*`: localized editor for the name and advanced
   criteria of an existing smart playlist. An optional `CountResolver`
   (`Func<SmartPlaylistCriteria, CancellationToken, Task<int?>>`) drives a
   debounced live preview ("N tracks match") that re-evaluates on every criteria
@@ -1754,73 +1754,73 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   server, the same candidate set as `ResolveUnifiedSmartPlaylistRows`), so smart
   playlists do not distinguish local vs server sources; the server-stored edit
   path uses a resolver backed by
-  `HyperFiServerClient.ResolveSmartPlaylistCountAsync`
+  `HyperFidelServerClient.ResolveSmartPlaylistCountAsync`
   (`POST /api/playlists/resolve-count`, server-side `criteria.Resolve` with the
   client's favourite IDs; older servers without the endpoint return no count →
   no preview). `TryBuildCriteriaCore` builds criteria without touching the
   validation UI so the preview can reuse it.
-- `HyperFi.Core/Library/PlaylistTrackRecord.cs`: playlist entry model with
+- `HyperFidel.Core/Library/PlaylistTrackRecord.cs`: playlist entry model with
   position, optional TrackId reference, and required path
-- `HyperFi.Core/Library/M3u8PlaylistService.cs`: UTF-8 M3U8 import/export with
+- `HyperFidel.Core/Library/M3u8PlaylistService.cs`: UTF-8 M3U8 import/export with
   relative local-path resolution, relative export paths, missing-file
   preservation, HTTP/HTTPS entries, and rejection of credential-bearing URLs
-- `HyperFi.Core/Library/AudioDatabase.cs`: SQLite database layer through
-  `Microsoft.Data.Sqlite`; database at `%LOCALAPPDATA%\HyperFi\library.db`
-- `HyperFi.Core/Library/LibraryScanner.cs`: directory scanner using TagLibSharp;
+- `HyperFidel.Core/Library/AudioDatabase.cs`: SQLite database layer through
+  `Microsoft.Data.Sqlite`; database at `%LOCALAPPDATA%\HyperFidel\library.db`
+- `HyperFidel.Core/Library/LibraryScanner.cs`: directory scanner using TagLibSharp;
   writes through `AudioDatabase.Upsert()`, reports progress, and supports
   cancellation
-- `HyperFi.Core/Library/CueSheetParser.cs`: parses UTF-8 or legacy-encoded CUE
+- `HyperFidel.Core/Library/CueSheetParser.cs`: parses UTF-8 or legacy-encoded CUE
   sheets and creates stable virtual track paths with physical source paths and
   segment boundaries
-- `HyperFi.Core/Library/LibraryWatcherService.cs`: owns one recursive
+- `HyperFidel.Core/Library/LibraryWatcherService.cs`: owns one recursive
   `FileSystemWatcher` per available configured library root, debounces paths for
   900 ms, applies incremental create/change/rename/delete updates, and runs a
   full reconciliation after 10 minutes and every 30 minutes thereafter
-- `HyperFi.Core/Library/LibraryBackupService.cs`: versioned ZIP export/import
+- `HyperFidel.Core/Library/LibraryBackupService.cs`: versioned ZIP export/import
   for the SQLite library, artwork cache, and configured library directories;
   audio files are not included
-- `HyperFi.Core/Library/LyricsService.cs`: LRCLIB client and LRC parser for
+- `HyperFidel.Core/Library/LyricsService.cs`: LRCLIB client and LRC parser for
   downloaded plain or synchronized lyrics
-- `HyperFi.Core/Library/RadioBrowserService.cs`: Radio Browser client with
+- `HyperFidel.Core/Library/RadioBrowserService.cs`: Radio Browser client with
   mirror discovery, station search, and click registration
-- `HyperFi.Core/Library/RadioStationRecord.cs`: persisted personal
+- `HyperFidel.Core/Library/RadioStationRecord.cs`: persisted personal
   internet-radio station model
-- `HyperFi.Core/Library/RadioStreamMetadataService.cs`: probes live ICY metadata
+- `HyperFidel.Core/Library/RadioStreamMetadataService.cs`: probes live ICY metadata
   through `ffprobe`; radio playback refreshes title/artist every 15 seconds
-- `HyperFi.Core/Library/PodcastService.cs`: searches the public Apple Podcasts
+- `HyperFidel.Core/Library/PodcastService.cs`: searches the public Apple Podcasts
   catalog and resolves all playable episodes from podcast RSS/Atom feeds, newest
   first
-- `HyperFi.Core/Library/CatalogFilterCache.cs`: persists radio-genre and podcast
+- `HyperFidel.Core/Library/CatalogFilterCache.cs`: persists radio-genre and podcast
   category/language catalogs in
-  `%LOCALAPPDATA%\HyperFi\catalog-filter-cache.json`; catalog data is refreshed
+  `%LOCALAPPDATA%\HyperFidel\catalog-filter-cache.json`; catalog data is refreshed
   after seven days while stale data remains usable
-- `HyperFi.Core/Library/PodcastRecord.cs`: podcast catalog, persisted
+- `HyperFidel.Core/Library/PodcastRecord.cs`: podcast catalog, persisted
   subscription, and episode models
-- `HyperFi/LyricsSearchWindow.*`: manual LRCLIB search with editable track and
+- `HyperFidel/LyricsSearchWindow.*`: manual LRCLIB search with editable track and
   artist fields, candidate preview, and explicit replacement of the current
   track's downloaded lyrics cache
-- `HyperFi.Core/Library/ArtistProfileService.cs`: configurable artist biography
+- `HyperFidel.Core/Library/ArtistProfileService.cs`: configurable artist biography
   and image lookup (Wikipedia or Last.fm) with preferred curated Fanart.tv
   `artistthumb` artwork when an encrypted stored key or `FANART_TV_API_KEY` is
   available; static source/key properties are applied by the desktop, and images
-  are cached under `%LOCALAPPDATA%\HyperFi\artist-images\`. Fanart.tv resolution
+  are cached under `%LOCALAPPDATA%\HyperFidel\artist-images\`. Fanart.tv resolution
   uses embedded MusicBrainz IDs or an unambiguous exact MusicBrainz match. The
   Fanart.tv key may only be persisted in `ApplicationCredentialStore`; it must
-  never be written to JSON or caches, logged, sent to an HyperFi Server, or
+  never be written to JSON or caches, logged, sent to an HyperFidel Server, or
   exposed to a model. Wikipedia/Last.fm image content is saved through shared
   serialized stream staging rather than opening the final cache file directly.
   Transfer failure, cancellation and empty content preserve the previous file;
   supported MIME and URL-extension fallback behavior remains unchanged. This
   protects file publication, not the semantic order of older automatic requests
   against later manual selections or SQLite metadata.
-- `HyperFi.Core/Library/ArtistImageSearchService.cs` and
-  `HyperFi/ArtistImageSearchWindow.*`: manual artist-image search with an
+- `HyperFidel.Core/Library/ArtistImageSearchService.cs` and
+  `HyperFidel/ArtistImageSearchWindow.*`: manual artist-image search with an
   editable query; it tries Fanart.tv first when a key is configured and falls
   back to Wikimedia Commons. Selecting an image updates `artists.image_path`,
   sets `image_is_manual`, and preserves the biography source; automatic profile
   refreshes must not download over manually selected image files. The Artist
   information Settings action processes missing images from the local library
-  and every configured HyperFi Server strictly sequentially, remains
+  and every configured HyperFidel Server strictly sequentially, remains
   cancellable, tries Fanart.tv first only when a key is available, and then
   falls back to Wikimedia Commons. Every in-memory candidate must be explicitly
   accepted or rejected in a preview before it may be saved to its owning local
@@ -1831,7 +1831,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   `DeleteImageAsync` supports cancellable admission; legacy deletion remains
   compatible. Idle gates are removed. This file contract does not provide
   cross-process ordering, user-intent ordering or a SQLite/file transaction.
-- `HyperFi/EditArtistNameDialog.*` and `HyperFi/ArtistMergeDialog.*`:
+- `HyperFidel/EditArtistNameDialog.*` and `HyperFidel/ArtistMergeDialog.*`:
   artist-info rename flow; collisions require an explicit merge-profile priority
   choice
 
@@ -1864,7 +1864,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   with at least two positive votes as separate JSON arrays. `GetTrackFacets`
   combines them with embedded genre text for classification; embedded tags are
   never overwritten. After playback first starts, one client-side low-priority
-  worker continues stale MusicBrainz enrichment for local and configured HyperFi
+  worker continues stale MusicBrainz enrichment for local and configured HyperFidel
   Server tracks only while playback is active. Album-detail and explicit
   requests take priority between API calls. Known MBIDs refresh after 30 days;
   conservative text matching that resolves no unique recording stores only its
@@ -1873,18 +1873,18 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
 - `albums` contains stable album IDs (`id`, `title`, `artist_id`, `year`,
   `artwork_id`, `is_favorite`)
 - `artworks` deduplicates artwork by SHA-256 hash; originals and thumbnails live
-  under `%LOCALAPPDATA%\HyperFi\artworks\` as `original`, `thumb_96`, and
+  under `%LOCALAPPDATA%\HyperFidel\artworks\` as `original`, `thumb_96`, and
   `thumb_320`
 - `favorites` is an older generic extension point; visible favorites use the
   direct flags
-- `play_history` records local tracks, remote HyperFi Server and Plex tracks,
+- `play_history` records local tracks, remote HyperFidel Server and Plex tracks,
   podcast episodes, and internet-radio sessions with media type, display
   title/subtitle, optional external ID, an optional `genre` captured at playback
   time (so genre statistics include tracks without a local library row),
   playback start/end, duration, final position, and completion state. The
   `external_id` stores a stable source context for non-local tracks:
-  `hyperfi:{serverId}:track:{trackId}` for remote HyperFi Server tracks
-  (`ResolveNowPlayingExternalId` / `BuildHyperFiHistoryExternalId`), and
+  `hyperfidel:{serverId}:track:{trackId}` for remote HyperFidel Server tracks
+  (`ResolveNowPlayingExternalId` / `BuildHyperFidelHistoryExternalId`), and
   `plex:{serverId}:{trackKey}:{albumKey}:{artistKey}` for Plex tracks
   (`BuildPlexHistoryExternalId`, using the Plex track/parent/grandparent rating
   keys carried on the `ContentRow` as `PlexServerId`/`PlexAlbumRatingKey`/
@@ -1902,11 +1902,11 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
 - `AudioDatabase.GetTrackIdAndFavorite(path)` performs a lightweight `id` and
   `is_favorite` lookup
 - `AudioDatabase.OpenDefault()` creates or opens
-  `%LOCALAPPDATA%\HyperFi\library.db`
+  `%LOCALAPPDATA%\HyperFidel\library.db`
 - On first launch after the rename, missing data is copied from
   `%LOCALAPPDATA%\Player\` and cached database paths are rebased to
-  `%LOCALAPPDATA%\HyperFi\`
-- Cache-path rebasing is guarded by the `cache_paths_hyperfi_v1` database
+  `%LOCALAPPDATA%\HyperFidel\`
+- Cache-path rebasing is guarded by the `cache_paths_hyperfidel_v1` database
   migration marker and must not run on every database open
 - `Upsert()` is idempotent through `INSERT ... ON CONFLICT DO UPDATE`
 - `GetPathTimestamps()` returns paths and modification timestamps for efficient
@@ -1975,12 +1975,12 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   analysing the affected album as a whole through a temporary FFmpeg concat
   list. Existing ReplayGain metadata is preserved. Settings > Playback exposes
   **Calculate missing ReplayGain** to backfill the local library and every
-  configured HyperFi Server. Remote calculations use authenticated
+  configured HyperFidel Server. Remote calculations use authenticated
   `POST /api/replaygain`, report progress through `/api/scan`, and preserve all
   existing track and album values. Normal server scans remain governed by the
   separate `CalculateMissingReplayGainDuringScan` option.
 - The desktop's scan-time ReplayGain checkbox controls only its local watcher.
-  Each HyperFi Server dialog reads and writes the server-owned equivalent via
+  Each HyperFidel Server dialog reads and writes the server-owned equivalent via
   authenticated `GET`/`PUT /api/settings/replaygain`; the server applies it to
   the live watcher and persists it without requiring a restart.
 - Opening the database runs a legacy-data migration that normalizes artists,
@@ -2000,7 +2000,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   album.
 - Settings includes **Repair album artwork**, which re-reads a sample file per
   album through TagLib when historical assignments are missing
-- HyperFi Server full scans run the same missing-album-artwork repair after
+- HyperFidel Server full scans run the same missing-album-artwork repair after
   scanning configured roots, so unchanged tracks with embedded covers can still
   populate missing server-side album artwork. The repair sample query must use
   physical `source_path` for CUE/virtual tracks instead of the `cue://` path.
@@ -2088,14 +2088,14 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   way; missing covers use the `InitialsAvatar` placeholder. Clicking a card
   closes the artist-info overlay and opens the album's tracks
   (`OpenArtistInfoAlbumAsync`): local via `ShowAlbumTracksAsync`, remote via
-  `OpenHyperFiAlbumTracksAsync` on the album's own server.
+  `OpenHyperFidelAlbumTracksAsync` on the album's own server.
 - The same artist-info controls form the normal non-Plex artist detail page. Its
   accent-bordered hero places the image beside the artist name, bounded
   scrollable biography, source, rename, image-management, and refresh actions;
-  its album strip combines normalized matching local and HyperFi Server
+  its album strip combines normalized matching local and HyperFidel Server
   identities. The image occupies a fixed left column and must never overlap the
   biography or actions in the right column. Its favorite button applies to all
-  normalized matching local and HyperFi Server identities. Artist links and
+  normalized matching local and HyperFidel Server identities. Artist links and
   double-clicks must not fall back to a bare album-only list. Back returns to
   the originating view in one step. Album cards in the artist detail open only
   on double-click. They retain the provider-local artist ID/name as the initial
@@ -2194,7 +2194,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   after navigation; only clean the source cache while its identity is valid.
   Separate library context-menu artwork adapters and automatic-profile/manual
   data-write overlap still need their audits.
-- `HyperFi/ArtistImageWriteQueue.cs` orders complete manual artist-detail image
+- `HyperFidel/ArtistImageWriteQueue.cs` orders complete manual artist-detail image
   search/upload/deletion batches per normalized name within one window. Reserve
   before waiting, recheck original publication/source ownership before the first
   write, and retain ordering through local file/SQLite work and server fan-out.
@@ -2324,9 +2324,9 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   **Play next** and **Append to queue**, followed by existing playlists and
   **New playlist...**. Plex tracks expose only the in-memory queue actions so
   authenticated URLs cannot be written to playlist or settings storage.
-- Local and remote HyperFi Server playlist context actions use
+- Local and remote HyperFidel Server playlist context actions use
   `LocalLibraryPlaylistProvider` and `PlaylistSelection` against the shared
-  mixed playlist list. Remote selections store stable `hyperfi://` references;
+  mixed playlist list. Remote selections store stable `hyperfidel://` references;
   legacy server playlist providers/endpoints are not exposed in current context
   menus.
 - Selecting a playlist immediately adds the track or all album tracks and
@@ -2340,16 +2340,16 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   themed playlist `MenuFlyout` for an existing or new regular playlist.
 - **New playlist...** opens `NewPlaylistDialog`; a name is required and Enter
   confirms
-- `HyperFi/NewPlaylistDialog.axaml/.cs` is themed with dynamic brushes and a
+- `HyperFidel/NewPlaylistDialog.axaml/.cs` is themed with dynamic brushes and a
   DWM-colored native title bar
 - `AppendPlaylistItems()` builds context-menu items dynamically
 - Album artwork cards extend their existing cover menu through
   `ContextMenu.Opened`
 - `GetPathsForRow()` returns one track path or all album tracks through
-  `GetTrackListByAlbum`. For a remote HyperFi Server album row it resolves the
+  `GetTrackListByAlbum`. For a remote HyperFidel Server album row it resolves the
   album's track list through a server request, so it must never be called
   synchronously while a row is being realized (during `LoadingRow` /
-  `DataGrid.MeasureOverride`): `BuildHyperFiArtworkContextFlyout` populates the
+  `DataGrid.MeasureOverride`): `BuildHyperFidelArtworkContextFlyout` populates the
   remote album's playlist targets off the UI thread only when the flyout is
   opened. Resolving remote rows synchronously on the UI thread froze the whole
   Albums table once a server was merged into the unified library.
@@ -2387,7 +2387,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   right-button handler marks the initial press handled before
   `SelectingItemsControl` can change selection and opens the flyout with
   `ShowAt(item, showAtPointer: true)`. The flyouts use dedicated presenter and
-  item themes based on the Fluent defaults with HyperFi's dynamic surface,
+  item themes based on the Fluent defaults with HyperFidel's dynamic surface,
   border, text, hover, pressed, and separator resources. Sidebar accordion and
   repeated-selection handlers must explicitly accept only the left mouse button.
   Explicitly created `MenuItem` objects must also receive the shared item theme
@@ -2430,13 +2430,13 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
 - **Drag & drop into the queue**: `SetupQueueDragAndDrop` makes the
   `ContentDataGrid`, `AlbumArtworkListBox`, and `FolderTreeView` drag sources
   (tunnel pointer handlers start a `DragDrop` operation carrying
-  `hyperfi/queue-paths`) and the always-visible `QueueNavItem` the drop target.
+  `hyperfidel/queue-paths`) and the always-visible `QueueNavItem` the drop target.
   Dropping on **Up Next** appends the resolved paths to the queue end and must
   not restart the active playback session. Track rows (local, remote, Plex) use
   their `FilePath`; local album rows and album cards resolve via
   `GetTrackListByAlbum`; local folders via `GetTrackPathsUnderDirectory`; remote
   folders via the in-memory `FolderTree` (`_folderTreesBySource`). Remote album
-  rows/cards carry an `hyperfi-album:server:id` reference that
+  rows/cards carry an `hyperfidel-album:server:id` reference that
   `ResolveDroppedQueuePathsAsync` expands to registered track stream URLs on
   drop (`QueueNavItem_OnDrop` is async). The queue and the source lists are
   never co-visible, so the sidebar item is the drop target.
@@ -2556,7 +2556,7 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   playback timestamp only while resolving a smart playlist
 - Artwork is deduplicated instead of stored per track
 - `TrackSearchIndex.cs` stores a Lucene.NET index under
-  `%LOCALAPPDATA%\HyperFi\search-index`, supports category-specific fields,
+  `%LOCALAPPDATA%\HyperFidel\search-index`, supports category-specific fields,
   partial words, and German umlaut/eszett variants, rebuilds stale indexes,
   updates incrementally after scans, and removes missing files below rescanned
   roots Supplemental MusicBrainz genres/tags are included in the all-fields
@@ -2580,22 +2580,22 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
 - Target platform: `net10.0-windows10.0.19041.0`, x64
 - Windows SMTC integration is created opportunistically at main-window startup.
   API or metadata failures must remain silent and must never prevent playback.
-  Global commands dispatch onto Avalonia's UI thread and reuse HyperFi's normal
+  Global commands dispatch onto Avalonia's UI thread and reuse HyperFidel's normal
   play, pause, previous, next, stop, and seek paths.
 - SMTC metadata follows local tracks, gapless transitions, podcasts, Plex
-  tracks, remote HyperFi Server tracks, and changing internet-radio ICY
+  tracks, remote HyperFidel Server tracks, and changing internet-radio ICY
   metadata. Local artwork uses the managed artwork cache; podcast/radio artwork
-  uses its public catalog URL; remote HyperFi Server artwork uses the
+  uses its public catalog URL; remote HyperFidel Server artwork uses the
   authenticated `GetTrackArtworkUrl` (`?key=`) so Windows fetches it directly.
 - The SMTC timeline is refreshed at most every five seconds during playback and
   immediately after track changes or seeks.
 - Linux exposes the MPRIS 2 media player interface through
-  `HyperFi/Compatibility/Linux/MprisMediaTransport.cs`, compiled only under the
-  `HYPERFI_LINUX` define because `Tmds.DBus.Protocol` is referenced on Linux
+  `HyperFidel/Compatibility/Linux/MprisMediaTransport.cs`, compiled only under the
+  `HYPERFIDEL_LINUX` define because `Tmds.DBus.Protocol` is referenced on Linux
   only. It dispatches onto the same shared transport methods as the desktop
   controls, must never throw into playback when the session bus is unavailable,
   and must not publish credential-bearing artwork URLs through `mpris:artUrl`
-  (gate them through `QueuePathPolicy.CanPersist`). Remote HyperFi Server covers
+  (gate them through `QueuePathPolicy.CanPersist`). Remote HyperFidel Server covers
   use the locally cached `remote-artworks/track-art-<server>-<track>.img` file
   instead, and the media metadata is refreshed after the asynchronous artwork
   download so the cover appears without exposing the `?key=` URL.
@@ -2760,26 +2760,26 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   sizes. Immersive detail titles (album, artist, podcast headers) use
   `FontSizeDisplay`; tables use `FontSizeCaption`/`FontSizeBody`; small meta
   text uses `FontSizeMeta` with a muted foreground.
-- Segmented RadioButton switchers (Table/Cover, Plex, HyperFi Server, and Genre
+- Segmented RadioButton switchers (Table/Cover, Plex, HyperFidel Server, and Genre
   Cloud recommendations) share `AttachSegmentedThumb`, which places a gold
   selection pill behind the buttons and animates its width and horizontal
   offset. The checked button background stays transparent so the pill remains
   visible; the motion respects `AppSettings.ReduceMotion`.
 - The default typeface is the bundled `Noto Serif SC`, exposed as the app-owned
-  `HyperFi Serif` alias through `FontManagerOptions.FontFamilyMappings` in
-  `Program.cs`. Regular, SemiBold, and Bold live in `HyperFi/Assets/Fonts` as
+  `HyperFidel Serif` alias through `FontManagerOptions.FontFamilyMappings` in
+  `Program.cs`. Regular, SemiBold, and Bold live in `HyperFidel/Assets/Fonts` as
   `AvaloniaResource` entries, together with `Noto Serif Devanagari` for the
   Hindi interface; system `Noto Serif` is the last fallback. The fonts are
   licensed under SIL OFL 1.1 (`licenses/OFL-1.1.txt`), and the bundled Inter
   font is no longer shipped.
 - The main window uses a modern sidebar, content area, and full-width transport
   bar
-- The full HyperFi logo appears directly, without a surrounding logo surface, in
+- The full HyperFidel logo appears directly, without a surrounding logo surface, in
   the startup window and About dialog. The main sidebar uses the linked
-  `Logo/hyperfi.png` asset (`Assets/DashboardLogo.png` at runtime) as its
+  `Logo/hyperfidel.png` asset (`Assets/DashboardLogo.png` at runtime) as its
   wordmark.
 - The 260 px sidebar contains Dashboard, library navigation with local and
-  HyperFi Server playlists, device information, About, and Settings
+  HyperFidel Server playlists, device information, About, and Settings
 - Library, personal radio, pinned podcast, and Plex server sidebar groups use
   independently expandable accordion headers; local playlists are a nested
   Library child group and their expansion state is persisted
@@ -2801,8 +2801,8 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
   `IsMyPodcastsSectionExpanded`, `IsPlexSectionExpanded`, and
   `IsPlaylistsSectionExpanded` persist independent sidebar accordion states
 - `AppSettings.IsLocalMediaLibraryGroupExpanded`,
-  `CollapsedHyperFiServerLibraryGroups`, and
-  `CollapsedHyperFiServerPlaylistGroups` persist the nested Local, HyperFi
+  `CollapsedHyperFidelServerLibraryGroups`, and
+  `CollapsedHyperFidelServerPlaylistGroups` persist the nested Local, HyperFidel
   Server, and per-server Playlists child-group expansion states inside the
   Library sidebar accordion; `IsPlaylistsSectionExpanded` persists the local
   Playlists child group
@@ -3091,7 +3091,7 @@ responsiveness, not a measured portable first-frame deadline.
 - During radio playback, the Internet Radio page shows a large station logo and
   live ICY title/artist metadata when supplied by the stream; the transport
   summary and Windows media overlay are updated at the same time. Downloaded
-  station logos are cached under `%LOCALAPPDATA%\HyperFi\radio-logos\` and the
+  station logos are cached under `%LOCALAPPDATA%\HyperFidel\radio-logos\` and the
   cached local file is passed to SMTC so Windows does not have to refetch the
   remote favicon URL itself.
 - Radio search results expose a multi-select genre popup derived from normalized
@@ -3112,7 +3112,7 @@ responsiveness, not a measured portable first-frame deadline.
   come from `/api/library/summary` (with lightweight fallbacks for older
   servers), while artist names are normalized and unified exactly like the
   shared Artists view. The favorite counter additionally includes only
-  client-side track favorites that still occur in each configured HyperFi
+  client-side track favorites that still occur in each configured HyperFidel
   Server's current facets and resolve through `GetTracksByIdsAsync`
   (`ResolveDashboardRemoteLibrarySummaryAsync`). Stale IDs and unavailable
   servers must not make the hero/Quick Access count differ from the Favorites
@@ -3129,7 +3129,7 @@ responsiveness, not a measured portable first-frame deadline.
      140-px cover), while the Albums view keeps the larger shared
      `AlbumArtworkCardTemplate`. Each shows a local/remote album thumbnail or
      `InitialsAvatar`, hover play overlay, favorite heart, and an `L`, `OS`, or
-     `P` source badge. Local and remote HyperFi hearts are toggleable; Plex
+     `P` source badge. Local and remote HyperFidel hearts are toggleable; Plex
      hearts are display-only because Plex favorites are not persisted. A card is
      playable (`IsPlayableHistoryEntry`) when the entry is a music track (media
      type `track`, not radio/podcast) that is either a locally available file or
@@ -3139,21 +3139,21 @@ responsiveness, not a measured portable first-frame deadline.
      queue with just that track and starts playback) without leaving the
      dashboard.
   2. **Recently added albums**: horizontal artwork carousel of up to 20 albums,
-     merging the local library with every configured remote HyperFi Server
+     merging the local library with every configured remote HyperFidel Server
      (`LoadRecentAlbumsAsync`, sorted by each album's last-added timestamp).
      Cards are the **same** artwork cards as the Albums view: each
      `DashboardAlbum` is mapped to a `ContentRow` (`BuildRecentAlbumRow`, local
-     `Album` / remote `HyperFiAlbum` carrying `HyperFiServer`) rendered from the
+     `Album` / remote `HyperFidelAlbum` carrying `HyperFidelServer`) rendered from the
      shared `AlbumArtworkCardTemplate` resource (`BuildRecentAlbumCard`), so
      covers can be changed and favorites toggled directly, and album/artist
      links navigate in library. Because those shared handlers are
-     location-independent via `ActivateRowHyperFiServer` (activates
-     `row.HyperFiServer`), they work for the dashboard's mixed local/remote
+     location-independent via `ActivateRowHyperFidelServer` (activates
+     `row.HyperFidelServer`), they work for the dashboard's mixed local/remote
      list. Double-clicking a card opens the album
      (`RecentAlbumCard_OnDoubleTapped`). Local artwork uses the album's 320-px
      path (`RecentAlbumInfo.ArtworkPath`); remote uses the authenticated server
      URL. Backed by the server endpoint `GET /api/albums/recent`
-     (`HyperFiServerClient.GetRecentAlbumsAsync`); servers without it are
+     (`HyperFidelServerClient.GetRecentAlbumsAsync`); servers without it are
      skipped. Selecting a card supports Back navigation. Cover/favorite handlers
      refresh the bound card in place on the dashboard surface
      (`UpdateRowArtworkFromBytes`) instead of rebuilding the hidden Albums list.
@@ -3207,7 +3207,7 @@ responsiveness, not a measured portable first-frame deadline.
        analytics cards below the overview row, with wide cyan proportional bars
        (including the muted 100-percent background track) and listened-minute
        totals, backed by `AudioDatabase.GetTopAlbums`/`GetTopArtists`
-       (`TopAlbumStat`/`TopArtistStat`), which merge local, remote HyperFi
+       (`TopAlbumStat`/`TopArtistStat`), which merge local, remote HyperFidel
        Server, and Plex playback by album title+artist / artist name in the
        selected period. Album rows show a small cover (local thumbnail, remote
        track artwork, or an `InitialsAvatar`); artist rows retain colored rank
@@ -3254,9 +3254,9 @@ responsiveness, not a measured portable first-frame deadline.
   `GetTopGenres`, `GetTopAlbums`, and `GetTopArtists`. Listening and top-stat
   queries take an optional `sinceUnix` lower bound driven by the dashboard
   period selector.
-- Dashboard calendar playback time includes local, remote HyperFi Server, and
+- Dashboard calendar playback time includes local, remote HyperFidel Server, and
   Plex tracks, podcasts, and internet radio. The Top genres / albums / artists
-  statistics include local, remote HyperFi Server, and Plex tracks: the genre
+  statistics include local, remote HyperFidel Server, and Plex tracks: the genre
   query uses `COALESCE(tracks.genre, play_history.genre)` over a `LEFT JOIN`,
   falling back to the genre captured at playback time (`ResolveNowPlayingGenre`)
   for tracks without a local library row; the album/artist aggregations merge by
@@ -3422,13 +3422,13 @@ responsiveness, not a measured portable first-frame deadline.
   changes cancel before debounce; dialog close cancels pending work. Obsolete
   completions and errors cannot replace current text. This path does not reuse
   tolerant feature caches or schedule opportunistic audio-feature analysis.
-- **Save smart playlist**: available in the local and remote HyperFi Server
+- **Save smart playlist**: available in the local and remote HyperFidel Server
   Tracks views when facet filters are active **or** the search box holds a
   query; opens the compact `NewPlaylistDialog` and serializes the active
   favourite, search text, genre, format, bitrate, and source facets through the
   shared `BuildCurrentTrackFilterCriteria` helper. In the local Tracks view it
   calls `AudioDatabase.CreateSmartPlaylist`; in a remote Tracks view it calls
-  `HyperFiServerClient.CreateSmartPlaylistAsync` so the smart playlist is
+  `HyperFidelServerClient.CreateSmartPlaylistAsync` so the smart playlist is
   persisted on that server.
 - Tracks **search** honours the active facets: the source facet gates which
   sources contribute results (`ShowSearchResultsAsync` skips local when the
@@ -3437,12 +3437,12 @@ responsiveness, not a measured portable first-frame deadline.
   through the shared `MatchesTrackFilters` (`TrackFacetFilterSnapshot` shares
   live filter semantics and remote providers apply the captured client-side
   favourites). The same applies to the per-server
-  `ShowHyperFiSearchResultsAsync`.
+  `ShowHyperFidelSearchResultsAsync`.
 - Right-clicking a smart playlist in the sidebar exposes **Edit smart
   playlist**, which opens the shared `SmartPlaylistDialog` with the stored name
   and full criteria. Local smart playlists update `filter_criteria` through
-  `AudioDatabase.UpdateSmartPlaylist`; remote HyperFi Server smart playlists
-  update through `HyperFiServerClient.UpdateSmartPlaylistAsync` on the track's
+  `AudioDatabase.UpdateSmartPlaylist`; remote HyperFidel Server smart playlists
+  update through `HyperFidelServerClient.UpdateSmartPlaylistAsync` on the track's
   own server. Saving never replaces playlist rows.
 - Right-clicking the Playlists accordion header exposes **Import M3U8
   playlist**. Imports are UTF-8, resolve relative local paths against the M3U8
@@ -3477,9 +3477,9 @@ responsiveness, not a measured portable first-frame deadline.
   a consistent 30 px height.
 - Subsystem availability is surfaced with `StatusBadge` controls (FFmpeg,
   Steinberg ASIO, cwASIO in the Output section; MCP in the MCP section). Each
-  configured HyperFi Server / Plex server row additionally shows a live
+  configured HyperFidel Server / Plex server row additionally shows a live
   connection badge probed asynchronously so opening Settings stays instant.
-  Reachable HyperFi Server rows also show the version returned by `/api/info`.
+  Reachable HyperFidel Server rows also show the version returned by `/api/info`.
 
 ### Background artist profile write ownership
 
@@ -3494,7 +3494,7 @@ transaction or a cross-client coordinator.
 
 ### Remote artist context-menu image ownership
 
-`OpenHyperFiArtistImageSearchAsync` uses an injectable selection adapter
+`OpenHyperFidelArtistImageSearchAsync` uses an injectable selection adapter
 retaining original binding, row identity, navigation and copied server
 connection. Its manual action shares ownership with detail image actions. After
 valid selection, it admits image intent and reserves the shared artist write
@@ -3567,7 +3567,7 @@ starts.
 
 ### Tracked Windows headless workflow suite
 
-`HyperFi.Ui.Smoke` is a separate executable in the solution, invoked by local
+`HyperFidel.Ui.Smoke` is a separate executable in the solution, invoked by local
 full verification and Windows CI in Debug and Release. It seeds unique temporary
 SQLite data before application creation, never shows MainWindow, injects
 synthetic server transport and blocks external profile/image HTTP handlers.

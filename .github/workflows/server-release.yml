@@ -68,11 +68,11 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore dependencies
-        run: dotnet restore HyperFi.Server/HyperFi.Server.csproj --runtime ${{ matrix.rid }}
+        run: dotnet restore HyperFidel.Server/HyperFidel.Server.csproj --runtime ${{ matrix.rid }}
 
-      - name: Publish HyperFi.Server (${{ matrix.rid }})
+      - name: Publish HyperFidel.Server (${{ matrix.rid }})
         run: >
-          dotnet publish HyperFi.Server/HyperFi.Server.csproj
+          dotnet publish HyperFidel.Server/HyperFidel.Server.csproj
           --configuration Release
           --runtime ${{ matrix.rid }}
           --self-contained true
@@ -90,36 +90,36 @@ jobs:
           STAGE="stage/${{ matrix.rid }}"
           PUB="publish/${{ matrix.rid }}"
 
-          mkdir -p "${STAGE}/usr/lib/hyperfi-server"
+          mkdir -p "${STAGE}/usr/lib/hyperfidel-server"
           mkdir -p "${STAGE}/usr/bin"
-          mkdir -p "${STAGE}/etc/hyperfi-server"
+          mkdir -p "${STAGE}/etc/hyperfidel-server"
           mkdir -p "${STAGE}/lib/systemd/system"
 
           # Copy published server binaries and runtime
-          cp -r "${PUB}/." "${STAGE}/usr/lib/hyperfi-server/"
-          chmod 755 "${STAGE}/usr/lib/hyperfi-server/HyperFi.Server"
+          cp -r "${PUB}/." "${STAGE}/usr/lib/hyperfidel-server/"
+          chmod 755 "${STAGE}/usr/lib/hyperfidel-server/HyperFidel.Server"
 
           # Convenience symlink on PATH
-          ln -sf /usr/lib/hyperfi-server/HyperFi.Server \
-              "${STAGE}/usr/bin/hyperfi-server"
+          ln -sf /usr/lib/hyperfidel-server/HyperFidel.Server \
+              "${STAGE}/usr/bin/hyperfidel-server"
 
           # Default configuration — users must set ApiKey and LibraryPaths
-          cp HyperFi.Server/appsettings.json \
-              "${STAGE}/etc/hyperfi-server/appsettings.json"
+          cp HyperFidel.Server/appsettings.json \
+              "${STAGE}/etc/hyperfidel-server/appsettings.json"
 
           # systemd unit
-          cp .github/server-release/hyperfi-server.service \
-              "${STAGE}/lib/systemd/system/hyperfi-server.service"
-          cp .github/server-release/hyperfi-server-updater.service \
-              "${STAGE}/lib/systemd/system/hyperfi-server-updater.service"
-          cp .github/server-release/hyperfi-server-updater.path \
-              "${STAGE}/lib/systemd/system/hyperfi-server-updater.path"
-          cp .github/server-release/hyperfi-server-updater.sh \
-              "${STAGE}/usr/lib/hyperfi-server/hyperfi-server-updater"
-          chmod 755 "${STAGE}/usr/lib/hyperfi-server/hyperfi-server-updater"
+          cp .github/server-release/hyperfidel-server.service \
+              "${STAGE}/lib/systemd/system/hyperfidel-server.service"
+          cp .github/server-release/hyperfidel-server-updater.service \
+              "${STAGE}/lib/systemd/system/hyperfidel-server-updater.service"
+          cp .github/server-release/hyperfidel-server-updater.path \
+              "${STAGE}/lib/systemd/system/hyperfidel-server-updater.path"
+          cp .github/server-release/hyperfidel-server-updater.sh \
+              "${STAGE}/usr/lib/hyperfidel-server/hyperfidel-server-updater"
+          chmod 755 "${STAGE}/usr/lib/hyperfidel-server/hyperfidel-server-updater"
           test -n "${{ vars.UPDATE_SIGNING_PUBLIC_KEY_BASE64 }}"
           printf '%s' "${{ vars.UPDATE_SIGNING_PUBLIC_KEY_BASE64 }}" | base64 --decode \
-              > "${STAGE}/usr/lib/hyperfi-server/update-public-key.der"
+              > "${STAGE}/usr/lib/hyperfidel-server/update-public-key.der"
 
       - name: Install fpm
         run: sudo gem install fpm --no-document
@@ -130,43 +130,43 @@ jobs:
         run: |
           VERSION="${{ steps.ver.outputs.version }}"
           STAGE="stage/${{ matrix.rid }}"
-          printf '%s\n' deb > "${STAGE}/usr/lib/hyperfi-server/install-type"
+          printf '%s\n' deb > "${STAGE}/usr/lib/hyperfidel-server/install-type"
 
           sed -i 's/\r$//' \
             .github/server-release/postinst.sh \
             .github/server-release/prerm.sh \
-            .github/server-release/hyperfi-server-updater.sh
+            .github/server-release/hyperfidel-server-updater.sh
           bash -n .github/server-release/postinst.sh
           bash -n .github/server-release/prerm.sh
-          bash -n .github/server-release/hyperfi-server-updater.sh
+          bash -n .github/server-release/hyperfidel-server-updater.sh
           chmod +x .github/server-release/postinst.sh \
                    .github/server-release/prerm.sh
           mkdir -p packages
 
-          DEB_DESC="HyperFi headless music server — scans a local library and exposes it over the network via REST and HTTP audio streaming. Edit /etc/hyperfi-server/appsettings.json (set ApiKey and LibraryPaths), then: systemctl enable --now hyperfi-server. Requires ffmpeg for CUE-sheet track transcoding."
+          DEB_DESC="HyperFidel headless music server — scans a local library and exposes it over the network via REST and HTTP audio streaming. Edit /etc/hyperfidel-server/appsettings.json (set ApiKey and LibraryPaths), then: systemctl enable --now hyperfidel-server. Requires ffmpeg for CUE-sheet track transcoding."
 
           fpm \
             --input-type dir \
             --output-type deb \
-            --name hyperfi-server \
+            --name hyperfidel-server \
             --version "${VERSION}" \
             --architecture "${{ matrix.deb_arch }}" \
             --description "${DEB_DESC}" \
-            --url "https://github.com/wuuwuu26/HyperFi" \
-            --vendor "HyperFi contributors" \
-            --maintainer "HyperFi contributors <wuuwuu26@users.noreply.github.com>" \
+            --url "https://github.com/wuuwuu26/HyperFidel" \
+            --vendor "HyperFidel contributors" \
+            --maintainer "HyperFidel contributors <wuuwuu26@users.noreply.github.com>" \
             --license MIT \
             --category sound \
             --after-install .github/server-release/postinst.sh \
             --before-remove .github/server-release/prerm.sh \
-            --config-files /etc/hyperfi-server/appsettings.json \
+            --config-files /etc/hyperfidel-server/appsettings.json \
             --deb-recommends ffmpeg \
-            --package "packages/hyperfi-server_${VERSION}_${{ matrix.deb_arch }}.deb" \
+            --package "packages/hyperfidel-server_${VERSION}_${{ matrix.deb_arch }}.deb" \
             --chdir "${STAGE}" \
             .
 
           CONTROL_DIR="$(mktemp -d)"
-          dpkg-deb --control "packages/hyperfi-server_${VERSION}_${{ matrix.deb_arch }}.deb" "${CONTROL_DIR}"
+          dpkg-deb --control "packages/hyperfidel-server_${VERSION}_${{ matrix.deb_arch }}.deb" "${CONTROL_DIR}"
           test "$(head -c 11 "${CONTROL_DIR}/postinst")" = '#!/bin/bash'
           ! grep -q $'\r' "${CONTROL_DIR}/postinst"
           ! grep -q $'\r' "${CONTROL_DIR}/prerm"
@@ -180,28 +180,28 @@ jobs:
         run: |
           VERSION="${{ steps.ver.outputs.version }}"
           STAGE="stage/${{ matrix.rid }}"
-          printf '%s\n' rpm > "${STAGE}/usr/lib/hyperfi-server/install-type"
+          printf '%s\n' rpm > "${STAGE}/usr/lib/hyperfidel-server/install-type"
 
           chmod +x .github/server-release/rpm-postinst.sh \
                    .github/server-release/rpm-preun.sh
 
-          RPM_DESC="HyperFi headless music server. Scans a local library and exposes it over the network via REST and HTTP audio streaming. Edit /etc/hyperfi-server/appsettings.json (set ApiKey and LibraryPaths), then: systemctl enable --now hyperfi-server. ffmpeg (e.g. from RPM Fusion) is required for CUE-sheet track transcoding."
+          RPM_DESC="HyperFidel headless music server. Scans a local library and exposes it over the network via REST and HTTP audio streaming. Edit /etc/hyperfidel-server/appsettings.json (set ApiKey and LibraryPaths), then: systemctl enable --now hyperfidel-server. ffmpeg (e.g. from RPM Fusion) is required for CUE-sheet track transcoding."
 
           fpm \
             --input-type dir \
             --output-type rpm \
-            --name hyperfi-server \
+            --name hyperfidel-server \
             --version "${VERSION}" \
             --architecture "${{ matrix.rpm_arch }}" \
             --description "${RPM_DESC}" \
-            --url "https://github.com/wuuwuu26/HyperFi" \
-            --vendor "HyperFi contributors" \
+            --url "https://github.com/wuuwuu26/HyperFidel" \
+            --vendor "HyperFidel contributors" \
             --license MIT \
             --after-install .github/server-release/rpm-postinst.sh \
             --before-remove .github/server-release/rpm-preun.sh \
-            --config-files /etc/hyperfi-server/appsettings.json \
-            --rpm-summary "HyperFi headless music server" \
-            --package "packages/hyperfi-server-${VERSION}-1.${{ matrix.rpm_arch }}.rpm" \
+            --config-files /etc/hyperfidel-server/appsettings.json \
+            --rpm-summary "HyperFidel headless music server" \
+            --package "packages/hyperfidel-server-${VERSION}-1.${{ matrix.rpm_arch }}.rpm" \
             --chdir "${STAGE}" \
             .
 
@@ -213,6 +213,6 @@ jobs:
         run: >
           bash .github/scripts/upload-release-assets.sh
           '${{ steps.ver.outputs.tag }}'
-          'HyperFi ${{ steps.ver.outputs.version }}'
+          'HyperFidel ${{ steps.ver.outputs.version }}'
           false
           packages/*

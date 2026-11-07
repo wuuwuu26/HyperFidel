@@ -8,7 +8,7 @@
 #include <span>
 #include <vector>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 
 /** Converts fixed-size PCM blocks into encrypted AirPlay 2 realtime RTP datagrams. */
 class RealtimeAudioPacketizer final {
@@ -48,4 +48,4 @@ private:
     bool first_ = true;
 };
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

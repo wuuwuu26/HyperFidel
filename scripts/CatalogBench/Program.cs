@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
-using HyperFi.Library;
+using HyperFidel.Library;
 
 namespace CatalogBench;
 
@@ -15,7 +15,7 @@ internal static class Program
     private static int Main(string[] args)
     {
         if (args.Length != 1) throw new ArgumentException("Specify one output JSON path.");
-        var root = Path.Combine(Path.GetTempPath(), "hyperfi-catalog-bench-" + Guid.NewGuid().ToString("N"));
+        var root = Path.Combine(Path.GetTempPath(), "hyperfidel-catalog-bench-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         var previousProfile = AudioDatabase.ActiveProfileId;
         var results = new List<QueryMeasurement>();
@@ -63,7 +63,7 @@ internal static class Program
             }
             var fullRoot = Path.GetFullPath(root);
             if (!string.Equals(Path.GetDirectoryName(fullRoot), Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase)
-                || !Path.GetFileName(fullRoot).StartsWith("hyperfi-catalog-bench-", StringComparison.Ordinal))
+                || !Path.GetFileName(fullRoot).StartsWith("hyperfidel-catalog-bench-", StringComparison.Ordinal))
                 throw new InvalidOperationException("Benchmark cleanup left its owned temporary directory.");
             Directory.Delete(fullRoot, recursive: true);
         }

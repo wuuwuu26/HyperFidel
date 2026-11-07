@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(HyperFiAirPlay2Bridge VERSION 0.1.0 LANGUAGES C CXX)
+project(HyperFidelAirPlay2Bridge VERSION 0.1.0 LANGUAGES C CXX)
 
 # The fetched crypto target is static but becomes part of this shared bridge.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -19,7 +19,7 @@ FetchContent_Declare(apple_alac
     GIT_REPOSITORY https://github.com/macosforge/alac.git
     GIT_TAG c38887c5c5e64a4b31108733bd79ca9b2496d987
     GIT_SHALLOW FALSE
-    SOURCE_SUBDIR __hyperfi_no_upstream_cmake)
+    SOURCE_SUBDIR __hyperfidel_no_upstream_cmake)
 FetchContent_MakeAvailable(apple_alac)
 
 add_library(apple_alac_encoder STATIC

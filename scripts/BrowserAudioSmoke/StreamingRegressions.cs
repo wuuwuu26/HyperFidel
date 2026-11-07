@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using HyperFi.Audio;
+using HyperFidel.Audio;
 
 /// <summary>Exercises never-finished HTTP inputs and actual progressive output without audio hardware.</summary>
 internal static class StreamingRegressions

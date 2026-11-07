@@ -11,9 +11,9 @@ int main() {
     std::array<std::uint8_t, 32> key{};
     constexpr std::uint32_t streamConnectionId = 0x12345678;
     constexpr std::uint32_t initialTimestamp = 66150;
-    hyperfi::airplay2::RealtimeAudioPacketizer packetizer(
+    hyperfidel::airplay2::RealtimeAudioPacketizer packetizer(
         44100, key, streamConnectionId, initialTimestamp);
-    std::vector<std::byte> pcm(hyperfi::airplay2::AlacEncoder::PcmBytesPerPacket);
+    std::vector<std::byte> pcm(hyperfidel::airplay2::AlacEncoder::PcmBytesPerPacket);
     pcm[0] = std::byte{0x34};
     pcm[1] = std::byte{0x12};
     const auto first = packetizer.packetize(pcm);

@@ -7,17 +7,17 @@ using System.Text.Json;
 using Avalonia.Threading;
 using Avalonia;
 using Avalonia.Headless;
-using HyperFi.Mcp;
-using HyperFi.Remote;
+using HyperFidel.Mcp;
+using HyperFidel.Remote;
 using QRCoder;
-using HyperFi;
+using HyperFidel;
 
 // Exercise the production host and dispatcher with synthetic metadata, never the real library.
 using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(45));
-var fixtureDirectory = Path.Combine(Path.GetTempPath(), "hyperfi-remote-smoke-" + Guid.NewGuid().ToString("N"));
+var fixtureDirectory = Path.Combine(Path.GetTempPath(), "hyperfidel-remote-smoke-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(fixtureDirectory);
 File.WriteAllText(Path.Combine(fixtureDirectory, ".legacy-data-migrated"), "isolated fixture");
-Environment.SetEnvironmentVariable("HYPERFI_DATA_DIR", fixtureDirectory);
+Environment.SetEnvironmentVariable("HYPERFIDEL_DATA_DIR", fixtureDirectory);
 AppBuilder.Configure<Application>().UseHeadless(new AvaloniaHeadlessPlatformOptions()).SetupWithoutStarting();
 var dispatcher = Dispatcher.UIThread;
 var run = Task.Run(async () =>
@@ -141,7 +141,7 @@ var run = Task.Run(async () =>
             };
             bridge.PlayFileFunc = async path => { playbackEntered.SetResult(path); await playbackReady.Task; };
         });
-        const string opaqueReference = "hyperfi://fixture/track/70001";
+        const string opaqueReference = "hyperfidel://fixture/track/70001";
         var toolPlay = new McpTools(bridge).PlayAsync(opaqueReference);
         Check(await playbackEntered.Task.WaitAsync(TimeSpan.FromSeconds(10)) == opaqueReference,
             "MCP playback receives opaque identity before resolution");
@@ -154,7 +154,7 @@ var run = Task.Run(async () =>
         {
             bridge.ReplaceQueueFunc = async paths => { replacementEntered.SetResult(paths); return await replacementReady.Task; };
         });
-        var queuePaths = new[] { opaqueReference, "synthetic-local.flac", "hyperfi://missing/track/1" };
+        var queuePaths = new[] { opaqueReference, "synthetic-local.flac", "hyperfidel://missing/track/1" };
         var replacementTool = new McpTools(bridge).ReplaceQueueAsync(queuePaths);
         Check((await replacementEntered.Task.WaitAsync(TimeSpan.FromSeconds(10))).SequenceEqual(queuePaths),
             "MCP queue resolver receives original ordered references");

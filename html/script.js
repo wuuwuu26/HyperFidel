@@ -1,4 +1,4 @@
-const repoApi = 'https://api.github.com/repos/wuuwuu26/HyperFi/releases/latest';
+const repoApi = 'https://api.github.com/repos/wuuwuu26/HyperFidel/releases/latest';
 
 document.querySelector('.nav-toggle').addEventListener('click', (event) => {
   const nav = document.querySelector('#main-nav');
@@ -22,7 +22,7 @@ document.querySelectorAll('[data-shot]').forEach(button => button.addEventListen
   button.setAttribute('aria-selected', 'true');
   shot.animate([{opacity:.2,transform:'scale(.99)'},{opacity:1,transform:'scale(1)'}],{duration:320});
   shot.src = `/assets/screenshots/${button.dataset.shot}`;
-  shot.alt = `HyperFi – ${button.dataset.title}`;
+  shot.alt = `HyperFidel – ${button.dataset.title}`;
   shotTitle.textContent = button.dataset.title;
 }));
 

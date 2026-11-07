@@ -6,7 +6,7 @@
 
 int main() {
     using namespace std::chrono_literals;
-    const hyperfi::airplay2::PacketPacer pacer(44100, 352);
+    const hyperfidel::airplay2::PacketPacer pacer(44100, 352);
     assert(pacer.releaseOffset(0) == 0us);
     assert(pacer.releaseOffset(100) > 798ms);
     assert(pacer.releaseOffset(100) < 799ms);

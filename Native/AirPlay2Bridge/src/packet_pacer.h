@@ -4,7 +4,7 @@
 #include <chrono>
 #include <cstdint>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 
 /** Paces RTP delivery on the negotiated realtime audio sample clock. */
 class PacketPacer final {
@@ -24,4 +24,4 @@ private:
     std::chrono::steady_clock::time_point started_{};
 };
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

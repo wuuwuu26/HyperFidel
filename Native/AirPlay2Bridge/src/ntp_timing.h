@@ -6,7 +6,7 @@
 #include <atomic>
 #include <thread>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 
 /** Answers the NTP-style UDP timing requests used by realtime AirPlay streams. */
 class NtpTimingResponder final {
@@ -34,4 +34,4 @@ private:
     std::atomic<std::uint64_t> responses_{0};
 };
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

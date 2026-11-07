@@ -39,7 +39,7 @@
     <ClCompile>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(CwAsioDir)\src;$(CwAsioDir)\src\asio;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>HYPERFI_CWASIO=1;WINDOWS=1;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HYPERFIDEL_CWASIO=1;WINDOWS=1;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>ole32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>

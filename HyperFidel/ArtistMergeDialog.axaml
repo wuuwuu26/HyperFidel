@@ -1,0 +1,47 @@
+<Window x:Class="HyperFidel.ArtistMergeDialog"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{DynamicResource L_MergeArtistsTitle}"
+        Icon="avares://HyperFidel/Assets/HyperFidel.ico"
+        Width="540"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource AppSurfaceBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock x:Name="MessageTextBlock"
+                   FontSize="{DynamicResource FontSizeBodyStrong}"
+                   LineHeight="21"
+                   TextWrapping="Wrap"
+                   Foreground="{DynamicResource AppPrimaryTextBrush}"/>
+        <StackPanel Grid.Row="1" Margin="0,20,0,20">
+            <Button x:Name="CurrentArtistButton"
+                    Height="40"
+                    Margin="0,0,0,10"
+                    Background="{DynamicResource AppAccentBrush}"
+                    Foreground="{DynamicResource AppAccentTextBrush}"
+                    BorderThickness="0"
+                    Click="CurrentArtistButton_OnClick"/>
+            <Button x:Name="MatchingArtistButton"
+                    Height="40"
+                    Background="{DynamicResource AppAccentBrush}"
+                    Foreground="{DynamicResource AppAccentTextBrush}"
+                    BorderThickness="0"
+                    Click="MatchingArtistButton_OnClick"/>
+        </StackPanel>
+        <Button Grid.Row="2"
+                Width="100"
+                Height="34"
+                HorizontalAlignment="Right"
+                Content="{DynamicResource L_Cancel}"
+                Background="{DynamicResource AppButtonBrush}"
+                Foreground="{DynamicResource AppButtonTextBrush}"
+                BorderBrush="{DynamicResource AppButtonBorderBrush}"
+                Click="CancelButton_OnClick"/>
+    </Grid>
+</Window>

@@ -1,0 +1,218 @@
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using HyperFidel.Localization;
+using HyperFidel.Streaming;
+using HyperFidel.Updates;
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.InteropServices;
+
+namespace HyperFidel;
+
+public partial class AboutWindow : Window
+{
+    private readonly string _version;
+    private readonly string _updatePublicKey;
+    private readonly IReadOnlyList<HyperFidelServerSettings> _servers;
+    private ReleaseAssetInfo? _availableInstaller;
+
+    /// <summary>Initializes the About window and displays the build-time release version.</summary>
+    public AboutWindow() : this([])
+    {
+    }
+
+    /// <summary>Initializes the About window with servers that should follow a desktop update.</summary>
+    /// <param name="servers">Configured HyperFidel Servers eligible for a matching signed update.</param>
+    internal AboutWindow(IReadOnlyList<HyperFidelServerSettings> servers)
+    {
+        InitializeComponent();
+        _servers = servers;
+        var assembly = typeof(AboutWindow).Assembly;
+        _version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion ?? assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+        _updatePublicKey = assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+            .FirstOrDefault(attribute => attribute.Key == "HyperFidelUpdatePublicKey")?.Value ?? string.Empty;
+        VersionTextBlock.Text = string.Format(LocalizationManager.Current.VersionLabel, _version);
+        BuildInfoTextBlock.Text = string.Join(
+            " · ",
+            RuntimeInformation.FrameworkDescription,
+            RuntimeInformation.OSDescription,
+            RuntimeInformation.ProcessArchitecture.ToString());
+        Opened += (_, _) => WindowChrome.ApplyTheme(this);
+    }
+
+    private void OpenLinkButton_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string url } ||
+            !Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            return;
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
+        }
+        catch (Exception exception) when (exception is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+        }
+    }
+
+    private async void CheckForUpdatesButton_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        CheckForUpdatesButton.IsEnabled = false;
+        InstallUpdateButton.IsVisible = false;
+        UpdateStatusTextBlock.Text = LocalizationManager.Current.CheckingForUpdates;
+        try
+        {
+            using var updates = new ReleaseUpdateService(_updatePublicKey);
+            var manifest = await updates.GetLatestManifestAsync();
+            _availableInstaller = DesktopUpdatePlatform.SelectInstaller(manifest.Assets);
+            var available = _availableInstaller is not null && ReleaseUpdateService.IsNewer(_version, manifest.Version);
+            UpdateStatusTextBlock.Text = available
+                ? string.Format(LocalizationManager.Current.UpdateAvailable, manifest.Version)
+                : LocalizationManager.Current.UpToDate;
+            InstallUpdateButton.IsVisible = available;
+        }
+        catch (InvalidOperationException) when (string.IsNullOrWhiteSpace(_updatePublicKey))
+        {
+            UpdateStatusTextBlock.Text = LocalizationManager.Current.UpdateUnavailable;
+        }
+        catch
+        {
+            UpdateStatusTextBlock.Text = LocalizationManager.Current.UpdateFailed;
+        }
+        finally
+        {
+            CheckForUpdatesButton.IsEnabled = true;
+        }
+    }
+
+    private async void InstallUpdateButton_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (_availableInstaller is null)
+            return;
+        await InstallUpdateAsync(_availableInstaller);
+    }
+
+    /// <summary>Starts the verified desktop update flow for an installer selected by the startup update check.</summary>
+    /// <param name="installer">Signed-manifest installer entry selected by the update check.</param>
+    /// <returns>A task representing the download, verification, server relay, and installer launch.</returns>
+    internal async Task StartUpdateAsync(ReleaseAssetInfo installer)
+    {
+        _availableInstaller = installer;
+        InstallUpdateButton.IsVisible = true;
+        await InstallUpdateAsync(installer);
+    }
+
+    /// <summary>Downloads, verifies, relays, and launches the selected desktop installer.</summary>
+    /// <param name="availableInstaller">Installer entry previously obtained from the signed manifest.</param>
+    /// <returns>A task representing the complete update attempt.</returns>
+    private async Task InstallUpdateAsync(ReleaseAssetInfo availableInstaller)
+    {
+        CheckForUpdatesButton.IsEnabled = false;
+        InstallUpdateButton.IsEnabled = false;
+        UpdateStatusTextBlock.Text = LocalizationManager.Current.DownloadingUpdate;
+        try
+        {
+            using var updates = new ReleaseUpdateService(_updatePublicKey);
+            var verified = await updates.GetLatestManifestBundleAsync();
+            var installer = DesktopUpdatePlatform.SelectInstaller(
+                verified.Manifest.Assets,
+                availableInstaller.File)
+                ?? throw new InvalidOperationException("The selected desktop installer is no longer available.");
+            var installerPath = await updates.DownloadAssetAsync(installer);
+            var failedServers = await UpdateServersAsync(updates, verified);
+            if (failedServers.Count > 0)
+            {
+                var proceed = await AppMessageBox.ConfirmAsync(
+                    string.Format(
+                        LocalizationManager.Current.ServerUpdatesFailedContinue,
+                        string.Join(", ", failedServers)),
+                    LocalizationManager.Current.Updates,
+                    this);
+                if (!proceed)
+                {
+                    File.Delete(installerPath);
+                    CheckForUpdatesButton.IsEnabled = true;
+                    InstallUpdateButton.IsEnabled = true;
+                    UpdateStatusTextBlock.Text = LocalizationManager.Current.UpdateFailed;
+                    return;
+                }
+            }
+            UpdateStatusTextBlock.Text = LocalizationManager.Current.InstallingUpdate;
+            await DesktopUpdatePlatform.LaunchInstallerAsync(installerPath);
+            if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                if (desktop.MainWindow is MainWindow playbackWindow)
+                    await playbackWindow.PreparePlaybackShutdownAsync();
+                desktop.Shutdown();
+            }
+        }
+        catch (Exception exception)
+        {
+            CrashLogger.Log(exception, "Desktop update installation");
+            UpdateStatusTextBlock.Text = LocalizationManager.Current.UpdateFailed;
+            CheckForUpdatesButton.IsEnabled = true;
+            InstallUpdateButton.IsEnabled = true;
+        }
+    }
+
+    /// <summary>Relays the matching signed package to every reachable update-enabled server.</summary>
+    /// <param name="updates">Release service used to download verified package assets.</param>
+    /// <param name="verified">Verified manifest shared with the desktop update.</param>
+    /// <returns>Names of servers whose required update failed.</returns>
+    private async Task<IReadOnlyList<string>> UpdateServersAsync(
+        ReleaseUpdateService updates,
+        VerifiedReleaseManifest verified)
+    {
+        if (_servers.Count == 0)
+            return [];
+
+        var failures = new List<string>();
+        var packages = new Dictionary<string, string>(StringComparer.Ordinal);
+        try
+        {
+            using var client = new HyperFidelServerClient();
+            foreach (var server in _servers)
+            {
+                UpdateStatusTextBlock.Text = string.Format(
+                    LocalizationManager.Current.UpdatingNamedServer,
+                    server.Name);
+                try
+                {
+                    var info = await client.TestConnectionAsync(server);
+                    var status = await client.GetUpdateStatusAsync(server);
+                    if (info is null || status is not { Enabled: true, Supported: true })
+                        continue;
+                    if (!ReleaseUpdateService.IsNewer(info.Version, verified.Manifest.Version))
+                        continue;
+                    var asset = verified.Manifest.Assets.FirstOrDefault(candidate =>
+                        candidate.Component == "server" && candidate.OperatingSystem == "linux" &&
+                        candidate.Architecture == status.Architecture && candidate.Type == status.InstallType);
+                    if (asset is null)
+                    {
+                        failures.Add(server.Name);
+                        continue;
+                    }
+                    if (!packages.TryGetValue(asset.File, out var packagePath))
+                    {
+                        packagePath = await updates.DownloadAssetAsync(asset);
+                        packages.Add(asset.File, packagePath);
+                    }
+                    await client.UploadUpdateAsync(server, verified, packagePath, asset.File);
+                    await client.ApplyUpdateAsync(server);
+                }
+                catch (Exception exception)
+                {
+                    CrashLogger.Log(exception, $"Server update relay ({server.Name})");
+                    failures.Add(server.Name);
+                }
+            }
+        }
+        finally
+        {
+            foreach (var packagePath in packages.Values)
+                File.Delete(packagePath);
+        }
+        return failures;
+    }
+}

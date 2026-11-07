@@ -1,11 +1,11 @@
-# HyperFi Server and MCP behind HTTPS
+# HyperFidel Server and MCP behind HTTPS
 
-These examples put a proxy on the same machine as HyperFi Server and the desktop
+These examples put a proxy on the same machine as HyperFidel Server and the desktop
 MCP host. Replace `music.example.net` with your DNS name. The public server URL
-is `https://music.example.net/hyperfi`; enter that complete base URL in the
+is `https://music.example.net/hyperfidel`; enter that complete base URL in the
 desktop server connection. MCP clients use `https://music.example.net/mcp`.
 
-HyperFi Server listens on port 5280 by default. Bind it to loopback when only
+HyperFidel Server listens on port 5280 by default. Bind it to loopback when only
 the local proxy should reach it, for example with
 `ASPNETCORE_URLS=http://127.0.0.1:5280`. Restrict upstream ports with a
 firewall. For proxies on another machine, replace loopback with a private
@@ -13,7 +13,7 @@ upstream address and protect that connection with a trusted private network, VPN
 or upstream TLS.
 
 For MCP, enable **Allow access from the local network** in Settings and
-configure the displayed bearer token in the client. This enables HyperFi's
+configure the displayed bearer token in the client. This enables HyperFidel's
 authentication middleware even when the proxy is on the same host. Keep port
 49200 inaccessible from untrusted networks. Proxying a default unauthenticated
 loopback MCP host to the internet would expose its enabled tools without the
@@ -36,7 +36,7 @@ music.example.net {
         output discard
     }
 
-    handle_path /hyperfi/* {
+    handle_path /hyperfidel/* {
         reverse_proxy 127.0.0.1:5280 {
             flush_interval -1
         }
@@ -55,25 +55,25 @@ music.example.net {
 }
 ```
 
-`handle_path` removes `/hyperfi` before forwarding, while the MCP handler
+`handle_path` removes `/hyperfidel` before forwarding, while the MCP handler
 retains `/mcp`. Caddy forwards request headers and queries by default, so
 `X-Api-Key`, `Authorization`, range headers, profile selectors and query
-authentication reach HyperFi. The negative flush interval forwards streaming
+authentication reach HyperFidel. The negative flush interval forwards streaming
 data promptly. No short upstream response timeout is added. Validate with
 `caddy validate --config /etc/caddy/Caddyfile` before reloading your service.
 
 ## nginx
 
 Obtain a certificate and private key for the public hostname first, and replace
-the two `/etc/ssl/hyperfi/` paths below. Place this server block inside nginx's
+the two `/etc/ssl/hyperfidel/` paths below. Place this server block inside nginx's
 `http` context:
 
 ```nginx
 server {
     listen 443 ssl;
     server_name music.example.net;
-    ssl_certificate /etc/ssl/hyperfi/fullchain.pem;
-    ssl_certificate_key /etc/ssl/hyperfi/privkey.pem;
+    ssl_certificate /etc/ssl/hyperfidel/fullchain.pem;
+    ssl_certificate_key /etc/ssl/hyperfidel/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
 
     access_log off;
@@ -91,7 +91,7 @@ server {
     proxy_read_timeout 3600s;
     proxy_send_timeout 3600s;
 
-    location /hyperfi/ {
+    location /hyperfidel/ {
         proxy_pass http://127.0.0.1:5280/;
     }
 
@@ -109,17 +109,17 @@ server {
 }
 ```
 
-The trailing slash on the server `proxy_pass` strips `/hyperfi/`; the MCP URLs
+The trailing slash on the server `proxy_pass` strips `/hyperfidel/`; the MCP URLs
 retain their original path. Queries remain intact. Buffering and caching are
 disabled for immediate streaming/SSE delivery. Timeouts are idle intervals
 between reads/writes, not a one-hour limit on a continuously active stream.
 Adjust the upload limit if you use larger library import archives. Run
 `nginx -t` before reloading. The examples deliberately do not redirect missing
-trailing slashes; use `/hyperfi/api/...` for API requests.
+trailing slashes; use `/hyperfidel/api/...` for API requests.
 
 ## Authentication and testing
 
-Use a current HyperFi client. Server API calls require `X-Api-Key`; generated
+Use a current HyperFidel client. Server API calls require `X-Api-Key`; generated
 audio and artwork requests also support the `key` query parameter. MCP uses
 `Authorization: Bearer`, not the server API key. Never insert a real credential
 into proxy configuration, a support report, shell history, a screenshot or a
@@ -131,7 +131,7 @@ balancer or monitoring service in front of these proxies as well.
 Before opening external access, check all of the following with disposable test
 credentials:
 
-- `GET /hyperfi/api/health` reaches the server without authentication.
+- `GET /hyperfidel/api/health` reaches the server without authentication.
 - A protected catalog request fails without a key and succeeds with the header;
   repeat with the query form without recording that URL.
 - Audio range requests retain `Range`, status 206, `Content-Range` and exact
@@ -156,10 +156,10 @@ ports/test certificates preserved the prefix/query, both authentication forms,
 unauthorized responses, range status/header/bytes and SSE delivery before
 upstream completion. nginx's `/dev/null` log sink used Windows `NUL` in the
 fixture. No personal backend or credential was used. These tests do not run the
-actual HyperFi endpoints, certificate issuance, reconnection or a long session.
+actual HyperFidel endpoints, certificate issuance, reconnection or a long session.
 
 Configuration and acceptance recipes do not establish a production deployment.
-Human end-to-end testing with HyperFi, both proxies and a real MCP client is
+Human end-to-end testing with HyperFidel, both proxies and a real MCP client is
 still required for issue #180. Record OS, proxy version, key/header checks,
 seeking, streaming and the MCP client/transport in that report. Do not include
 credentials or authenticated URLs.

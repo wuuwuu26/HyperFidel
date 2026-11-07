@@ -1,9 +1,0 @@
-[Unit]
-Description=Watch for verified HyperFi Server update requests
-
-[Path]
-PathExists=/var/lib/hyperfi-server/updates/ready
-Unit=hyperfi-server-updater.service
-
-[Install]
-WantedBy=multi-user.target

@@ -36,15 +36,15 @@ the table is a snapshot, not a permanent fact.
 | .NET runtime and SDK            | `net10.0` / `net10.0-windows10.0.19041.0` (SDK 10.0.401)                                           | LTS with support until 14 November 2028                               | None                                             |
 | Avalonia                        | `12.1.2` (incl. `Avalonia.Controls.DataGrid`)                                                      | Matches the .NET 10 toolchain                                         | None (a future major needs review)               |
 | `AvaloniaUI.DiagnosticsSupport` | not referenced                                                                                     | The Debug-only DevTools bridge; the app never called `AttachDevTools` | Add it deliberately if DevTools are wanted again |
-| SkiaSharp                       | `3.119.4` (`HyperFi.Core`, plus `SkiaSharp.NativeAssets.Linux.NoDependencies` in `HyperFi.Server`) | `Avalonia.Skia` 12.1.2 depends on SkiaSharp `3.119.4`                 | None (major upgrades still need review)          |
+| SkiaSharp                       | `3.119.4` (`HyperFidel.Core`, plus `SkiaSharp.NativeAssets.Linux.NoDependencies` in `HyperFidel.Server`) | `Avalonia.Skia` 12.1.2 depends on SkiaSharp `3.119.4`                 | None (major upgrades still need review)          |
 | `Microsoft.Data.Sqlite`         | `10.0.12`                                                                                          | Matches the .NET 10 toolchain                                         | None (major upgrades still need review)          |
 | `Microsoft.NET.Test.Sdk`        | `18.10.1`                                                                                          | Matches the .NET 10 toolchain                                         | None (major upgrades still need review)          |
 | `Tmds.DBus.Protocol`            | `0.95.1`                                                                                           | Linux-only; `0.92.0` is the documented floor                          | None (minor/patch updates are welcome)           |
 
-Target frameworks today: `HyperFi` and `HyperFi.Tests` use
+Target frameworks today: `HyperFidel` and `HyperFidel.Tests` use
 `net10.0-windows10.0.19041.0` on Windows and `net10.0` elsewhere;
-`HyperFi.Core`, `HyperFi.Server`, `HyperFi.Core.Tests`, and
-`HyperFi.Server.Tests` use `net10.0`. `global.json` pins SDK `10.0.100` with
+`HyperFidel.Core`, `HyperFidel.Server`, `HyperFidel.Core.Tests`, and
+`HyperFidel.Server.Tests` use `net10.0`. `global.json` pins SDK `10.0.100` with
 `rollForward: latestFeature`, so any installed `10.0.x` SDK satisfies it.
 
 ## Completed: the .NET 10 LTS migration
@@ -55,18 +55,18 @@ LTS line. What changed:
 1. `global.json` pins SDK `10.0.100` with `rollForward: latestFeature`, so any
    installed `10.0.x` SDK satisfies it.
 2. Every `TargetFramework` moved in one commit. A mixed set does not build,
-   because the desktop project would reference a `net10.0` `HyperFi.Core` from a
+   because the desktop project would reference a `net10.0` `HyperFidel.Core` from a
    `net8.0` target.
 3. `Microsoft.Data.Sqlite` moved to `10.0.12`, `Microsoft.AspNetCore.TestHost`
    to `10.0.12`, and `Microsoft.NET.Test.Sdk` to `18.10.1`.
 4. Every workflow pins `dotnet-version: 10.0.x`.
-5. `HyperFi/HyperFi.csproj` now copies the Lucene `NOTICE.txt` from the
+5. `HyperFidel/HyperFidel.csproj` now copies the Lucene `NOTICE.txt` from the
    `4.8.0-beta00018` package directory it actually references; the path still
    named `beta00017`, so the license file was silently skipped.
 
 Verification: `scripts/verify-all.ps1` green in Debug and Release with
-`--warnaserror`, and 570 tests passing on `net10.0` (`HyperFi.Core.Tests` 427,
-`HyperFi.Tests` 105, `HyperFi.Server.Tests` 38).
+`--warnaserror`, and 570 tests passing on `net10.0` (`HyperFidel.Core.Tests` 427,
+`HyperFidel.Tests` 105, `HyperFidel.Server.Tests` 38).
 
 ## Completed: the Avalonia 12 migration
 
@@ -105,7 +105,7 @@ Verification: clean Debug and Release builds with `--warnaserror` (0 errors, 0
 warnings) and `scripts/verify-all.ps1` green, with 570 tests passing.
 
 **Runtime verification.** A Windows smoke test of the Release build in
-`HyperFi/bin/Release/net10.0-windows10.0.19041.0` found no obvious defects. That
+`HyperFidel/bin/Release/net10.0-windows10.0.19041.0` found no obvious defects. That
 build was confirmed to carry `Avalonia*` 12.1.2, `Avalonia.Controls.DataGrid`
 12.1.2, `SkiaSharp` 3.119.4, and `Microsoft.Data.Sqlite` 10.0.12, so it
 exercises both this migration and the .NET 10 one.
@@ -125,7 +125,7 @@ Still outstanding:
   than assumed to still apply.
 - Features a general pass does not reach: drag and drop into Up Next, the
   year-in-review PNG and PDF export, the fullscreen karaoke view, the output and
-  equalizer profile dialogs, remote HyperFi Server and Plex playback, MCP and AI
+  equalizer profile dialogs, remote HyperFidel Server and Plex playback, MCP and AI
   tool execution, cross-device resume, and the WebDAV backup upload.
 
 ## Completed: compiled bindings
@@ -198,8 +198,8 @@ future Avalonia line changes or removes `DataGrid`.
 
 SkiaSharp is on `3.119.4`, matching `Avalonia.Skia` 12.1.2. A future Avalonia
 release that moves to SkiaSharp 4.x repeats the same procedure: bump `SkiaSharp`
-in `HyperFi.Core` and `SkiaSharp.NativeAssets.Linux.NoDependencies` in
-`HyperFi.Server` in the same commit as the Avalonia packages, replace the APIs
+in `HyperFidel.Core` and `SkiaSharp.NativeAssets.Linux.NoDependencies` in
+`HyperFidel.Server` in the same commit as the Avalonia packages, replace the APIs
 the new line removed, keep the desktop free of a separate SkiaSharp reference,
 and verify the Linux packages still ship the native library.
 
@@ -216,8 +216,8 @@ already match the .NET 10 toolchain, so only a major bump remains.
 
 1. Evaluate the newer line against `net10.0` first; a line that needs an even
    newer runtime has to wait for the next LTS migration.
-2. Bump `Microsoft.Data.Sqlite` in `HyperFi.Core` and re-run every database test
-   through `HyperFi.Core.Tests.CoreTestDatabase`.
+2. Bump `Microsoft.Data.Sqlite` in `HyperFidel.Core` and re-run every database test
+   through `HyperFidel.Core.Tests.CoreTestDatabase`.
 3. Bump `Microsoft.NET.Test.Sdk` in all three test projects together and re-run
    all of them.
 

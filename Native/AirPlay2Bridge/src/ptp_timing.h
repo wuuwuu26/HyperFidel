@@ -10,7 +10,7 @@
 #include <string>
 #include <thread>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 
 /** Minimal unicast gPTP grandmaster used by native buffered AirPlay 2 sessions. */
 class PtpTimingGrandmaster final {
@@ -54,4 +54,4 @@ private:
     std::uint16_t announceSequence_ = 1;
 };
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

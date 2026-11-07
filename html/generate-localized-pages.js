@@ -13,7 +13,7 @@ const source = fs.readFileSync(sourcePath, 'utf8')
   .replace(/ loading="lazy" decoding="async"/g, '')
   .replace(/ width="\d+" height="\d+"/g, '');
 const metadata = Object.fromEntries(Object.entries(pageMetadata).map(([key, value]) => [key, [value.title, value.description]]));
-const urls = Object.fromEntries(Object.entries(languageUrls).map(([key, value]) => [key, 'https://github.com/wuuwuu26/HyperFi' + value]));
+const urls = Object.fromEntries(Object.entries(languageUrls).map(([key, value]) => [key, 'https://github.com/wuuwuu26/HyperFidel' + value]));
 function translateText(html, language) {
   if (language === 'de') return html;
   return html.replace(/>([^<>]+)</g, (whole, value) => {
@@ -30,16 +30,16 @@ function build(language) {
     .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${metadata[language][1]}">`)
     .replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${metadata[language][0]}">`)
     .replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${metadata[language][1]}">`)
-    .replace(/<meta property="og:image" content="[^"]*">/, '<meta property="og:image" content="https://github.com/wuuwuu26/HyperFi/assets/og.png">')
-    .replace(/(<meta property="og:type" content="website">)/, `$1\n  <meta property="og:site_name" content="HyperFi">\n  <meta property="og:url" content="${urls[language]}">\n  <meta property="og:locale" content="${{en:'en_US',de:'de_DE',fr:'fr_FR',es:'es_ES',ru:'ru_RU',zh:'zh_CN',hi:'hi_IN'}[language]}">`)
-    .replace(/(<meta name="twitter:card" content="summary_large_image">)/, `$1\n  <meta name="twitter:title" content="${metadata[language][0]}">\n  <meta name="twitter:description" content="${metadata[language][1]}">\n  <meta name="twitter:image" content="https://github.com/wuuwuu26/HyperFi/assets/og.png">`)
-    .replace(/(<link rel="icon"[^>]+>)/, `<link rel="canonical" href="${urls[language]}">\n  <link rel="alternate" hreflang="x-default" href="https://github.com/wuuwuu26/HyperFi/">\n  ${Object.entries(urls).map(([lang, url]) => `<link rel="alternate" hreflang="${lang}" href="${url}">`).join('\n  ')}\n  $1`)
-    .replace('</head>', `  <script type="application/ld+json">${JSON.stringify({'@context':'https://schema.org','@type':'SoftwareApplication',name:'HyperFi',url:urls[language],applicationCategory:'MultimediaApplication',operatingSystem:'Windows 10, Windows 11, Linux, macOS',description:metadata[language][1],license:'https://www.apache.org/licenses/LICENSE-2.0',isAccessibleForFree:true,downloadUrl:'https://github.com/wuuwuu26/HyperFi/releases/latest',softwareHelp:'https://github.com/wuuwuu26/HyperFi/wiki',author:{'@type':'Person',name:'HyperFi contributors'}})}</script>\n</head>`)
+    .replace(/<meta property="og:image" content="[^"]*">/, '<meta property="og:image" content="https://github.com/wuuwuu26/HyperFidel/assets/og.png">')
+    .replace(/(<meta property="og:type" content="website">)/, `$1\n  <meta property="og:site_name" content="HyperFidel">\n  <meta property="og:url" content="${urls[language]}">\n  <meta property="og:locale" content="${{en:'en_US',de:'de_DE',fr:'fr_FR',es:'es_ES',ru:'ru_RU',zh:'zh_CN',hi:'hi_IN'}[language]}">`)
+    .replace(/(<meta name="twitter:card" content="summary_large_image">)/, `$1\n  <meta name="twitter:title" content="${metadata[language][0]}">\n  <meta name="twitter:description" content="${metadata[language][1]}">\n  <meta name="twitter:image" content="https://github.com/wuuwuu26/HyperFidel/assets/og.png">`)
+    .replace(/(<link rel="icon"[^>]+>)/, `<link rel="canonical" href="${urls[language]}">\n  <link rel="alternate" hreflang="x-default" href="https://github.com/wuuwuu26/HyperFidel/">\n  ${Object.entries(urls).map(([lang, url]) => `<link rel="alternate" hreflang="${lang}" href="${url}">`).join('\n  ')}\n  $1`)
+    .replace('</head>', `  <script type="application/ld+json">${JSON.stringify({'@context':'https://schema.org','@type':'SoftwareApplication',name:'HyperFidel',url:urls[language],applicationCategory:'MultimediaApplication',operatingSystem:'Windows 10, Windows 11, Linux, macOS',description:metadata[language][1],license:'https://www.apache.org/licenses/LICENSE-2.0',isAccessibleForFree:true,downloadUrl:'https://github.com/wuuwuu26/HyperFidel/releases/latest',softwareHelp:'https://github.com/wuuwuu26/HyperFidel/wiki',author:{'@type':'Person',name:'HyperFidel contributors'}})}</script>\n</head>`)
     .replace(/assets\/screenshots\/([a-z-]+)\.png/g, 'assets/screenshots/$1.png')
     .replace(/data-shot="([a-z-]+)\.png"/g, 'data-shot="$1.webp"')
     .replace(/(href|src)="(assets\/|styles\.css|wiki-links\.css|i18n\.js|script\.js)/g, '$1="/$2')
     .replace(/src="\/assets\/screenshots\/([^\"]+)"/g, 'src="/assets/screenshots/$1" width="2560" height="1384"')
-    .replace(/src="\/assets\/brand\/hyperfi\.png"/g, 'src="/assets/brand/hyperfi.png" width="1672" height="420"')
+    .replace(/src="\/assets\/brand\/hyperfidel\.png"/g, 'src="/assets/brand/hyperfidel.png" width="1672" height="420"')
     .replace(/src="\/assets\/brand\/icon\.png"/g, 'src="/assets/brand/icon.png" width="812" height="587"')
     .replace(/<img id="main-shot"/, '<img loading="lazy" decoding="async" id="main-shot"')
     .replace(/<body>/, `<body data-page-language="${language}">`);
@@ -52,7 +52,7 @@ Object.keys(languageUrls).forEach(build);
 // Derive the sitemap from the same supported locales as the selector and resources.
 const alternates = Object.entries(urls).map(([lang, url]) =>
   `<xhtml:link rel="alternate" hreflang="${lang}" href="${url}"/>`).join('')
-  + '<xhtml:link rel="alternate" hreflang="x-default" href="https://github.com/wuuwuu26/HyperFi/"/>';
+  + '<xhtml:link rel="alternate" hreflang="x-default" href="https://github.com/wuuwuu26/HyperFidel/"/>';
 fs.writeFileSync(path.join(root, 'sitemap.xml'),
   '<?xml version="1.0" encoding="UTF-8"?>\n'
   + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'

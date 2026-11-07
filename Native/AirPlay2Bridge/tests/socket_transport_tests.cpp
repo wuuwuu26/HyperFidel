@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <iostream>
 
-using hyperfi::airplay2::Socket;
+using hyperfidel::airplay2::Socket;
 
 int main() {
     Socket udp = Socket::bindUdp();

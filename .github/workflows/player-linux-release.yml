@@ -69,11 +69,11 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore Linux player
-        run: dotnet restore HyperFi/HyperFi.csproj --runtime ${{ matrix.rid }}
+        run: dotnet restore HyperFidel/HyperFidel.csproj --runtime ${{ matrix.rid }}
 
       - name: Publish Linux player
         run: >
-          dotnet publish HyperFi/HyperFi.csproj
+          dotnet publish HyperFidel/HyperFidel.csproj
           --configuration Release
           --runtime ${{ matrix.rid }}
           --self-contained true
@@ -91,25 +91,25 @@ jobs:
           VERSION="${{ steps.ver.outputs.version }}"
           RID="${{ matrix.rid }}"
           PUB="publish/${RID}"
-          ARCHIVE_ROOT="archive/HyperFi-${VERSION}-${RID}"
+          ARCHIVE_ROOT="archive/HyperFidel-${VERSION}-${RID}"
           STAGE="stage/${RID}"
 
-          chmod 755 "${PUB}/HyperFi"
+          chmod 755 "${PUB}/HyperFidel"
           mkdir -p packages "${ARCHIVE_ROOT}"
           cp -a "${PUB}/." "${ARCHIVE_ROOT}/"
-          tar -czf "packages/HyperFi-${VERSION}-${RID}.tar.gz" \
-            -C archive "HyperFi-${VERSION}-${RID}"
+          tar -czf "packages/HyperFidel-${VERSION}-${RID}.tar.gz" \
+            -C archive "HyperFidel-${VERSION}-${RID}"
 
-          mkdir -p "${STAGE}/usr/lib/hyperfi"
+          mkdir -p "${STAGE}/usr/lib/hyperfidel"
           mkdir -p "${STAGE}/usr/bin"
           mkdir -p "${STAGE}/usr/share/applications"
           mkdir -p "${STAGE}/usr/share/pixmaps"
-          cp -a "${PUB}/." "${STAGE}/usr/lib/hyperfi/"
-          ln -s /usr/lib/hyperfi/HyperFi "${STAGE}/usr/bin/hyperfi"
-          cp .github/player-release/hyperfi.desktop \
-            "${STAGE}/usr/share/applications/hyperfi.desktop"
+          cp -a "${PUB}/." "${STAGE}/usr/lib/hyperfidel/"
+          ln -s /usr/lib/hyperfidel/HyperFidel "${STAGE}/usr/bin/hyperfidel"
+          cp .github/player-release/hyperfidel.desktop \
+            "${STAGE}/usr/share/applications/hyperfidel.desktop"
           cp Logo/icon.png \
-            "${STAGE}/usr/share/pixmaps/hyperfi.png"
+            "${STAGE}/usr/share/pixmaps/hyperfidel.png"
 
       - name: Install package tools
         run: |
@@ -123,19 +123,19 @@ jobs:
           fpm \
             --input-type dir \
             --output-type deb \
-            --name hyperfi \
+            --name hyperfidel \
             --version "${VERSION}" \
             --architecture "${{ matrix.deb_arch }}" \
-            --description "HyperFi desktop music library and audio player" \
-            --url "https://github.com/wuuwuu26/HyperFi" \
-            --vendor "HyperFi contributors" \
-            --maintainer "HyperFi contributors <wuuwuu26@users.noreply.github.com>" \
+            --description "HyperFidel desktop music library and audio player" \
+            --url "https://github.com/wuuwuu26/HyperFidel" \
+            --vendor "HyperFidel contributors" \
+            --maintainer "HyperFidel contributors <wuuwuu26@users.noreply.github.com>" \
             --license Apache-2.0 \
             --category sound \
             --depends ffmpeg \
             --depends libasound2 \
             --depends libopenal1 \
-            --package "packages/hyperfi_${VERSION}_${{ matrix.deb_arch }}.deb" \
+            --package "packages/hyperfidel_${VERSION}_${{ matrix.deb_arch }}.deb" \
             --chdir "stage/${{ matrix.rid }}" \
             .
 
@@ -145,18 +145,18 @@ jobs:
           fpm \
             --input-type dir \
             --output-type rpm \
-            --name hyperfi \
+            --name hyperfidel \
             --version "${VERSION}" \
             --iteration 1 \
             --architecture "${{ matrix.rpm_arch }}" \
-            --description "HyperFi desktop music library and audio player" \
-            --url "https://github.com/wuuwuu26/HyperFi" \
-            --vendor "HyperFi contributors" \
+            --description "HyperFidel desktop music library and audio player" \
+            --url "https://github.com/wuuwuu26/HyperFidel" \
+            --vendor "HyperFidel contributors" \
             --license Apache-2.0 \
             --category "Applications/Multimedia" \
             --depends alsa-lib \
             --depends openal-soft \
-            --package "packages/hyperfi-${VERSION}-1.${{ matrix.rpm_arch }}.rpm" \
+            --package "packages/hyperfidel-${VERSION}-1.${{ matrix.rpm_arch }}.rpm" \
             --chdir "stage/${{ matrix.rid }}" \
             .
 
@@ -165,17 +165,17 @@ jobs:
         run: |
           VERSION="${{ steps.ver.outputs.version }}"
           PACKAGE_ROOT="arch-package"
-          PACKAGE_PATH="packages/hyperfi-${VERSION}-1-${{ matrix.archlinux_arch }}.pkg.tar.zst"
+          PACKAGE_PATH="packages/hyperfidel-${VERSION}-1-${{ matrix.archlinux_arch }}.pkg.tar.zst"
           mkdir -p "${PACKAGE_ROOT}"
           cp -a "stage/${{ matrix.rid }}/." "${PACKAGE_ROOT}/"
           cat > "${PACKAGE_ROOT}/.PKGINFO" <<EOF
-          pkgname = hyperfi
-          pkgbase = hyperfi
+          pkgname = hyperfidel
+          pkgbase = hyperfidel
           pkgver = ${VERSION}-1
-          pkgdesc = HyperFi desktop music library and audio player
-          url = https://github.com/wuuwuu26/HyperFi
+          pkgdesc = HyperFidel desktop music library and audio player
+          url = https://github.com/wuuwuu26/HyperFidel
           builddate = $(date +%s)
-          packager = HyperFi GitHub Actions
+          packager = HyperFidel GitHub Actions
           size = $(du -sb "${PACKAGE_ROOT}" | cut -f1)
           arch = ${{ matrix.archlinux_arch }}
           license = Apache-2.0
@@ -189,7 +189,7 @@ jobs:
 
           tar --zstd -tf "${PACKAGE_PATH}" | grep -Fxq '.PKGINFO'
           tar --zstd -xOf "${PACKAGE_PATH}" .PKGINFO \
-            | grep -Fxq "pkgname = hyperfi"
+            | grep -Fxq "pkgname = hyperfidel"
 
       - name: Upload packages to GitHub Release
         env:
@@ -197,6 +197,6 @@ jobs:
         run: >
           bash .github/scripts/upload-release-assets.sh
           '${{ steps.ver.outputs.tag }}'
-          'HyperFi ${{ steps.ver.outputs.version }}'
+          'HyperFidel ${{ steps.ver.outputs.version }}'
           false
           packages/*

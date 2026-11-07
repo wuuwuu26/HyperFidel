@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Questions and setup help
-    url: https://github.com/wuuwuu26/HyperFi/discussions/categories/q-a
+    url: https://github.com/wuuwuu26/HyperFidel/discussions/categories/q-a
     about: Ask the community about setup, output devices, servers, and general use.
   - name: Private security report
-    url: https://github.com/wuuwuu26/HyperFi/security/advisories/new
+    url: https://github.com/wuuwuu26/HyperFidel/security/advisories/new
     about: Report security vulnerabilities privately. Do not open a public issue.

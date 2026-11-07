@@ -30,7 +30,7 @@ This file applies to `Native/` and supplements `../AGENTS.md`.
   stable result/state enums, and must fail closed on pairing proof errors.
   Transient pairing uses HAP mode 4 and never logs derived keys. Control framing
   authenticates the two-byte little-endian length, caps plaintext frames at 1024
-  bytes, and maintains separate counters for each direction. Windows HyperFi
+  bytes, and maintains separate counters for each direction. Windows HyperFidel
   builds bundle and prefer this bridge when available. Sonos stereo-pair
   playback has passed real-device tests; other receivers remain experimental.
   The Sonos-targeted session sequence uses encrypted `GET /info`, PTP session

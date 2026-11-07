@@ -1,17 +1,17 @@
 # Community package drafts
 
 These are local starting points for issues
-[#178](https://github.com/wuuwuu26/HyperFi/issues/178) and
-[#182](https://github.com/wuuwuu26/HyperFi/issues/182). They are not published
+[#178](https://github.com/wuuwuu26/HyperFidel/issues/178) and
+[#182](https://github.com/wuuwuu26/HyperFidel/issues/182). They are not published
 to AUR or a Homebrew tap. Do not advertise installation commands until the
 target repository exists and native acceptance passes.
 
 Version 0.48.1 hashes were checked against the GitHub Release asset metadata on
 2026-10-19. This is not a verification of the signed update manifest. Before
 publication, download the packages and check their hashes against the manifest
-after verifying its ECDSA signature with HyperFi's trusted release public key.
+after verifying its ECDSA signature with HyperFidel's trusted release public key.
 Never use `SKIP` or `:no_check` as a substitute. The Arch archive itself is not
-a detached pacman-signed package merely because its digest appears in HyperFi's
+a detached pacman-signed package merely because its digest appears in HyperFidel's
 signed update manifest.
 
 ## Arch
@@ -20,7 +20,7 @@ signed update manifest.
 OpenAL and FFmpeg dependencies, plus native .NET and Avalonia libraries. The
 managed runtime is bundled; installing `dotnet-runtime` is unnecessary.
 `lttng-ust2.12` is optional for CoreCLR tracing. The recipe conflicts with the
-official `hyperfi` package so the same installation paths cannot be owned twice.
+official `hyperfidel` package so the same installation paths cannot be owned twice.
 It preserves managed binaries without stripping or debug splitting. It does not
 use a moving `latest` URL or a `pkgver()` implementation: this is a versioned
 binary release, and version/checksum updates should be reviewed together.
@@ -35,16 +35,16 @@ Validation on CachyOS on 2026-10-23:
   hashes, modes and symlinks. The chroot-installed package passed `pacman -Qkk`
   with 406 total files and no altered files.
 - In the disposable chroot, `pacman` upgraded draft revision 1 to revision 2 and
-  replaced the official `hyperfi` package with `hyperfi-bin`. A synthetic
+  replaced the official `hyperfidel` package with `hyperfidel-bin`. A synthetic
   profile marker survived both operations. This covers package transactions, not
   a previous application-version upgrade or migration of real user settings.
 - With Xvfb, Xauth and DejaVu fonts installed only for acceptance, the command
-  opened the HyperFi main window and initial profile dialog as an unprivileged
-  test user. `HYPERFI_DATA_DIR` selected isolated data and its migration marker
+  opened the HyperFidel main window and initial profile dialog as an unprivileged
+  test user. `HYPERFIDEL_DATA_DIR` selected isolated data and its migration marker
   was created. Desktop metadata validation and the installed icon check passed.
 
 - The maintainer reported the manual CachyOS checklist successful after starting
-  the extracted revision 2 package with an isolated `HYPERFI_DATA_DIR`: display
+  the extracted revision 2 package with an isolated `HYPERFIDEL_DATA_DIR`: display
   and artwork, music import and audible playback, pause, seeking, volume and
   settings persistence after restart. This was a user-observed test without
   installing the package on the host.
@@ -76,7 +76,7 @@ Interpret `namcap` output in the context of this binary package:
   invoked as processes, so static dependency analysis can report them as unused.
 - The tracing provider references `liblttng-ust.so.0`; its optional dependency
   follows the Arch .NET runtime package.
-- `checkpkg` cannot compare against a repository version of `hyperfi-bin` before
+- `checkpkg` cannot compare against a repository version of `hyperfidel-bin` before
   one exists. Its “target not found” message does not invalidate the build.
 
 The native dependency baseline follows the
@@ -96,7 +96,7 @@ Before submitting from an AUR maintainer account:
 3. Install on a disposable Arch machine, test the command, desktop launcher,
    artwork, PCM playback and an upgrade from the previous package. Confirm that
    replacing the official package does not remove personal settings.
-4. Submit the recipe and generated `.SRCINFO` to `hyperfi-bin` on AUR. Only then
+4. Submit the recipe and generated `.SRCINFO` to `hyperfidel-bin` on AUR. Only then
    link the real AUR page from Installation and the website.
 
 For each release, update `pkgver`, reset `pkgrel`, replace the hash after
@@ -106,23 +106,23 @@ reviewed checksum/package revision.
 
 ## Homebrew
 
-`homebrew/Casks/hyperfi.rb` selects a portable app ZIP and checksum for each
-architecture. The app artifact installs `HyperFi.app` without running a PKG
+`homebrew/Casks/hyperfidel.rb` selects a portable app ZIP and checksum for each
+architecture. The app artifact installs `HyperFidel.app` without running a PKG
 installer. It leaves user data alone and documents Gatekeeper without bypassing
 it. The application locates or downloads FFmpeg as in the existing portable
 distribution; this cask introduces no machine-wide FFmpeg prerequisite.
 
-Before publishing a tap such as `wuuwuu26/homebrew-hyperfi`:
+Before publishing a tap such as `wuuwuu26/homebrew-hyperfidel`:
 
-1. Create the tap repository with this `Casks/hyperfi.rb` and a README.
+1. Create the tap repository with this `Casks/hyperfidel.rb` and a README.
 2. Run `brew style`, `brew audit --cask --online` and install/uninstall tests in
-   that tap on both Apple Silicon and Intel macOS. Confirm `HyperFi.app` exists
+   that tap on both Apple Silicon and Intel macOS. Confirm `HyperFidel.app` exists
    at the archive root and the correct ZIP is selected.
 3. Test launch, FFmpeg discovery, PCM playback and upgrades on each
    architecture; record macOS versions and the actual Gatekeeper approval path.
    No native Mac installation or audible playback has been performed here.
 4. Link the verified tap from Installation and the website; document
-   `brew tap bschlaack/hyperfi` followed by `brew install --cask hyperfi` only
+   `brew tap bschlaack/hyperfidel` followed by `brew install --cask hyperfidel` only
    once that tap is live.
 
 For each release, update `version` and both hashes after verifying the release

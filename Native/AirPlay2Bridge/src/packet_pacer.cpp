@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <thread>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 
 PacketPacer::PacketPacer(std::uint32_t sampleRate, std::uint32_t framesPerPacket)
     : sampleRate_(sampleRate), framesPerPacket_(framesPerPacket) {
@@ -24,4 +24,4 @@ void PacketPacer::waitFor(std::uint64_t packetIndex) {
     if (deadline > now) std::this_thread::sleep_until(deadline);
 }
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

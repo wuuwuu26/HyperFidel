@@ -11,8 +11,8 @@ int main() {
     std::vector<std::uint8_t> plain(2500);
     for (std::size_t i = 0; i < plain.size(); ++i) plain[i] = static_cast<std::uint8_t>(i % 251);
 
-    hyperfi::airplay2::EncryptedControl writer(key);
-    hyperfi::airplay2::EncryptedControl reader(key);
+    hyperfidel::airplay2::EncryptedControl writer(key);
+    hyperfidel::airplay2::EncryptedControl reader(key);
     auto wire = writer.encode(plain);
     std::vector<std::uint8_t> decoded;
     for (std::size_t offset = 0; offset < wire.size();) {
@@ -23,7 +23,7 @@ int main() {
     }
     assert(decoded == plain);
 
-    hyperfi::airplay2::EncryptedControl tamperedReader(key);
+    hyperfidel::airplay2::EncryptedControl tamperedReader(key);
     wire.back() ^= 1;
     bool rejected = false;
     try { (void)tamperedReader.decode(wire); } catch (...) { rejected = true; }

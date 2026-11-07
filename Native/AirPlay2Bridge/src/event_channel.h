@@ -11,7 +11,7 @@
 #include <thread>
 #include <vector>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 
 /** Transport command received from an AirPlay receiver. */
 enum class MediaRemoteCommand { Play, Pause, Next, Previous };
@@ -50,4 +50,4 @@ private:
     MediaRemoteCommandCallback commandCallback_;
 };
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

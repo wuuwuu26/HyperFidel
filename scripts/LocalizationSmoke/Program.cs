@@ -1,4 +1,4 @@
-using HyperFi.Localization;
+using HyperFidel.Localization;
 
 // Exercise the real compiled localization manager without launching the desktop.
 foreach (var language in Enum.GetValues<Language>().Concat(Enum.GetValues<Language>().Reverse()))

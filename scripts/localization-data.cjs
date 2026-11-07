@@ -4,12 +4,12 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const literal = '"(?:\\\\.|[^"\\\\])*"';
 function readDesktop() {
-  const model = fs.readFileSync(path.join(root, 'HyperFi/Localization/Strings.cs'), 'utf8');
-  const source = fs.readFileSync(path.join(root, 'HyperFi/Localization/LocalizationManager.cs'), 'utf8');
+  const model = fs.readFileSync(path.join(root, 'HyperFidel/Localization/Strings.cs'), 'utf8');
+  const source = fs.readFileSync(path.join(root, 'HyperFidel/Localization/LocalizationManager.cs'), 'utf8');
   const parameters = [...model.split(')')[0].matchAll(/string (\w+)/g)].map(m => m[1]);
   const properties = [...model.matchAll(/public string (\w+) \{ get; init; \}/g)].map(m => m[1]);
   const result = {};
-  const languageSource = fs.readFileSync(path.join(root, 'HyperFi/Localization/Language.cs'), 'utf8');
+  const languageSource = fs.readFileSync(path.join(root, 'HyperFidel/Localization/Language.cs'), 'utf8');
   const languages = [...languageSource.matchAll(/^\s{4}(\w+)\s*,?\s*$/gm)].map(m => m[1]);
   for (const name of languages) {
     const start = source.indexOf(`private static readonly LocalizedStrings ${name} = `);

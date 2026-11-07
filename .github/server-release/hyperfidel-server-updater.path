@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch for verified HyperFidel Server update requests
+
+[Path]
+PathExists=/var/lib/hyperfidel-server/updates/ready
+Unit=hyperfidel-server-updater.service
+
+[Install]
+WantedBy=multi-user.target

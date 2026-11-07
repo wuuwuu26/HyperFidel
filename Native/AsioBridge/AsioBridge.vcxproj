@@ -41,7 +41,7 @@
     <ClCompile>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(AsioSdkDir)\common;$(AsioSdkDir)\host;$(AsioSdkDir)\host\pc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>HYPERFI_STEINBERG_ASIO=1;WINDOWS=1;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HYPERFIDEL_STEINBERG_ASIO=1;WINDOWS=1;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>ole32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>

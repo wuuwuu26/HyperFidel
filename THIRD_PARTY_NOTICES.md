@@ -1,8 +1,8 @@
 # Third-Party Notices
 
-HyperFi uses the components listed below. These components are not relicensed
-under HyperFi's Apache License 2.0; their respective licenses continue to apply.
-Package versions are the versions referenced by `HyperFi/HyperFi.csproj` and its
+HyperFidel uses the components listed below. These components are not relicensed
+under HyperFidel's Apache License 2.0; their respective licenses continue to apply.
+Package versions are the versions referenced by `HyperFidel/HyperFidel.csproj` and its
 resolved dependency graph.
 
 ## MIT-licensed components
@@ -65,7 +65,7 @@ The complete Apache License 2.0 text is the repository's `LICENSE` file.
 The complete SIL Open Font License 1.1 text is provided in
 `licenses/OFL-1.1.txt`. These fonts are embedded in the desktop application so
 it does not depend on a system font installation; they are not relicensed under
-HyperFi's Apache License.
+HyperFidel's Apache License.
 
 - [Noto Serif SC](https://github.com/notofonts/noto-cjk), copyright 2017-2024
   Adobe (http://www.adobe.com/). Noto is a trademark of Google Inc. Regular,
@@ -86,7 +86,7 @@ HyperFi's Apache License.
 GNU Lesser General Public License, version 2.1 only (LGPL-2.1-only). The
 complete license text is provided in `licenses/LGPL-2.1.txt`.
 
-HyperFi consumes TagLibSharp as a separate managed assembly. HyperFi does not
+HyperFidel consumes TagLibSharp as a separate managed assembly. HyperFidel does not
 modify TagLibSharp. The exact corresponding source is available from the
 upstream repository and the source link recorded by its NuGet package:
 
@@ -97,21 +97,21 @@ compatible modified build, subject to the LGPL and runtime compatibility.
 
 ## FFmpeg
 
-[FFmpeg](https://ffmpeg.org/) is not linked into HyperFi. HyperFi launches the
+[FFmpeg](https://ffmpeg.org/) is not linked into HyperFidel. HyperFidel launches the
 separate `ffmpeg` and `ffprobe` executables as child processes. When those
-executables are absent, HyperFi downloads the BtbN `win64-lgpl-essentials` build
+executables are absent, HyperFidel downloads the BtbN `win64-lgpl-essentials` build
 on Windows from:
 
 <https://github.com/BtbN/FFmpeg-Builds>
 
-On macOS, HyperFi downloads the current-architecture `ffmpeg` and `ffprobe`
+On macOS, HyperFidel downloads the current-architecture `ffmpeg` and `ffprobe`
 release assets published by:
 
 <https://github.com/eugeneware/ffmpeg-static>
 
 FFmpeg is primarily licensed under LGPL-2.1-or-later, but the exact license of a
 binary depends on its build configuration and enabled external libraries.
-HyperFi deliberately requests the LGPL essentials build on Windows. macOS
+HyperFidel deliberately requests the LGPL essentials build on Windows. macOS
 download assets retain the license and build information published alongside
 their upstream release. Corresponding FFmpeg source and build scripts are
 available from:
@@ -120,7 +120,7 @@ available from:
 - <https://github.com/BtbN/FFmpeg-Builds>
 - <https://github.com/eugeneware/ffmpeg-static>
 
-FFmpeg is an independent work and is not covered by HyperFi's Apache License.
+FFmpeg is an independent work and is not covered by HyperFidel's Apache License.
 
 ## Steinberg ASIO
 
@@ -128,7 +128,7 @@ ASIO is a trademark and software of Steinberg Media Technologies GmbH.
 
 The optional `Native/AsioBridge` target can be built against a separately
 obtained Steinberg ASIO SDK. The SDK is not included in this repository and is
-not covered by HyperFi's Apache License. Anyone building or distributing that
+not covered by HyperFidel's Apache License. Anyone building or distributing that
 optional bridge must obtain the SDK from Steinberg and comply with the chosen
 Steinberg ASIO SDK license and trademark usage guidelines.
 

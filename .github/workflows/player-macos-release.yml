@@ -65,11 +65,11 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore macOS player
-        run: dotnet restore HyperFi/HyperFi.csproj --runtime ${{ matrix.rid }}
+        run: dotnet restore HyperFidel/HyperFidel.csproj --runtime ${{ matrix.rid }}
 
       - name: Publish macOS player
         run: >
-          dotnet publish HyperFi/HyperFi.csproj
+          dotnet publish HyperFidel/HyperFidel.csproj
           --configuration Release
           --runtime ${{ matrix.rid }}
           --self-contained true
@@ -86,12 +86,12 @@ jobs:
         run: |
           VERSION="${{ steps.ver.outputs.version }}"
           RID="${{ matrix.rid }}"
-          APP="bundle/${RID}/HyperFi.app"
+          APP="bundle/${RID}/HyperFidel.app"
           mkdir -p "${APP}/Contents/MacOS"
           mkdir -p "${APP}/Contents/Resources"
           cp -a "publish/${RID}/." "${APP}/Contents/MacOS/"
           cp .github/player-macos/Info.plist "${APP}/Contents/Info.plist"
-          ICONSET="bundle/${RID}/HyperFi.iconset"
+          ICONSET="bundle/${RID}/HyperFidel.iconset"
           mkdir -p "${ICONSET}"
           sips -z 16 16 Logo/icon.png --out "${ICONSET}/icon_16x16.png"
           sips -z 32 32 Logo/icon.png --out "${ICONSET}/icon_16x16@2x.png"
@@ -103,14 +103,14 @@ jobs:
           sips -z 512 512 Logo/icon.png --out "${ICONSET}/icon_256x256@2x.png"
           sips -z 512 512 Logo/icon.png --out "${ICONSET}/icon_512x512.png"
           sips -z 1024 1024 Logo/icon.png --out "${ICONSET}/icon_512x512@2x.png"
-          iconutil -c icns "${ICONSET}" -o "${APP}/Contents/Resources/HyperFi.icns"
-          chmod 755 "${APP}/Contents/MacOS/HyperFi"
+          iconutil -c icns "${ICONSET}" -o "${APP}/Contents/Resources/HyperFidel.icns"
+          chmod 755 "${APP}/Contents/MacOS/HyperFidel"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION}" "${APP}/Contents/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${VERSION}" "${APP}/Contents/Info.plist"
           mkdir -p packages
           ditto -c -k --sequesterRsrc --keepParent \
-            "${APP}" "packages/HyperFi-${VERSION}-${RID}-Portable.zip"
-          tar -czf "packages/HyperFi-${VERSION}-${RID}.tar.gz" -C "bundle/${RID}" HyperFi.app
+            "${APP}" "packages/HyperFidel-${VERSION}-${RID}-Portable.zip"
+          tar -czf "packages/HyperFidel-${VERSION}-${RID}.tar.gz" -C "bundle/${RID}" HyperFidel.app
 
       - name: Create macOS installer package
         run: |
@@ -118,30 +118,30 @@ jobs:
           RID="${{ matrix.rid }}"
           PACKAGE_ROOT="installer-root/${RID}"
           mkdir -p "${PACKAGE_ROOT}/Applications"
-          ditto "bundle/${RID}/HyperFi.app" "${PACKAGE_ROOT}/Applications/HyperFi.app"
+          ditto "bundle/${RID}/HyperFidel.app" "${PACKAGE_ROOT}/Applications/HyperFidel.app"
           pkgbuild \
             --root "${PACKAGE_ROOT}" \
-            --identifier com.wuuwuu26.hyperfi \
+            --identifier com.wuuwuu26.hyperfidel \
             --version "${VERSION}" \
             --install-location / \
-            "packages/HyperFi-${VERSION}-${RID}.pkg"
+            "packages/HyperFidel-${VERSION}-${RID}.pkg"
 
       - name: Validate application bundle
         run: |
           VERSION="${{ steps.ver.outputs.version }}"
           RID="${{ matrix.rid }}"
-          plutil -lint "bundle/${{ matrix.rid }}/HyperFi.app/Contents/Info.plist"
-          test -x "bundle/${{ matrix.rid }}/HyperFi.app/Contents/MacOS/HyperFi"
-          test -s "bundle/${{ matrix.rid }}/HyperFi.app/Contents/Resources/HyperFi.icns"
+          plutil -lint "bundle/${{ matrix.rid }}/HyperFidel.app/Contents/Info.plist"
+          test -x "bundle/${{ matrix.rid }}/HyperFidel.app/Contents/MacOS/HyperFidel"
+          test -s "bundle/${{ matrix.rid }}/HyperFidel.app/Contents/Resources/HyperFidel.icns"
           /usr/libexec/PlistBuddy -c "Print :CFBundleIconFile" \
-            "bundle/${{ matrix.rid }}/HyperFi.app/Contents/Info.plist" \
-            | grep -Fxq 'HyperFi.icns'
-          file "bundle/${{ matrix.rid }}/HyperFi.app/Contents/MacOS/HyperFi"
-          unzip -t "packages/HyperFi-${VERSION}-${RID}-Portable.zip"
-          tar -tzf "packages/HyperFi-${VERSION}-${RID}.tar.gz" \
-            | grep -Fxq 'HyperFi.app/Contents/Info.plist'
-          pkgutil --payload-files "packages/HyperFi-${VERSION}-${RID}.pkg" \
-            | grep -Fxq './Applications/HyperFi.app/Contents/Info.plist'
+            "bundle/${{ matrix.rid }}/HyperFidel.app/Contents/Info.plist" \
+            | grep -Fxq 'HyperFidel.icns'
+          file "bundle/${{ matrix.rid }}/HyperFidel.app/Contents/MacOS/HyperFidel"
+          unzip -t "packages/HyperFidel-${VERSION}-${RID}-Portable.zip"
+          tar -tzf "packages/HyperFidel-${VERSION}-${RID}.tar.gz" \
+            | grep -Fxq 'HyperFidel.app/Contents/Info.plist'
+          pkgutil --payload-files "packages/HyperFidel-${VERSION}-${RID}.pkg" \
+            | grep -Fxq './Applications/HyperFidel.app/Contents/Info.plist'
 
       - name: Upload package to GitHub Release
         env:
@@ -149,6 +149,6 @@ jobs:
         run: >
           bash .github/scripts/upload-release-assets.sh
           '${{ steps.ver.outputs.tag }}'
-          'HyperFi ${{ steps.ver.outputs.version }}'
+          'HyperFidel ${{ steps.ver.outputs.version }}'
           false
           packages/*

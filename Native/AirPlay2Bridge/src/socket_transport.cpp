@@ -23,7 +23,7 @@
 #  include <unistd.h>
 #endif
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 namespace {
 
 #if defined(_WIN32)
@@ -274,4 +274,4 @@ std::string Socket::localAddress() const {
     return text.data();
 }
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

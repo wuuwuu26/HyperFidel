@@ -6,10 +6,10 @@ const http = require('node:http');
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 const root = path.resolve(__dirname, '..');
-const words = JSON.parse(fs.readFileSync(path.join(root,'HyperFi/Localization/MobileRemote.json'),'utf8'));
+const words = JSON.parse(fs.readFileSync(path.join(root,'HyperFidel/Localization/MobileRemote.json'),'utf8'));
 for (const lang of Object.keys(words)) assert.deepEqual(Object.keys(words[lang]).sort(),Object.keys(words.en).sort());
-const script = fs.readFileSync(path.join(root,'HyperFi/Remote/MobileRemote.js'),'utf8');
-const html = fs.readFileSync(path.join(root,'HyperFi/Remote/MobileRemote.html'),'utf8')
+const script = fs.readFileSync(path.join(root,'HyperFidel/Remote/MobileRemote.js'),'utf8');
+const html = fs.readFileSync(path.join(root,'HyperFidel/Remote/MobileRemote.html'),'utf8')
     .replace('/*REMOTE_WORDS*/','const words = '+JSON.stringify(words)+';').replace('/*REMOTE_SCRIPT*/',script);
 const token = 'synthetic-test-key&plus+equals=';
 const commands = [], errors = [], requests = [];
@@ -38,7 +38,7 @@ const server = http.createServer(async(req,res)=>{
         res.end(html); return;
     }
     if(req.url.startsWith('/remote/api/browser-audio/stream/')){
-        if(!state.browserAudio || !req.headers.cookie?.includes('HyperFiBrowserAudio=synthetic-media-cookie')){res.writeHead(401);res.end();return;}
+        if(!state.browserAudio || !req.headers.cookie?.includes('HyperFidelBrowserAudio=synthetic-media-cookie')){res.writeHead(401);res.end();return;}
         res.writeHead(200,{'Content-Type':'audio/wav','Content-Length':browserWave.length,'Cache-Control':'no-store'});res.end(browserWave);return;
     }
     if(deny || req.headers.authorization !== 'Bearer '+token){res.writeHead(401);res.end();return;}
@@ -55,7 +55,7 @@ const server = http.createServer(async(req,res)=>{
             state.browserAudio={clientId:value.clientId,streamId:'browser-stream-'+(++streamRevision),startSeconds:65,paused:false,volume:state.volume,controlRevision:1,formatId:value.formatId||'mp3-192',format:'MP3 · 48 kHz · 192 kbps'};
             broadcast();
             if(holdBrowserClaim){signalBrowserClaim();await new Promise(resolve=>{releaseBrowserClaim=resolve;});holdBrowserClaim=false;}
-            res.setHeader('Set-Cookie','HyperFiBrowserAudio=synthetic-media-cookie; HttpOnly; SameSite=Strict; Path=/remote/api/browser-audio');
+            res.setHeader('Set-Cookie','HyperFidelBrowserAudio=synthetic-media-cookie; HttpOnly; SameSite=Strict; Path=/remote/api/browser-audio');
         } else if(req.url.endsWith('/browser-audio/release')){
             if(state.browserAudio?.clientId===value.clientId)state.browserAudio=null;
         } else if(req.url.endsWith('/outputs/select')) state.browserAudio=null;
@@ -253,7 +253,7 @@ const server = http.createServer(async(req,res)=>{
         releaseBrowserClaim();
         await page.waitForFunction(()=>!document.getElementById('browserAudio').paused&&document.getElementById('browserAudio').currentTime>0);
         assert.equal(await page.locator('#browserAudioHint').textContent(),words.de.browserAudioActive);
-        assert(!(await page.evaluate(()=>document.cookie)).includes('HyperFiBrowserAudio'),'Media cookie must be HttpOnly');
+        assert(!(await page.evaluate(()=>document.cookie)).includes('HyperFidelBrowserAudio'),'Media cookie must be HttpOnly');
         await page.locator('[data-cmd=pause-resume]').click();
         await page.waitForFunction(()=>document.getElementById('browserAudio').paused);
         await page.locator('[data-cmd=pause-resume]').click();
