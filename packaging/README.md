@@ -6,8 +6,8 @@ These are local starting points for issues
 to AUR or a Homebrew tap. Do not advertise installation commands until the
 target repository exists and native acceptance passes.
 
-Version 0.48.1 hashes were checked against the GitHub Release asset metadata on
-2026-10-19. This is not a verification of the signed update manifest. Before
+Version 0.2.0 hashes were computed from the downloaded GitHub Release assets on
+2026-11-08. This is not a verification of the signed update manifest. Before
 publication, download the packages and check their hashes against the manifest
 after verifying its ECDSA signature with HyperFidel's trusted release public key.
 Never use `SKIP` or `:no_check` as a substitute. The Arch archive itself is not

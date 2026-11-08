@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- HyperFidel Server packages replace the previous `hyperfi-server` package, and
+  an upgrade stops the old units, adopts `/etc/hyperfi-server`, moves the
+  database, caches and artwork from `/var/lib/hyperfi-server`, and retires the
+  old service account. A server configured under the `HyperFi` configuration
+  root keeps its ApiKey, library paths and profiles instead of reverting to the
+  shipped defaults.
 - The project is renamed from HyperFi to HyperFidel. The application name,
   window titles, About branding, assembly and namespace names, project and
   solution files, installer and package names, Linux desktop entry, systemd

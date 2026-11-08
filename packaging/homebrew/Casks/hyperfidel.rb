@@ -2,9 +2,9 @@
 cask "hyperfidel" do
   arch arm: "arm64", intel: "x64"
 
-  version "0.48.1"
-  sha256 arm:   "228bce9f85dbd152f24aff5000891e87a7a77912426fea3fe99ebc5c10793f02",
-         intel: "7fc73d5fd7d0b147196322ebec77df55f4126d715e01ff03084132c19ff0ce37"
+  version "0.2.0"
+  sha256 arm:   "02a4b98871c416f3398fb60921622589376fb5fce544e74dd9e98cc4eb39d755",
+         intel: "ec633e2ab3ca3a6f043e6e21b37a7586a3009ebe2e819d0b593c428981f6b436"
 
   url "https://github.com/wuuwuu26/HyperFidel/releases/download/v#{version}/HyperFidel-#{version}-osx-#{arch}-Portable.zip"
   name "HyperFidel"

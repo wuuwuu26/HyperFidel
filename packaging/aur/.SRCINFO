@@ -1,7 +1,7 @@
 pkgbase = hyperfidel-bin
 	pkgdesc = Music library and Hi-Fi audio player
-	pkgver = 0.48.1
-	pkgrel = 2
+	pkgver = 0.2.0
+	pkgrel = 1
 	url = https://github.com/wuuwuu26/HyperFidel
 	arch = x86_64
 	license = Apache-2.0
@@ -21,11 +21,11 @@ pkgbase = hyperfidel-bin
 	depends = libice
 	depends = libsm
 	optdepends = lttng-ust2.12: CoreCLR tracing
-	provides = hyperfidel=0.48.1
+	provides = hyperfidel=0.2.0
 	conflicts = hyperfidel
 	options = !strip
 	options = !debug
-	source = https://github.com/wuuwuu26/HyperFidel/releases/download/v0.48.1/hyperfidel-0.48.1-1-x86_64.pkg.tar.zst
-	sha256sums = c7f1c59474035a02a55cf8cd11cf255c61de0874d34a1c123101df6ea005426a
+	source = https://github.com/wuuwuu26/HyperFidel/releases/download/v0.2.0/hyperfidel-0.2.0-1-x86_64.pkg.tar.zst
+	sha256sums = c374f84b26edfb57a580ae8f214bc9b72f64a1349e29529ddeb8d49da3ccb54b
 
 pkgname = hyperfidel-bin

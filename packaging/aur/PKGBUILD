@@ -1,8 +1,8 @@
 # Maintainer: wuuwuu26
 # Draft for issue #178. Validate in an Arch clean chroot before publication.
 pkgname=hyperfidel-bin
-pkgver=0.48.1
-pkgrel=2
+pkgver=0.2.0
+pkgrel=1
 pkgdesc='Music library and Hi-Fi audio player'
 arch=('x86_64')
 url='https://github.com/wuuwuu26/HyperFidel'
@@ -15,7 +15,7 @@ provides=("hyperfidel=${pkgver}")
 conflicts=('hyperfidel')
 options=('!strip' '!debug')
 source=("https://github.com/wuuwuu26/HyperFidel/releases/download/v${pkgver}/hyperfidel-${pkgver}-1-${CARCH}.pkg.tar.zst")
-sha256sums=('c7f1c59474035a02a55cf8cd11cf255c61de0874d34a1c123101df6ea005426a')
+sha256sums=('c374f84b26edfb57a580ae8f214bc9b72f64a1349e29529ddeb8d49da3ccb54b')
 
 package() {
     # makepkg extracts the release archive. Repackage only its installation
