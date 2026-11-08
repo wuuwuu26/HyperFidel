@@ -139,6 +139,7 @@ public partial class MainWindow : Window
     private AppSettings _settings = new();
     private DispatcherTimer? _appLogoGlowTimer;
     private DispatcherTimer? _statusToastTimer;
+    private DispatcherTimer? _volumeSaveTimer;
     private double _appLogoGlowPhase;
     private readonly Scrobbling.LastFmScrobblingService _lastFmScrobbler =
         new(new Scrobbling.PendingScrobbleStore(AppPaths.GetDataPath("scrobbling", "pending.json")));
@@ -557,6 +558,7 @@ public partial class MainWindow : Window
         _showAlbumArtworkView = _settings.AlbumArtworkView;
         _showArtistArtworkView = _settings.ArtistArtworkView;
         VolumeSlider.Value = Math.Clamp(_settings.Volume, 0, 1);
+        LogUiDiagnostics($"Volume restored from settings: {_settings.Volume:0.###} -> slider {VolumeSlider.Value:0.###}");
         AlbumArtworkViewRadioButton.IsChecked = _showAlbumArtworkView;
         AlbumTableViewRadioButton.IsChecked = !_showAlbumArtworkView;
         using (StartupTimingLog.Time("MainWindow.SelectInitialView"))
@@ -981,6 +983,9 @@ public partial class MainWindow : Window
         DisposeEndpointVolumeSynchronizationInBackground();
         CaptureAllDataGridColumnWidths();
         CaptureNormalWindowPlacement();
+        // Flush a pending volume write before the final snapshot so a slider change
+        // made moments before closing is not lost to the debounce.
+        _volumeSaveTimer?.Stop();
         PersistViewState();
         CancelAndDispose(ref _radioSearchCts);
         CancelAndDispose(ref _podcastSearchCts);

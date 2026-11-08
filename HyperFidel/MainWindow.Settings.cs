@@ -66,7 +66,35 @@ public partial class MainWindow : Window
         }
         _settings.Volume = VolumeSlider.Value;
         if (!_updatingVolumeFromSystem)
+        {
             _windowsMediaTransport?.SetVolume(VolumeSlider.Value);
+            ScheduleVolumeSave();
+        }
+    }
+
+    /// <summary>
+    /// Persists the volume shortly after the last change. Volume used to be written
+    /// only on a clean window close, so a crash, force-quit or logout lost the user's
+    /// choice and the next launch fell back to the default full volume.
+    /// </summary>
+    private void ScheduleVolumeSave()
+    {
+        if (_volumeSaveTimer is null)
+        {
+            _volumeSaveTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(600)
+            };
+            _volumeSaveTimer.Tick += (_, _) =>
+            {
+                _volumeSaveTimer!.Stop();
+                var snapshot = _settings;
+                _ = Task.Run(() => _settingsStore.Save(snapshot));
+            };
+        }
+
+        _volumeSaveTimer.Stop();
+        _volumeSaveTimer.Start();
     }
 
     private async Task ConfigureEndpointVolumeSynchronizationAsync()
@@ -101,8 +129,22 @@ public partial class MainWindow : Window
             }
             synchronizer.VolumeChanged += EndpointVolumeSynchronizer_OnVolumeChanged;
             _endpointVolumeSynchronizer = synchronizer;
-            var volume = await Task.Run(() => synchronizer.Volume);
-            ApplySystemVolume(volume, pushToEndpoint: false);
+            if (synchronizer.AppliesToOutputPath)
+            {
+                // The endpoint owns the gain for this output path, so mirror it into
+                // the transport slider.
+                var volume = await Task.Run(() => synchronizer.Volume);
+                ApplySystemVolume(volume, pushToEndpoint: false);
+            }
+            else
+            {
+                // The output bypasses the system mixer (direct ALSA), so the player
+                // applies the saved volume itself. Copying the sink volume back would
+                // overwrite the user's choice every time the app starts. Publish the
+                // application volume to the system instead and keep it in sync from
+                // user changes only.
+                synchronizer.SetVolume((float)VolumeSlider.Value);
+            }
         }
         catch
         {
@@ -155,8 +197,15 @@ public partial class MainWindow : Window
         }
     }
 
-    private void EndpointVolumeSynchronizer_OnVolumeChanged(object? sender, float volume) =>
+    private void EndpointVolumeSynchronizer_OnVolumeChanged(object? sender, float volume)
+    {
+        // Only mirror the endpoint when it actually carries the gain. For a bypassing
+        // output path (direct ALSA) the application volume is authoritative, otherwise
+        // any system volume change would silently overwrite the user's choice.
+        if (_endpointVolumeSynchronizer is { AppliesToOutputPath: false })
+            return;
         Dispatcher.UIThread.Post(() => ApplySystemVolume(volume, pushToEndpoint: false));
+    }
 
     /// <summary>Applies a volume reported by MPRIS or the platform endpoint.</summary>
     /// <param name="volume">Linear volume from 0.0 to 1.0.</param>
@@ -166,6 +215,9 @@ public partial class MainWindow : Window
     /// </param>
     private void ApplySystemVolume(float volume, bool pushToEndpoint = true)
     {
+        LogUiDiagnostics(
+            $"ApplySystemVolume {volume:0.###} (pushToEndpoint={pushToEndpoint}, " +
+            $"appliesToOutputPath={_endpointVolumeSynchronizer?.AppliesToOutputPath.ToString() ?? "none"})");
         _updatingVolumeFromSystem = true;
         try
         {
@@ -181,6 +233,9 @@ public partial class MainWindow : Window
         if (pushToEndpoint && _endpointVolumeSynchronizer is not null)
             _endpointVolumeSynchronizer.SetVolume(volume);
         _windowsMediaTransport?.SetVolume(VolumeSlider.Value);
+        // A change requested from the desktop (media keys, panel slider) is a real
+        // user choice and must survive an unclean exit like a slider drag does.
+        ScheduleVolumeSave();
     }
 
     private float GetReplayGainFactor(string filePath)

@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- The volume no longer jumps back to 100 %. A second application instance is now
+  refused at startup, so two copies can no longer overwrite the shared settings
+  file or compete for the desktop media name. The volume is also persisted
+  shortly after every change, including changes made from the system media
+  controls, instead of only on a clean window close, so a crash or force-quit no
+  longer loses it.
 - Upgrading from HyperFi no longer resets the saved volume to 100 %. Settings
   files that still use the `HyperFi` property prefix are now renamed, and a
   failure while applying credentials or normalizing settings keeps the values

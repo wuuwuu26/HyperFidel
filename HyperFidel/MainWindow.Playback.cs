@@ -71,7 +71,10 @@ public partial class MainWindow : Window
         _windowsMediaTransport.PositionChangeRequested += position =>
             Dispatcher.UIThread.Post(async () => await SeekFromSystemAsync(position));
         _windowsMediaTransport.VolumeChangeRequested += volume =>
+        {
+            LogUiDiagnostics($"MPRIS volume change requested: {volume:0.###}");
             Dispatcher.UIThread.Post(() => ApplySystemVolume((float)volume));
+        };
         _windowsMediaTransport.SetVolume(VolumeSlider.Value);
         RefreshQueueNavigationButtons();
     }
@@ -641,6 +644,10 @@ public partial class MainWindow : Window
                 ? 1.0f
                 : (float)VolumeSlider.Value;
             _player.Volume = PendingPlayerInitialVolume.Value ?? normalVolume;
+            LogUiDiagnostics(
+                $"Player volume set to {_player.Volume:0.###} (slider {VolumeSlider.Value:0.###}, " +
+                $"backend {_settings.OutputBackend}, appliesToOutputPath " +
+                $"{_endpointVolumeSynchronizer?.AppliesToOutputPath.ToString() ?? "none"})");
             _player.ReplayGainFactor = GetReplayGainFactor(filePath);
             _currentPlaybackDuration = player.Duration;
             if (initialPosition == TimeSpan.Zero &&
