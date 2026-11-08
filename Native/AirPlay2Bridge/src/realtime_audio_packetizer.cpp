@@ -7,7 +7,7 @@
 #include <array>
 #include <stdexcept>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 namespace {
 std::uint32_t readRandom32() {
     const auto bytes = fxchain::airplay::randomBytes(4);
@@ -69,4 +69,4 @@ std::vector<std::byte> RealtimeAudioPacketizer::packetize(std::span<const std::b
     return packet;
 }
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

@@ -7,7 +7,7 @@
 #include <span>
 #include <string>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 
 /** Cross-platform socket handle whose ownership is explicit and movable. */
 class Socket final {
@@ -64,4 +64,4 @@ private:
     std::intptr_t handle_ = -1;
 };
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

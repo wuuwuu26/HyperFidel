@@ -6,8 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../HyperFi/Localization/Strings.cs" Link="Strings.cs" />
-    <Compile Include="../../HyperFi/Localization/Language.cs" Link="Language.cs" />
-    <Compile Include="../../HyperFi/Localization/LocalizationManager.cs" Link="LocalizationManager.cs" />
+    <Compile Include="../../HyperFidel/Localization/Strings.cs" Link="Strings.cs" />
+    <Compile Include="../../HyperFidel/Localization/Language.cs" Link="Language.cs" />
+    <Compile Include="../../HyperFidel/Localization/LocalizationManager.cs" Link="LocalizationManager.cs" />
   </ItemGroup>
 </Project>

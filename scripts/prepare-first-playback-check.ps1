@@ -15,7 +15,7 @@ if (-not $IsWindows) {
 }
 
 $testRoot = Join-Path ([IO.Path]::GetTempPath()) (
-    'hyperfi-first-playback-' + [Guid]::NewGuid().ToString('N'))
+    'hyperfidel-first-playback-' + [Guid]::NewGuid().ToString('N'))
 $testRoot = [IO.Path]::GetFullPath($testRoot)
 [IO.Directory]::CreateDirectory($testRoot) | Out-Null
 [IO.File]::WriteAllText((Join-Path $testRoot '.legacy-data-migrated'),
@@ -23,7 +23,7 @@ $testRoot = [IO.Path]::GetFullPath($testRoot)
 
 $settings = @{
     LibraryPaths = @()
-    HyperFiServers = @()
+    HyperFidelServers = @()
     PlexServers = @()
     OutputProfiles = @()
     CheckForUpdatesOnStartup = $false
@@ -79,7 +79,7 @@ if ($Start) {
     if ([string]::IsNullOrWhiteSpace($ApplicationPath)) {
         $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
         $ApplicationPath = Join-Path $repositoryRoot (
-            'HyperFi/bin/Release/net10.0-windows10.0.19041.0/HyperFi.exe')
+            'HyperFidel/bin/Release/net10.0-windows10.0.19041.0/HyperFidel.exe')
     }
     $ApplicationPath = [IO.Path]::GetFullPath($ApplicationPath)
     if (-not [IO.File]::Exists($ApplicationPath)) {
@@ -88,7 +88,7 @@ if ($Start) {
     $processInfo = [Diagnostics.ProcessStartInfo]::new($ApplicationPath)
     $processInfo.UseShellExecute = $false
     $processInfo.WorkingDirectory = [IO.Path]::GetDirectoryName($ApplicationPath)
-    $processInfo.Environment['HYPERFI_DATA_DIR'] = $testRoot
+    $processInfo.Environment['HYPERFIDEL_DATA_DIR'] = $testRoot
     $processInfo.Environment.Remove('FANART_TV_API_KEY') | Out-Null
     $processInfo.WindowStyle = [Diagnostics.ProcessWindowStyle]::Normal
     $testProcess = [Diagnostics.Process]::Start($processInfo)

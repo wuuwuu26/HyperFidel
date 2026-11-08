@@ -8,7 +8,7 @@
 #include <cctype>
 #include <stdexcept>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 namespace {
 constexpr std::size_t MaxEventBody = 1024 * 1024;
 
@@ -113,4 +113,4 @@ void EventChannel::processPlaintext() {
     }
 }
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

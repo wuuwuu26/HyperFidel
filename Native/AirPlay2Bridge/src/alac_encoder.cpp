@@ -7,7 +7,7 @@
 
 #include <stdexcept>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 
 AlacEncoder::AlacEncoder(std::uint32_t sampleRate, std::size_t framesPerPacket)
     : encoder_(std::make_unique<ALACEncoder>()),
@@ -92,4 +92,4 @@ std::vector<std::byte> AlacEncoder::encodeUncompressed(std::span<const std::byte
     return encoded;
 }
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

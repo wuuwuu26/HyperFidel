@@ -7,7 +7,7 @@
 #include <span>
 #include <vector>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 namespace {
 constexpr std::uint16_t EventPort = 319;
 constexpr std::uint16_t GeneralPort = 320;
@@ -89,7 +89,7 @@ void PtpTimingGrandmaster::run() {
             pollRequests();
         } catch (...) {
             // Timing runs independently from the ABI caller. A transient UDP
-            // failure must not escape the worker thread and terminate HyperFi.
+            // failure must not escape the worker thread and terminate HyperFidel.
             std::this_thread::sleep_for(std::chrono::milliseconds(25));
         }
     }
@@ -145,4 +145,4 @@ void PtpTimingGrandmaster::pollRequests() {
     }
 }
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

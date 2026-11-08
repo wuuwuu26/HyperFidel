@@ -33,8 +33,8 @@ synthetic output so it cannot discover the real default device.
 A reported startup failure exposed a race between checking a missing legacy
 artwork destination and copying it. Migration now preserves files created in
 that interval and propagates other I/O failures without a completion marker.
-Explicit HYPERFI_DATA_DIR profiles do not import legacy data, even without the
-marker prepared by the helper. Renaming the default HyperFi folder alone can
+Explicit HYPERFIDEL_DATA_DIR profiles do not import legacy data, even without the
+marker prepared by the helper. Renaming the default HyperFidel folder alone can
 still intentionally migrate the old Player configuration and caches again. Use
 the isolated check below for a clean test without moving personal data. The
 subsequent user reply confirms both local and server-only audible playback; it
@@ -62,7 +62,7 @@ pwsh -NoProfile -File scripts/prepare-first-playback-check.ps1 -Scenario Server 
 ```
 
 Build the Windows Release app first; ApplicationPath can select another local
-build. The child alone receives HYPERFI_DATA_DIR. The launch path has not been
+build. The child alone receives HYPERFIDEL_DATA_DIR. The launch path has not been
 claimed as an automated native UI or sound test.
 
 For Local, use Directories to add the returned MusicFolder. Its scan starts
@@ -70,7 +70,7 @@ automatically; wait for completion, save Settings, then double-click the track
 in Tracks. Verify audible output and normal Play/Pause/Stop behavior. Output
 device opens the normal output settings if the default endpoint is unavailable.
 
-For Server, configure the server in HyperFi servers, save Settings and play a
+For Server, configure the server in HyperFidel servers, save Settings and play a
 known track through Tracks with no local folder configured. Enter credentials
 only in the app. Check unavailable-source retry and output selection there.
 Record pass/failure and the failing step, without credentials, private URLs or
@@ -84,9 +84,9 @@ media.
 ## Optional local rendering
 
 ```powershell
-$env:HYPERFI_SMOKE_RENDER_DIR = Join-Path $PWD '.codex/setup-render'
-dotnet run --project HyperFi.Ui.Smoke/HyperFi.Ui.Smoke.csproj
-Remove-Item Env:HYPERFI_SMOKE_RENDER_DIR
+$env:HYPERFIDEL_SMOKE_RENDER_DIR = Join-Path $PWD '.codex/setup-render'
+dotnet run --project HyperFidel.Ui.Smoke/HyperFidel.Ui.Smoke.csproj
+Remove-Item Env:HYPERFIDEL_SMOKE_RENDER_DIR
 ```
 
 This exports only synthetic setup controls, named by locale/theme/width/scale.

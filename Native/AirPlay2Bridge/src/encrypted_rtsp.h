@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 
 /** A complete response received through the encrypted AirPlay 2 control channel. */
 struct RtspResponse final {
@@ -41,4 +41,4 @@ private:
     int sequence_ = 1;
 };
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

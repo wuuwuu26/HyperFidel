@@ -58,7 +58,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore dependencies
-        run: dotnet restore HyperFi/HyperFi.csproj --runtime win-x64
+        run: dotnet restore HyperFidel/HyperFidel.csproj --runtime win-x64
 
       - name: Build cwASIO bridge (Release)
         shell: pwsh
@@ -86,12 +86,12 @@ jobs:
       - name: Publish self-contained Windows build
         shell: pwsh
         run: >
-          dotnet publish HyperFi/HyperFi.csproj
+          dotnet publish HyperFidel/HyperFidel.csproj
           --configuration Release
           --runtime win-x64
           --self-contained true
           --no-restore
-          --output artifacts/HyperFi-win-x64
+          --output artifacts/HyperFidel-win-x64
           /p:IncludeAsioBridge=false
           /p:IncludeCwAsioBridge=true
           /p:IncludeAirPlay2Bridge=true
@@ -105,16 +105,16 @@ jobs:
       - name: Create portable ZIP
         shell: pwsh
         run: |
-          $zip = "installer/Output/HyperFi-${{ steps.ver.outputs.version }}-win-x64-Portable.zip"
+          $zip = "installer/Output/HyperFidel-${{ steps.ver.outputs.version }}-win-x64-Portable.zip"
           New-Item -ItemType Directory -Force installer/Output | Out-Null
-          Compress-Archive -Path artifacts/HyperFi-win-x64/* -DestinationPath $zip
+          Compress-Archive -Path artifacts/HyperFidel-win-x64/* -DestinationPath $zip
           Write-Host "Created $zip ($([math]::Round((Get-Item $zip).Length / 1MB, 1)) MB)"
 
       - name: Compile Inno Setup installer
         shell: pwsh
         run: |
           $iscc = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
-          & $iscc /dAppVersion=${{ steps.ver.outputs.version }} installer\HyperFi.iss
+          & $iscc /dAppVersion=${{ steps.ver.outputs.version }} installer\HyperFidel.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Create canonical draft and upload Windows packages
@@ -124,32 +124,32 @@ jobs:
         run: |
           bash .github/scripts/upload-release-assets.sh \
             '${{ steps.ver.outputs.tag }}' \
-            'HyperFi ${{ steps.ver.outputs.version }}' \
+            'HyperFidel ${{ steps.ver.outputs.version }}' \
             true \
-            'installer/Output/HyperFi-${{ steps.ver.outputs.version }}-win-x64-Setup.exe' \
-            'installer/Output/HyperFi-${{ steps.ver.outputs.version }}-win-x64-Portable.zip' <<'EOF'
-            ## HyperFi ${{ steps.ver.outputs.version }}
+            'installer/Output/HyperFidel-${{ steps.ver.outputs.version }}-win-x64-Setup.exe' \
+            'installer/Output/HyperFidel-${{ steps.ver.outputs.version }}-win-x64-Portable.zip' <<'EOF'
+            ## HyperFidel ${{ steps.ver.outputs.version }}
 
-            See [CHANGELOG.md](https://github.com/wuuwuu26/HyperFi/blob/main/CHANGELOG.md)
+            See [CHANGELOG.md](https://github.com/wuuwuu26/HyperFidel/blob/main/CHANGELOG.md)
             for a full list of changes.
 
             ### Download
 
             | Package | Description |
             | --- | --- |
-            | `HyperFi-${{ steps.ver.outputs.version }}-win-x64-Setup.exe` | Installer — adds Start Menu entry and uninstaller |
-            | `HyperFi-${{ steps.ver.outputs.version }}-win-x64-Portable.zip` | Portable — extract anywhere and run `HyperFi.exe` |
-            | `HyperFi-${{ steps.ver.outputs.version }}-linux-x64.tar.gz` | Portable Linux archive for x86-64 |
-            | `HyperFi-${{ steps.ver.outputs.version }}-linux-arm64.tar.gz` | Portable Linux archive for ARM64 |
-            | `HyperFi-${{ steps.ver.outputs.version }}-osx-x64.pkg` | macOS installer for Intel Macs |
-            | `HyperFi-${{ steps.ver.outputs.version }}-osx-arm64.pkg` | macOS installer for Apple Silicon |
-            | `HyperFi-${{ steps.ver.outputs.version }}-osx-x64-Portable.zip` | Portable macOS app for Intel Macs |
-            | `HyperFi-${{ steps.ver.outputs.version }}-osx-arm64-Portable.zip` | Portable macOS app for Apple Silicon |
-            | `HyperFi-${{ steps.ver.outputs.version }}-osx-x64.tar.gz` | Alternative macOS app archive for Intel Macs |
-            | `HyperFi-${{ steps.ver.outputs.version }}-osx-arm64.tar.gz` | Alternative macOS app archive for Apple Silicon |
-            | `hyperfi_${{ steps.ver.outputs.version }}_amd64.deb` / `arm64.deb` | Debian and Ubuntu package |
-            | `hyperfi-${{ steps.ver.outputs.version }}-1.x86_64.rpm` / `aarch64.rpm` | Fedora, RHEL, and compatible distributions |
-            | `hyperfi-${{ steps.ver.outputs.version }}-1-x86_64.pkg.tar.zst` | Arch Linux package |
+            | `HyperFidel-${{ steps.ver.outputs.version }}-win-x64-Setup.exe` | Installer — adds Start Menu entry and uninstaller |
+            | `HyperFidel-${{ steps.ver.outputs.version }}-win-x64-Portable.zip` | Portable — extract anywhere and run `HyperFidel.exe` |
+            | `HyperFidel-${{ steps.ver.outputs.version }}-linux-x64.tar.gz` | Portable Linux archive for x86-64 |
+            | `HyperFidel-${{ steps.ver.outputs.version }}-linux-arm64.tar.gz` | Portable Linux archive for ARM64 |
+            | `HyperFidel-${{ steps.ver.outputs.version }}-osx-x64.pkg` | macOS installer for Intel Macs |
+            | `HyperFidel-${{ steps.ver.outputs.version }}-osx-arm64.pkg` | macOS installer for Apple Silicon |
+            | `HyperFidel-${{ steps.ver.outputs.version }}-osx-x64-Portable.zip` | Portable macOS app for Intel Macs |
+            | `HyperFidel-${{ steps.ver.outputs.version }}-osx-arm64-Portable.zip` | Portable macOS app for Apple Silicon |
+            | `HyperFidel-${{ steps.ver.outputs.version }}-osx-x64.tar.gz` | Alternative macOS app archive for Intel Macs |
+            | `HyperFidel-${{ steps.ver.outputs.version }}-osx-arm64.tar.gz` | Alternative macOS app archive for Apple Silicon |
+            | `hyperfidel_${{ steps.ver.outputs.version }}_amd64.deb` / `arm64.deb` | Debian and Ubuntu package |
+            | `hyperfidel-${{ steps.ver.outputs.version }}-1.x86_64.rpm` / `aarch64.rpm` | Fedora, RHEL, and compatible distributions |
+            | `hyperfidel-${{ steps.ver.outputs.version }}-1-x86_64.pkg.tar.zst` | Arch Linux package |
 
             All desktop builds are self-contained and bundle .NET 10. Linux
             playback additionally requires FFmpeg, ALSA, and OpenAL; the
@@ -168,12 +168,12 @@ jobs:
             ### Uninstalling (installer)
 
             Use **Add or Remove Programs** in Windows Settings.
-            Library data under `%LOCALAPPDATA%\HyperFi\` is preserved.
+            Library data under `%LOCALAPPDATA%\HyperFidel\` is preserved.
 
             ### Portable notes
 
             Extract the ZIP to any folder (e.g. a USB drive) and run
-            `HyperFi.exe`. Library data is always written to
-            `%LOCALAPPDATA%\HyperFi\` on the current user profile,
+            `HyperFidel.exe`. Library data is always written to
+            `%LOCALAPPDATA%\HyperFidel\` on the current user profile,
             regardless of where the executable lives.
           EOF

@@ -1,4 +1,4 @@
-# HyperFi Roadmap
+# HyperFidel Roadmap
 
 Items 1-37 are complete and listed for reference only. Later sections preserve
 dated implementation milestones and measurements; they are not a current
@@ -60,7 +60,7 @@ of full reference fidelity.
 
 ## 15. ★ Isolate the Core test data root — `Done`
 
-- `HyperFi.Core.Tests/CoreTestDatabase` owns a unique temporary directory per
+- `HyperFidel.Core.Tests/CoreTestDatabase` owns a unique temporary directory per
   test, opens the library database, builds paths inside the directory, and
   clears only that database's SQLite pool on disposal.
 - `ArtistAttributionTests` no longer shares one library file or deletes it
@@ -75,7 +75,7 @@ of full reference fidelity.
 
 ## 16. ★ Add `scripts/verify-all.ps1` — `Done`
 
-- Runs the managed builds for `HyperFi.Core`, `HyperFi.Server`, and `HyperFi`
+- Runs the managed builds for `HyperFidel.Core`, `HyperFidel.Server`, and `HyperFidel`
   with `--warnaserror`, all three test projects, and both parity scripts.
 - Stops at the first failure, prints the failing output tail, then a compact
   summary naming the steps that were skipped, and exits non-zero.
@@ -99,17 +99,17 @@ Steps:
 
 - 17a Read-only tools — `Done`: `get_year_in_review` (listened hours, active
   days, monthly breakdown, leading genres/albums/artists) and `get_track_key`
-  (Camelot label for a local path or an `hyperfi://` reference). The tool count
+  (Camelot label for a local path or an `hyperfidel://` reference). The tool count
   is 34. This also uncovered and fixed a real defect: `CamelotKey` had landed on
-  the rating-mutation DTO instead of `HyperFiTrackInfo`, so remote rows never
+  the rating-mutation DTO instead of `HyperFidelTrackInfo`, so remote rows never
   showed the key. Two Core tests guard the DTO.
 - 17b Mutating tools — `Done`: `set_tracks_favorite`, `set_tracks_rating`, and
   `create_similar_playlist`, backed by three new `McpPlayerBridge` delegates and
   path-based implementations. `SetTracksFavoriteByPathsAsync`/
-  `SetTracksRatingByPathsAsync` split local paths from `hyperfi://` references
+  `SetTracksRatingByPathsAsync` split local paths from `hyperfidel://` references
   and reuse the transactional bulk update and the per-track server API;
   `CreateSimilarPlaylistByPathAsync` is now shared with the track context menu.
-  The tool count is 37, and two `HyperFi.Tests` cases validate every AI tool
+  The tool count is 37, and two `HyperFidel.Tests` cases validate every AI tool
   schema (types, descriptions, and required names).
 
 ## 18. Pick the similarity reference in the smart-playlist editor — `Done`
@@ -120,30 +120,30 @@ Steps:
 
 - 18a Server-side similarity resolve — `Done`: `/api/playlists/{id}/resolve` and
   `/api/playlists/resolve-count` now go through the new public
-  `HyperFi.Server.Services.SmartPlaylistResolver`, which supplies the cached
+  `HyperFidel.Server.Services.SmartPlaylistResolver`, which supplies the cached
   similarity feature vectors whenever the criteria carries a reference. Before
   this a similarity playlist stored on a server resolved to an empty list. A
   reference pointing at another library (`server:<id>`) intentionally still
   resolves to nothing, because vectors are provider-local. Three
-  `HyperFi.Server.Tests` cases cover the helper, the empty plain-resolve result,
+  `HyperFidel.Server.Tests` cases cover the helper, the empty plain-resolve result,
   and criteria without a reference.
 - 18b Reference picker in the editor — `Done`: the similarity panel gained
   **Choose reference track**, which opens `ReferenceTrackPickerDialog` (search
-  over the local index plus every configured HyperFi Server) and applies the
+  over the local index plus every configured HyperFidel Server) and applies the
   selection together with the minimum score. The dialog never touches the
   database or the network itself; `MainWindow` supplies the search. The pure
   `SmartPlaylistCriteriaEditing.ResolveSimilarityReference` gained a
   picked-reference override (explicit removal still wins), covered by three more
-  `HyperFi.Tests` cases.
+  `HyperFidel.Tests` cases.
 
 ## 19. Offer activity presets in the Infinite Mix profile — `Done`
 
 - `InfiniteMixDialog` gained **Focus**, **Workout**, and **Wind down** presets
   next to the mood selector. They pre-fill the mood, discovery level, history
-  period, and weighting through the pure `HyperFi.InfiniteMixPresets.Apply`,
+  period, and weighting through the pure `HyperFidel.InfiniteMixPresets.Apply`,
   which preserves the server selection, genre filters, feedback, and exclusions
   and never modifies the profile it is based on. Every field stays editable
-  afterwards. 6 `HyperFi.Tests` cases.
+  afterwards. 6 `HyperFidel.Tests` cases.
 - Deliberate boundary: the presets do **not** add descriptor scoring to Infinite
   Mix. `SimilarityFeatureService.RankPreset` (item 9) remains the
   descriptor-based activity mix, because the genre-cloud candidate payload
@@ -157,15 +157,15 @@ Steps:
   sending a request Last.fm would reject.
 - Added `LastFmClient.SetTrackLovedAsync` (`track.love`/`track.unlove`, artist
   and track only) and `LastFmScrobblingService.SetTrackLoved`, wired to the
-  transport favourite button for both local and HyperFi Server tracks. The call
+  transport favourite button for both local and HyperFidel Server tracks. The call
   is best effort, never blocks playback, and is not queued while offline.
 - The session key and API secret stay in `ApplicationCredentialStore` only.
-- 6 `HyperFi.Core.Tests` cases verify the signed love/unlove request, the error
+- 6 `HyperFidel.Core.Tests` cases verify the signed love/unlove request, the error
   response, and that an untagged item sends nothing.
 
 ## 21. Export the year in review as PDF — `Done`
 
-- Added the pure `HyperFi.Controls.YearInReviewLayout` content model (title,
+- Added the pure `HyperFidel.Controls.YearInReviewLayout` content model (title,
   headline, monthly bar ratios, leading sections, album labels), consumed by the
   PDF export so the on-screen card and the PDF cannot drift apart.
 - Added `YearInReviewPdfExporter`, which draws that model into a bounded
@@ -173,7 +173,7 @@ Steps:
   Avalonia.Skia's pinned 2.88.9 reference, so the desktop project deliberately
   has no separate SkiaSharp package reference. The dialog gained **Save as
   PDF**.
-- 6 `HyperFi.Tests` cases cover the layout model and 2 more verify that a real
+- 6 `HyperFidel.Tests` cases cover the layout model and 2 more verify that a real
   PDF document is written, including the empty-summary case.
 
 ## 22. Word-level karaoke highlighting — `Done`
@@ -186,7 +186,7 @@ Steps:
   active slot when the word changes so the surrounding transitions keep
   animating. Plain synchronized lines keep the line-level highlight;
   `LyricLineSelector` serves as both the line and word selector.
-- 10 `HyperFi.Core.Tests` cases cover the parser (plain, enhanced, mixed,
+- 10 `HyperFidel.Core.Tests` cases cover the parser (plain, enhanced, mixed,
   ordering, markers-only, missing timestamps) and the word-level selection.
 
 ## 23. Bulk genre editing — `Done`
@@ -203,15 +203,15 @@ Steps:
   every `AudioDatabase.Upsert`; `SetTrackGenres` updates several tracks in one
   transaction and writes the override at the same time; an empty value removes
   it so the next scan restores the embedded genre. The bulk action bar gained a
-  genre field and updates the selected rows in place. 5 `HyperFi.Core.Tests`
+  genre field and updates the selected rows in place. 5 `HyperFidel.Core.Tests`
   cases cover the rescan, the clear path, multiple tracks, duplicates, and the
   empty selection.
 - 23b Server-owned tracks — `Done`: `PUT /api/tracks/{id}/genre` stores the same
   library-only override through `AudioDatabase.SetTrackGenres` and refreshes the
-  track's Lucene document; `HyperFiServerClient.UpdateTrackGenreAsync` sends it
+  track's Lucene document; `HyperFidelServerClient.UpdateTrackGenreAsync` sends it
   (an explicit empty value clears the override), and the bulk action updates
   remote rows in place and reports per-selection failures. 3
-  `HyperFi.Core.Tests` cases cover the request path, the clear value, and a
+  `HyperFidel.Core.Tests` cases cover the request path, the clear value, and a
   rejected response.
 
 ## 24. Download podcast episodes for offline playback — `Done`
@@ -225,7 +225,7 @@ Steps:
 - Episode rows gained a **Download episode** / **Delete download** context menu
   and a download marker in the status column; playback prefers the cached file;
   Settings > Library sets `AppSettings.PodcastDownloadLimitMb`.
-- 12 `HyperFi.Core.Tests` cases cover the file naming and the eviction
+- 12 `HyperFidel.Core.Tests` cases cover the file naming and the eviction
   selection.
 - Not included: pinning individual episodes so eviction can never remove them,
   and background prefetch of new episodes.
@@ -235,22 +235,22 @@ Steps:
 Steps:
 
 - 25a Server-side schedule and shared naming — `Done`:
-  `HyperFi.Server.Services.BackupScheduleService` writes a versioned ZIP at most
-  once per `IntervalDays` into `HyperFi:BackupSchedule:Directory` (default: a
+  `HyperFidel.Server.Services.BackupScheduleService` writes a versioned ZIP at most
+  once per `IntervalDays` into `HyperFidel:BackupSchedule:Directory` (default: a
   `backups` folder below the server data directory) and prunes through
   `BackupRetention.SelectObsolete`. The last run comes from the newest archive,
   so no extra state is persisted, and the section holds no credentials.
-  Automatic archive naming moved into the shared `HyperFi.Library.BackupNaming`,
-  which the desktop now uses as well. 8 `HyperFi.Core.Tests` cases cover the
+  Automatic archive naming moved into the shared `HyperFidel.Library.BackupNaming`,
+  which the desktop now uses as well. 8 `HyperFidel.Core.Tests` cases cover the
   naming.
-- 25b WebDAV upload target — `Done`: `HyperFi.Library.BackupTargets` validates
+- 25b WebDAV upload target — `Done`: `HyperFidel.Library.BackupTargets` validates
   and builds the target URL (plain `http`/`https`, no embedded credentials) and
-  `HyperFi.Library.BackupUploader` performs a bounded `PUT` with optional Basic
+  `HyperFidel.Library.BackupUploader` performs a bounded `PUT` with optional Basic
   auth that never leaks credentials into a URL, a log, or an error message.
   `ApplicationCredentialSnapshot.BackupTargetPassword` carries the password, so
   it never reaches `settings.json`; Settings exposes enable, URL, sub-folder,
   user name, and password, and the scheduled and **Back up now** paths share
-  `MainWindow.TryUploadBackupAsync`. 18 `HyperFi.Core.Tests` cases cover the URL
+  `MainWindow.TryUploadBackupAsync`. 18 `HyperFidel.Core.Tests` cases cover the URL
   rules and the upload request. S3 remains a deliberate follow-up.
 
 ## 26. Reduce motion and keyboard navigation — `Done`
@@ -322,7 +322,7 @@ Steps:
   `Microsoft.NET.Test.Sdk` 18.10.1 match the new toolchain.
 - Avalonia stays on 11.3 for now; the Avalonia 12 migration is a separate step
   recorded in `DEPENDENCY-MIGRATION.md`.
-- Drive-by license fix: `HyperFi.csproj` copies the Lucene `NOTICE.txt` from the
+- Drive-by license fix: `HyperFidel.csproj` copies the Lucene `NOTICE.txt` from the
   `4.8.0-beta00018` directory it actually references.
 
 **Tests**: the existing 570 tests (Core 427, Desktop 105, Server 38) run on
@@ -397,7 +397,7 @@ report 0 errors and 0 warnings.
 - The probe order is extracted into the pure
   `WasapiAudioPlayer.OrderCandidateSampleRates`.
 
-**Tests**: seven new cases in `HyperFi.Tests` cover the DSD division order, the
+**Tests**: seven new cases in `HyperFidel.Tests` cover the DSD division order, the
 fractional-rate ordering, DSD128, the PCM ordering, and uniqueness.
 
 **Commit**: `fix(playback): keep DSD-to-PCM on an exact rate division`
@@ -483,7 +483,7 @@ passes, waveform and custom-shape overlays, and a composite stage.
 ### Phases
 
 - 37a Audio analysis foundation - `Done`: `Fft`, `AudioSpectrumAnalyzer`, and
-  `PcmVisualizationTap` in `HyperFi.Core/Audio`, covered by 21 tests (sine
+  `PcmVisualizationTap` in `HyperFidel.Core/Audio`, covered by 21 tests (sine
   frequency detection, DC concentration, silence, band separation, decay and
   reset, ring-buffer overflow, oversized blocks, and clearing).
 - 37b Preset expression language - `Done`: `PresetLexer`, `PresetCompiler` (a
@@ -790,7 +790,7 @@ CPU path as the fallback.
 
 - 40a Render-surface decision - `Done`: Avalonia's own Skia surface through
   `SKRuntimeEffect` (SkSL) was chosen over an own OpenGL/Vulkan surface, because
-  SkiaSharp is already referenced by `HyperFi.Core` and the path stays testable
+  SkiaSharp is already referenced by `HyperFidel.Core` and the path stays testable
   headlessly. The decision, its three risks, and the fallback rule are recorded
   in `DEPENDENCY-MIGRATION.md`.
 - 40b Shader translation - `Done`: `ShaderTranspiler` emits SkSL from the parsed
@@ -864,7 +864,7 @@ CPU path as the fallback.
   took it to 764 of 764: every shader in the sample now translates and is
   accepted by Skia.
 - 40d Platform, packaging, and CI - `Done`: the GPU path adds no native
-  dependency. It runs on SkiaSharp, which `HyperFi.Core` already referenced, and
+  dependency. It runs on SkiaSharp, which `HyperFidel.Core` already referenced, and
   the desktop already depends on Avalonia's Skia renderer, so the native library
   is part of the existing dependency graph rather than a new one. Verified by
   publishing the desktop self-contained for `linux-x64` and `osx-arm64` and
@@ -872,7 +872,7 @@ CPU path as the fallback.
   assembly; the Windows build ships `libSkiaSharp.dll` the same way. Nothing in
   the visualizer reaches outside the managed SkiaSharp surface, so the existing
   CI matrix (Windows Debug/Release, the `linux-x64` artifact, and the macOS
-  `HyperFi.app` bundles), the packaging scripts, and the signed release manifest
+  `HyperFidel.app` bundles), the packaging scripts, and the signed release manifest
   already cover it and needed no change.
 - 40f A real GPU pipeline - `Done for presets without shaders`: section 40 was
   named "GPU pipeline", but nothing in it reaches the GPU. `SkiaShaderRunner`
@@ -900,11 +900,11 @@ CPU path as the fallback.
   `VertexAttribPointer`, `DrawArrays`, `Viewport`, `ClearColor`/`Clear`, and
   `Flush` — but **not** `TexSubImage2D`, so a texture update re-specifies it
   through `TexImage2D` or fetches the missing entry point through
-  `GetProcAddress`. Step 1 is done: `HyperFi.Controls.VisualizerGlPresenter`
+  `GetProcAddress`. Step 1 is done: `HyperFidel.Controls.VisualizerGlPresenter`
   uploads the finished frame as an RGBA8 texture and draws it with a
   `#version 300 es` program over a two-triangle quad in a vertex buffer, and
   logs the GL version once. The presenter is now the visualizer's default
-  presentation; `HYPERFI_VISUALIZER_OPENGL=0` forces the bitmap path, and a
+  presentation; `HYPERFIDEL_VISUALIZER_OPENGL=0` forces the bitmap path, and a
   platform whose GL context never arrives falls back to it within
   `GlPresenterGraceSeconds`. A shader or context failure is logged and leaves
   the window on the CPU path. The remaining steps, each behind its own flag with
@@ -938,7 +938,7 @@ CPU path as the fallback.
   per-frame pass values (`ReadFrameParameters`), and the overlay-only frame
   (`RenderOverlayFrame`/`OverlayFrame`), all covered by tests. What is left is
   the GL pipeline itself in the control, which is app-side only. Step 3 is done
-  for presets without shaders. `HyperFi.Controls.VisualizerGlPipeline` runs the
+  for presets without shaders. `HyperFidel.Controls.VisualizerGlPipeline` runs the
   warp as a mesh draw (the fragment shader is a translation of
   `WarpSampling.SamplePosition`, and every texture is bottom-up so the engine's
   top-down coordinates are converted in the shader), the blur as the same
@@ -987,8 +987,8 @@ CPU path as the fallback.
   automatic fallback for a platform without a GL context. A per-pixel block that
   writes the sample position is emitted as a warp fragment shader by default
   (`ShaderTranspiler.TranspileGlslWarp` over a full-screen quad, with the frame
-  motion seeded as `_hyperfi_*` uniforms and the decay moved to the post pass);
-  `HYPERFI_VISUALIZER_PIXELWARP=0` forces the CPU warp. A block the dialect
+  motion seeded as `_hyperfidel_*` uniforms and the decay moved to the post pass);
+  `HYPERFIDEL_VISUALIZER_PIXELWARP=0` forces the CPU warp. A block the dialect
   cannot express no longer costs the preset its shaders in the mesh path, which
   is what sent `$$$ Royal - Mashup (397)` to the CPU entirely. Its regression
   renders it with the per-pixel GPU warp forced and verifies the result. A
@@ -1003,11 +1003,11 @@ CPU path as the fallback.
   **A matched-music comparison now exists.** Most presets drive their shapes,
   zoom, and colours from the audio, so a tone could not show whether they behave
   like the reference. A reference oracle runner converts a track FFmpeg can read
-  into one raw PCM file both engines consume, and the HyperFi harness reads the
+  into one raw PCM file both engines consume, and the HyperFidel harness reads the
   same file. It found a real defect straight away: the loudness guard stood at
   the reference's literal `0.001`, which is written for projectM's unnormalized
   magnitudes, so `mid` and `treble` reported a constant one for real music and
-  every preset that reacts to them was dead. The guard is scaled to HyperFi's
+  every preset that reacts to them was dead. The guard is scaled to HyperFidel's
   units now. With that fixed and the same track, `$$$ Royal - Mashup (138)` runs
   at 96-101 mean brightness against projectM's 32. The reference's logarithmic
   frequency equalization is adopted too, which changes the band weighting rather
@@ -1043,7 +1043,7 @@ CPU path as the fallback.
   `TranspileGlslComp`, `TranspileGlslWarp`): the prelude aliases `float2/3/4`
   onto `vec2/3/4` so the shared body emission is byte-identical, the samplers
   become `sampler2D` sampled with `texture()`, and the entry point becomes a
-  `void main()` writing `hyperfiColor` with the engine's top-down `fragCoord`
+  `void main()` writing `hyperfidelColor` with the engine's top-down `fragCoord`
   built from `gl_FragCoord`. The pipeline integration runs it:
   `VisualizerGlPipeline.SetShaders` compiles the emitted GLSL in the control's
   context, the warp pass uses the warp shader in place of the fixed mesh
@@ -1071,7 +1071,7 @@ CPU path as the fallback.
   argument is spread into scalars because `matN` has no four-component
   constructor. The warp's sampling arithmetic now lives in the tested
 
-  `HyperFi.Visualization.WarpSampling`, which the GLSL fragment shader has to
+  `HyperFidel.Visualization.WarpSampling`, which the GLSL fragment shader has to
   translate rather than restate, so the two paths cannot drift apart. A GL mesh
   warp was written and then deliberately not wired in, because a warp alone is
   the wrong picture: this engine applies the blur, decay, video echo, borders,
@@ -1097,7 +1097,7 @@ CPU path as the fallback.
   GPU; and `GetPixel` read the warped frame while `sampler_main` read the
   composited one. The GPU-side causes are fixed too: the warp pass now builds
   `sampler_blur1`-`sampler_blur3` from the previous frame, and the shader's `/`
-  uses `hyperfiSafeDiv` so a zero divisor yields zero as it does on the CPU. A
+  uses `hyperfidelSafeDiv` so a zero divisor yields zero as it does on the CPU. A
   constant-source test proves the shader math itself agrees: the same comp
   shader that the harness reports as far apart computes the identical value on
   both paths and only the eight-bit clamp differs. The harness therefore still
@@ -1179,7 +1179,7 @@ CPU path as the fallback.
   `b1n`/`b1x`/`b1ed` and the `b2`/`b3` family are the Milkdrop 1 `blurN_min`,
   `blurN_max`, and `blurN_edge_darken` parameters under their short names, so
   they resolve to those variables, and a preset that carries only them takes its
-  blur amount from their `blurN_max` sum instead of HyperFi's own `blur_level`
+  blur amount from their `blurN_max` sum instead of HyperFidel's own `blur_level`
   key. Their edge-darkening amount is applied after the blur passes with our own
   documented falloff: the frame centre is untouched and the border is multiplied
   down towards `1 - amount`, which is the approximation the phase called for
@@ -1355,7 +1355,7 @@ CPU path as the fallback.
   position-varying motion is interpolated, and that a position-writing program
   ignores the setting. A comparison harness now exists for the fidelity work
   that remains: the local development harness builds projectM as the reference,
-  renders a preset with it and with HyperFi, and reports the mean channel
+  renders a preset with it and with HyperFidel, and reports the mean channel
   difference and the correlation per frame. It is a local development tool,
   links a projectM checkout the developer builds, and is not part of any build,
   test run, or release artifact. Against a few presets the correlation is weak
@@ -1389,7 +1389,7 @@ CPU path as the fallback.
   projectM and the composited frame here; and the video echo and overlay
   modulation still differ. The oracle's audio input is not equivalent to
   projectM's own analysis unless both sides run silent, so a comparison must use
-  that mode before the numbers mean anything, and the HyperFi side must be the
+  that mode before the numbers mean anything, and the HyperFidel side must be the
   GL pipeline because the CPU pass budget abandons a heavy comp shader the GPU
   runs. **Tests**: each phase adds its own; 39a is the prerequisite for claiming
   any speed-up.

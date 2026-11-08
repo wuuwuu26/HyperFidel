@@ -1,24 +1,24 @@
 <!-- markdownlint-disable MD033 MD041 -->
 <p align="center">
-  <img src="Logo/hyperfi.png" alt="HyperFi" width="160">
+  <img src="Logo/hyperfidel.png" alt="HyperFidel" width="160">
 </p>
 
-# HyperFi
+# HyperFidel
 
 **A local-first Hi-Fi player, library, and optional home server for Windows,
 Linux, and macOS.**
 
-HyperFi is for people who keep their music as files. It plays that library
+HyperFidel is for people who keep their music as files. It plays that library
 through your own DAC, keeps the interface out of the way, and can share the same
 collection with other devices through a small self-hosted server. There is no
 account, no subscription, and no telemetry.
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/wuuwuu26/HyperFi)](https://github.com/wuuwuu26/HyperFi/releases/latest)
+[![Release](https://img.shields.io/github/v/release/wuuwuu26/HyperFidel)](https://github.com/wuuwuu26/HyperFidel/releases/latest)
 ![Platforms](https://img.shields.io/badge/platforms-Windows%20%C2%B7%20Linux%20%C2%B7%20macOS-lightgrey)
 
-**Downloads:** [latest release](https://github.com/wuuwuu26/HyperFi/releases/latest) ·
-**Wiki:** [github.com/wuuwuu26/HyperFi/wiki](https://github.com/wuuwuu26/HyperFi/wiki) ·
+**Downloads:** [latest release](https://github.com/wuuwuu26/HyperFidel/releases/latest) ·
+**Wiki:** [github.com/wuuwuu26/HyperFidel/wiki](https://github.com/wuuwuu26/HyperFidel/wiki) ·
 **Full reference:** [docs/FULL-FEATURE-REFERENCE.md](docs/FULL-FEATURE-REFERENCE.md)
 
 ## Highlights
@@ -31,7 +31,7 @@ account, no subscription, and no telemetry.
   `DSD_U32_BE` directly and falls back to DoP; Windows uses cwASIO or ASIO.
   WASAPI can convert DSF/DFF to PCM in real time when native DSD is unavailable.
 - **One library across devices.** The desktop client merges local files with
-  any connected HyperFi Server into unified Artists, Albums, Tracks, and Folder
+  any connected HyperFidel Server into unified Artists, Albums, Tracks, and Folder
   views. CUE sheets, MKA chapters, smart playlists, full-text search, bulk
   favorite/rating/genre edits, and cross-device resume are built in.
 - **A warm, gold interface.** Translucent surfaces over a soft gradient, a
@@ -53,19 +53,19 @@ account, no subscription, and no telemetry.
 
 ## Screenshot
 
-<img src="html/assets/screenshots/hyperfi.png" alt="HyperFi library view" width="800">
+<img src="html/assets/screenshots/hyperfidel.png" alt="HyperFidel library view" width="800">
 
 ## Download
 
 Self-contained builds bundle the .NET runtime. Pick the package for your
-platform from the [latest release](https://github.com/wuuwuu26/HyperFi/releases/latest):
+platform from the [latest release](https://github.com/wuuwuu26/HyperFidel/releases/latest):
 
 | Component      | Packages                                                       |
 | -------------- | -------------------------------------------------------------- |
 | Windows player | `Setup.exe`, portable ZIP (Windows 10/11 x64)                  |
 | Linux player   | DEB, RPM, Arch `.pkg.tar.zst`, portable tar.gz (x64 and ARM64) |
 | macOS player   | PKG and portable app ZIP (Apple Silicon and Intel)             |
-| HyperFi Server | DEB and RPM (Linux x64 / ARM64, including Raspberry Pi)        |
+| HyperFidel Server | DEB and RPM (Linux x64 / ARM64, including Raspberry Pi)        |
 
 The in-app updater verifies a signed release manifest, checks each download
 digest, and installs through the native package manager on Linux.
@@ -114,7 +114,7 @@ uncompressed DFF output is sent directly through ALSA.
 ### macOS player
 
 - macOS 10.15 or newer on Apple Silicon (`arm64`) or Intel (`x64`)
-- FFmpeg and FFprobe from `PATH`, common package-manager locations, or HyperFi's
+- FFmpeg and FFprobe from `PATH`, common package-manager locations, or HyperFidel's
   automatic per-user download
 - The system OpenAL framework for PCM output
 - No ASIO, cwASIO, ALSA, or native DSD support
@@ -122,7 +122,7 @@ uncompressed DFF output is sent directly through ALSA.
 Release builds provide self-contained PKG installers and portable app bundles.
 Development builds require the .NET 10 SDK.
 
-### HyperFi Server
+### HyperFidel Server
 
 - Linux, macOS, or Windows on x64 or ARM64
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) for building;
@@ -135,20 +135,20 @@ Development builds require the .NET 10 SDK.
 Clone the repository and build the desktop client:
 
 ```bash
-git clone https://github.com/wuuwuu26/HyperFi.git
-cd HyperFi
-dotnet restore HyperFi/HyperFi.csproj
-dotnet build HyperFi/HyperFi.csproj --configuration Release
-dotnet run --project HyperFi/HyperFi.csproj
+git clone https://github.com/wuuwuu26/HyperFidel.git
+cd HyperFidel
+dotnet restore HyperFidel/HyperFidel.csproj
+dotnet build HyperFidel/HyperFidel.csproj --configuration Release
+dotnet run --project HyperFidel/HyperFidel.csproj
 ```
 
 Create a self-contained Linux build:
 
 ```bash
-dotnet restore HyperFi/HyperFi.csproj --runtime linux-x64
-dotnet publish HyperFi/HyperFi.csproj --configuration Release \
+dotnet restore HyperFidel/HyperFidel.csproj --runtime linux-x64
+dotnet publish HyperFidel/HyperFidel.csproj --configuration Release \
   --runtime linux-x64 --self-contained true --no-restore \
-  --output artifacts/HyperFi-linux-x64
+  --output artifacts/HyperFidel-linux-x64
 ```
 
 The same pattern works for `win-x64`, `osx-x64`, and `osx-arm64`. Windows also
@@ -160,22 +160,22 @@ bridge options.
 Run the managed tests:
 
 ```bash
-dotnet test HyperFi.Core.Tests/HyperFi.Core.Tests.csproj
-dotnet test HyperFi.Tests/HyperFi.Tests.csproj
-dotnet test HyperFi.Server.Tests/HyperFi.Server.Tests.csproj
+dotnet test HyperFidel.Core.Tests/HyperFidel.Core.Tests.csproj
+dotnet test HyperFidel.Tests/HyperFidel.Tests.csproj
+dotnet test HyperFidel.Server.Tests/HyperFidel.Server.Tests.csproj
 ```
 
 Build the server as a self-contained Linux binary:
 
 ```bash
-dotnet publish HyperFi.Server/HyperFi.Server.csproj --configuration Release \
+dotnet publish HyperFidel.Server/HyperFidel.Server.csproj --configuration Release \
   --runtime linux-x64 --self-contained true \
-  --output artifacts/HyperFi.Server-linux-x64
+  --output artifacts/HyperFidel.Server-linux-x64
 ```
 
-## HyperFi Server
+## HyperFidel Server
 
-`HyperFi.Server` scans the same library directories as the desktop client and
+`HyperFidel.Server` scans the same library directories as the desktop client and
 serves them over the local network. It exposes artists, albums, tracks,
 playlists, artwork, waveforms, and lyrics through a REST API, and streams audio
 with authenticated URLs that work in FFmpeg and browsers. It runs as a plain
@@ -183,19 +183,19 @@ binary or a systemd service; release packages are available as DEB and RPM.
 
 The server is optional. The desktop client works entirely offline with local
 files and only connects to servers you explicitly add. See
-[HyperFi Server reference](docs/FULL-FEATURE-REFERENCE.md#hyperfi-server) and
+[HyperFidel Server reference](docs/FULL-FEATURE-REFERENCE.md#hyperfidel-server) and
 [HTTPS and reverse proxies](docs/SERVER-REVERSE-PROXY.md) for setup details.
 
 ## Data and privacy
 
-HyperFi stores player data under `%LOCALAPPDATA%\HyperFi\` on Windows and the
+HyperFidel stores player data under `%LOCALAPPDATA%\HyperFidel\` on Windows and the
 operating system's local application-data directory (normally
-`$HOME/.local/share/HyperFi/`) on Linux and macOS. Set `HYPERFI_DATA_DIR` to use
-a different root; packaged Linux servers use `/var/lib/hyperfi-server`.
+`$HOME/.local/share/HyperFidel/`) on Linux and macOS. Set `HYPERFIDEL_DATA_DIR` to use
+a different root; packaged Linux servers use `/var/lib/hyperfidel-server`.
 
 - `settings.json` contains non-secret preferences.
 - `credentials.dat` and, on Linux/macOS, `credentials.key` hold the encrypted
-  Last.fm, Fanart.tv, AI Chat, HyperFi Server, Plex, and streaming credentials.
+  Last.fm, Fanart.tv, AI Chat, HyperFidel Server, Plex, and streaming credentials.
 - `library.db`, `artworks/`, `search-index/`, `waveforms/`, and the other cache
   folders hold the managed library, artwork, search data, and playback state.
 
@@ -206,11 +206,11 @@ files. There is no telemetry, and credentials are never written to
 
 ## Documentation
 
-- [GitHub Wiki](https://github.com/wuuwuu26/HyperFi/wiki) — end-user guides
+- [GitHub Wiki](https://github.com/wuuwuu26/HyperFidel/wiki) — end-user guides
 - [Full feature and technical reference](docs/FULL-FEATURE-REFERENCE.md) — every
   feature, output profile, format behavior, and build detail
 - [HTTPS and reverse proxies](docs/SERVER-REVERSE-PROXY.md) — Caddy and nginx
-  examples for HyperFi Server and authenticated MCP access
+  examples for HyperFidel Server and authenticated MCP access
 - [CHANGELOG.md](CHANGELOG.md) — shipped changes and current work
 - [ROADMAP.md](ROADMAP.md) — historical implementation milestones
 - [docs/WORKFLOW-TEST-COVERAGE.md](docs/WORKFLOW-TEST-COVERAGE.md) — automated
@@ -218,7 +218,7 @@ files. There is no telemetry, and credentials are never written to
 
 ## Known limitations
 
-- Direct ALSA takes exclusive ownership of the selected card. While HyperFi is
+- Direct ALSA takes exclusive ownership of the selected card. While HyperFidel is
   playing, the matching PipeWire/PulseAudio profile is disabled so other
   applications cannot use that card; the profile is restored when playback is
   released. Volume keys are mirrored to the player through the system mixer.
@@ -228,16 +228,16 @@ files. There is no telemetry, and credentials are never written to
   native DSD output.
 - Windows Kernel Streaming is selectable but not implemented as a playback
   backend.
-- Release packages for HyperFi Server target Linux. Windows and macOS servers
+- Release packages for HyperFidel Server target Linux. Windows and macOS servers
   can be built from source but are not published as installers.
 
 ## License and attribution
 
-HyperFi is licensed under the [Apache License, Version 2.0](LICENSE). The
-[NOTICE](NOTICE) file records the HyperFi copyright, the retained Orynivo
-notice, and the trademark statement for the HyperFi name and logo.
+HyperFidel is licensed under the [Apache License, Version 2.0](LICENSE). The
+[NOTICE](NOTICE) file records the HyperFidel copyright, the retained Orynivo
+notice, and the trademark statement for the HyperFidel name and logo.
 
-HyperFi is an independent derivative of
+HyperFidel is an independent derivative of
 [Orynivo](https://github.com/bschlaack/Orynivo), Copyright 2026 Björn Schlaack,
 which is also licensed under Apache-2.0. The original author and project are
 credited in NOTICE; the Orynivo name and logo remain that project's assets.

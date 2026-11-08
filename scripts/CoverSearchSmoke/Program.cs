@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
-using HyperFi.Library;
+using HyperFidel.Library;
 
 if (args.Contains("--live"))
 {

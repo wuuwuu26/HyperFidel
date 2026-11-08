@@ -4,7 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Threading;
-using HyperFi;
+using HyperFidel;
 
 // Explicit opt-in public lookup, isolated from the user's database/settings.
 if (!args.Contains("--live"))
@@ -12,8 +12,8 @@ if (!args.Contains("--live"))
     Console.WriteLine("Pass --live to measure the real cover dialog against public artwork services.");
     return;
 }
-Environment.SetEnvironmentVariable("HYPERFI_DATA_DIR",
-    Path.Combine(Path.GetTempPath(), "hyperfi-cover-ui-" + Guid.NewGuid().ToString("N")));
+Environment.SetEnvironmentVariable("HYPERFIDEL_DATA_DIR",
+    Path.Combine(Path.GetTempPath(), "hyperfidel-cover-ui-" + Guid.NewGuid().ToString("N")));
 AppBuilder.Configure<App>()
     .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
     .UseSkia().SetupWithoutStarting();

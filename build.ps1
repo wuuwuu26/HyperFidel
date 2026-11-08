@@ -98,7 +98,7 @@ function Resolve-AsioSdkPath {
 $asioSdk = if ($SkipAsio) { $null } else { Resolve-AsioSdkPath $AsioSdkDir }
 $nativeProject = Join-Path $PSScriptRoot 'Native\AsioBridge\AsioBridge.vcxproj'
 $cwAsioProject = Join-Path $PSScriptRoot 'Native\CwAsioBridge\CwAsioBridge.vcxproj'
-$managedProject = Join-Path $PSScriptRoot 'HyperFi\HyperFi.csproj'
+$managedProject = Join-Path $PSScriptRoot 'HyperFidel\HyperFidel.csproj'
 $airPlay2Source = Join-Path $PSScriptRoot 'Native\AirPlay2Bridge'
 $airPlay2Build = Join-Path $PSScriptRoot 'artifacts\AirPlay2Bridge'
 $needsMsBuild = $null -ne $asioSdk -or -not $SkipCwAsio
@@ -146,7 +146,7 @@ elseif ($RequireAsio) {
     throw 'The Steinberg ASIO SDK was not found, but -RequireAsio was specified.'
 }
 else {
-    Write-Host 'Building HyperFi without the Steinberg ASIO bridge.'
+    Write-Host 'Building HyperFidel without the Steinberg ASIO bridge.'
 }
 
 $includeAsioBridge = if ($null -ne $asioSdk) { 'true' } else { 'false' }

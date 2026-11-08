@@ -68,7 +68,7 @@ function Invoke-Check {
 
 $steps = [System.Collections.Generic.List[object]]::new()
 if (-not $SkipBuild) {
-    foreach ($project in 'HyperFi.Core', 'HyperFi.Server', 'HyperFi') {
+    foreach ($project in 'HyperFidel.Core', 'HyperFidel.Server', 'HyperFidel') {
         $steps.Add(@{
             Name       = "Build $project ($Configuration)"
             Executable = 'dotnet'
@@ -86,10 +86,10 @@ if (-not $SkipBuild) {
     # the OS property compiles that variant on any host; this caught a CreateAsync overload
     # mismatch that only the CI Linux and macOS jobs had reported.
     $steps.Add(@{
-        Name       = "Build HyperFi (Linux/macOS compile, $Configuration)"
+        Name       = "Build HyperFidel (Linux/macOS compile, $Configuration)"
         Executable = 'dotnet'
         Arguments  = @(
-            'build', 'HyperFi/HyperFi.csproj',
+            'build', 'HyperFidel/HyperFidel.csproj',
             '-p:OS=Unix',
             '--configuration', $Configuration,
             '--warnaserror',
@@ -98,7 +98,7 @@ if (-not $SkipBuild) {
     })
 }
 if (-not $SkipTests) {
-    foreach ($project in 'HyperFi.Core.Tests', 'HyperFi.Tests', 'HyperFi.Server.Tests') {
+    foreach ($project in 'HyperFidel.Core.Tests', 'HyperFidel.Tests', 'HyperFidel.Server.Tests') {
         $steps.Add(@{
             Name       = "Test $project"
             Executable = 'dotnet'
@@ -110,7 +110,7 @@ if (-not $SkipTests -and $IsWindows) {
     $steps.Add(@{
         Name       = 'Windows headless UI workflows'
         Executable = 'dotnet'
-        Arguments  = @('run', '--project', 'HyperFi.Ui.Smoke/HyperFi.Ui.Smoke.csproj', '--configuration', $Configuration)
+        Arguments  = @('run', '--project', 'HyperFidel.Ui.Smoke/HyperFidel.Ui.Smoke.csproj', '--configuration', $Configuration)
     })
 }
 $steps.Add(@{

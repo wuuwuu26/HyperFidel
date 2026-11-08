@@ -1,15 +1,15 @@
 name: Bug report
-description: Report a reproducible problem in HyperFi or HyperFi Server.
+description: Report a reproducible problem in HyperFidel or HyperFidel Server.
 title: "[Bug]: "
 labels: [bug]
 body:
   - type: markdown
     attributes:
-      value: Thank you for helping improve HyperFi. Remove API keys, authenticated URLs, private filesystem paths, and personal library data from screenshots and logs.
+      value: Thank you for helping improve HyperFidel. Remove API keys, authenticated URLs, private filesystem paths, and personal library data from screenshots and logs.
   - type: input
     id: version
     attributes:
-      label: HyperFi version
+      label: HyperFidel version
       placeholder: e.g. 0.36.7
     validations:
       required: true
@@ -17,7 +17,7 @@ body:
     id: component
     attributes:
       label: Affected component
-      options: [Desktop player, HyperFi Server, Installer or updater, Website or documentation, Native AirPlay 2 bridge, Other]
+      options: [Desktop player, HyperFidel Server, Installer or updater, Website or documentation, Native AirPlay 2 bridge, Other]
     validations:
       required: true
   - type: input

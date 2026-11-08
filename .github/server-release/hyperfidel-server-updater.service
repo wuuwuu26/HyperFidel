@@ -1,0 +1,12 @@
+[Unit]
+Description=Install a verified HyperFidel Server package update
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/hyperfidel-server/hyperfidel-server-updater
+User=root
+Group=root
+PrivateTmp=true
+ProtectHome=true
+NoNewPrivileges=true

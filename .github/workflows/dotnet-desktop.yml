@@ -58,7 +58,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore dependencies
-        run: dotnet restore HyperFi/HyperFi.csproj
+        run: dotnet restore HyperFidel/HyperFidel.csproj
 
       - name: Build cwASIO bridge
         shell: pwsh
@@ -81,7 +81,7 @@ jobs:
 
       - name: Build application
         run: >
-          dotnet build HyperFi/HyperFi.csproj
+          dotnet build HyperFidel/HyperFidel.csproj
           --configuration ${{ matrix.configuration }}
           --no-restore
           --warnaserror
@@ -91,16 +91,16 @@ jobs:
 
       - name: Run unit tests
         run: |
-          dotnet test HyperFi.Core.Tests/HyperFi.Core.Tests.csproj --configuration ${{ matrix.configuration }}
+          dotnet test HyperFidel.Core.Tests/HyperFidel.Core.Tests.csproj --configuration ${{ matrix.configuration }}
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet test HyperFi.Tests/HyperFi.Tests.csproj --configuration ${{ matrix.configuration }}
+          dotnet test HyperFidel.Tests/HyperFidel.Tests.csproj --configuration ${{ matrix.configuration }}
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet test HyperFi.Server.Tests/HyperFi.Server.Tests.csproj --configuration ${{ matrix.configuration }}
+          dotnet test HyperFidel.Server.Tests/HyperFidel.Server.Tests.csproj --configuration ${{ matrix.configuration }}
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Run Windows headless UI workflows
         run: >
-          dotnet run --project HyperFi.Ui.Smoke/HyperFi.Ui.Smoke.csproj
+          dotnet run --project HyperFidel.Ui.Smoke/HyperFidel.Ui.Smoke.csproj
           --configuration ${{ matrix.configuration }}
           /p:IncludeAsioBridge=false
           /p:IncludeCwAsioBridge=true
@@ -109,11 +109,11 @@ jobs:
       - name: Publish Windows build
         if: matrix.configuration == 'Release'
         run: >
-          dotnet publish HyperFi/HyperFi.csproj
+          dotnet publish HyperFidel/HyperFidel.csproj
           --configuration Release
           --runtime win-x64
           --self-contained false
-          --output artifacts/HyperFi-win-x64
+          --output artifacts/HyperFidel-win-x64
           /p:IncludeAsioBridge=false
           /p:IncludeCwAsioBridge=true
           /p:IncludeAirPlay2Bridge=true
@@ -122,8 +122,8 @@ jobs:
         if: matrix.configuration == 'Release'
         uses: actions/upload-artifact@v7
         with:
-          name: HyperFi-win-x64
-          path: artifacts/HyperFi-win-x64
+          name: HyperFidel-win-x64
+          path: artifacts/HyperFidel-win-x64
           if-no-files-found: error
 
   linux:
@@ -140,29 +140,29 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore Linux desktop
-        run: dotnet restore HyperFi/HyperFi.csproj --runtime linux-x64
+        run: dotnet restore HyperFidel/HyperFidel.csproj --runtime linux-x64
 
       - name: Build Linux desktop
         run: >
-          dotnet build HyperFi/HyperFi.csproj
+          dotnet build HyperFidel/HyperFidel.csproj
           --configuration Release
           --no-restore
           --warnaserror
 
       - name: Publish Linux desktop
         run: >
-          dotnet publish HyperFi/HyperFi.csproj
+          dotnet publish HyperFidel/HyperFidel.csproj
           --configuration Release
           --runtime linux-x64
           --self-contained true
           --no-restore
-          --output artifacts/HyperFi-linux-x64
+          --output artifacts/HyperFidel-linux-x64
 
       - name: Upload Linux desktop
         uses: actions/upload-artifact@v7
         with:
-          name: HyperFi-linux-x64
-          path: artifacts/HyperFi-linux-x64
+          name: HyperFidel-linux-x64
+          path: artifacts/HyperFidel-linux-x64
           if-no-files-found: error
 
   macos:
@@ -188,11 +188,11 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore macOS desktop
-        run: dotnet restore HyperFi/HyperFi.csproj --runtime ${{ matrix.rid }}
+        run: dotnet restore HyperFidel/HyperFidel.csproj --runtime ${{ matrix.rid }}
 
       - name: Build macOS desktop
         run: >
-          dotnet build HyperFi/HyperFi.csproj
+          dotnet build HyperFidel/HyperFidel.csproj
           --configuration Release
           --runtime ${{ matrix.rid }}
           --no-restore
@@ -200,16 +200,16 @@ jobs:
 
       - name: Publish macOS desktop
         run: >
-          dotnet publish HyperFi/HyperFi.csproj
+          dotnet publish HyperFidel/HyperFidel.csproj
           --configuration Release
           --runtime ${{ matrix.rid }}
           --self-contained true
           --no-restore
-          --output artifacts/HyperFi-${{ matrix.rid }}
+          --output artifacts/HyperFidel-${{ matrix.rid }}
 
       - name: Upload macOS desktop
         uses: actions/upload-artifact@v7
         with:
-          name: HyperFi-${{ matrix.rid }}
-          path: artifacts/HyperFi-${{ matrix.rid }}
+          name: HyperFidel-${{ matrix.rid }}
+          path: artifacts/HyperFidel-${{ matrix.rid }}
           if-no-files-found: error

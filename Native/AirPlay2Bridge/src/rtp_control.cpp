@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <chrono>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 namespace {
 void writeBigEndian32(std::byte* destination, std::uint32_t value) {
     destination[0] = static_cast<std::byte>(value >> 24);
@@ -128,4 +128,4 @@ void RtpRetransmitResponder::run(std::stop_token stopToken) {
     }
 }
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

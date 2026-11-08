@@ -1,14 +1,14 @@
 # AirPlay2Bridge
 
 `AirPlay2Bridge` is a standalone, Qt-free native sender component intended for
-reuse by HyperFi and other applications. Its public boundary is the stable C ABI
+reuse by HyperFidel and other applications. Its public boundary is the stable C ABI
 in `include/airplay2_bridge.h`; application-specific UI, discovery, persistence,
 and audio decoding remain outside the project.
 
 ## Current status
 
 > **Experimental:** This sender is suitable for interoperability testing and
-> HyperFi's experimental AirPlay 2 output, but it is not yet a general
+> HyperFidel's experimental AirPlay 2 output, but it is not yet a general
 > compatibility guarantee for every AirPlay 2 receiver. Continuous playback,
 > seeking, and clean stereo output have been verified on the tested Sonos stereo
 > pair. Other device models, firmware revisions, grouped topologies, and network
@@ -33,7 +33,7 @@ encrypted packets with the prepared stream. It also supplies initial volume and
 RTP-anchored DMAP track metadata before PCM delivery because Sonos may withhold
 an otherwise valid stream until metadata arrives. Receiver volume defaults to a
 probe-safe -20 dB and can be selected before session start through the C ABI;
-HyperFi uses 0 dB and applies its volume to PCM. Caller-supplied title, artist,
+HyperFidel uses 0 dB and applies its volume to PCM. Caller-supplied title, artist,
 and album replace the diagnostic probe labels. Optional JPEG or PNG cover bytes
 are copied during session creation, bounded to 8 MiB, and sent best-effort so
 artwork rejection cannot prevent playback. The initial RTP/NTP mapping uses a
@@ -80,7 +80,7 @@ cmake --build build/airplay2bridge --config Release
 ctest --test-dir build/airplay2bridge -C Release --output-on-failure
 ```
 
-The library has no Qt or HyperFi dependency. Configuring a clean build requires
+The library has no Qt or HyperFidel dependency. Configuring a clean build requires
 network access to fetch the pinned cryptographic and Apple ALAC sources and
 their pinned dependencies. Windows additionally links `ws2_32`; POSIX platforms
 use their system socket API.

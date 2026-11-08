@@ -6,6 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../HyperFi.Core/Library/MusicBrainzCoverSearch.cs" Link="MusicBrainzCoverSearch.cs" />
+    <Compile Include="../../HyperFidel.Core/Library/MusicBrainzCoverSearch.cs" Link="MusicBrainzCoverSearch.cs" />
   </ItemGroup>
 </Project>

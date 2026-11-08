@@ -5,7 +5,7 @@
 #include <chrono>
 #include <cstring>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 namespace {
 void writeNtp(std::byte* destination) {
     constexpr std::uint64_t EpochDelta = 2208988800ULL;
@@ -64,4 +64,4 @@ void NtpTimingResponder::run(std::stop_token stopToken) {
     }
 }
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

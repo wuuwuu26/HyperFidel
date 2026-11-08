@@ -1,0 +1,2314 @@
+using System.Globalization;
+using System.Net.Http.Json;
+using System.Net;
+using System.IO.Compression;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using HyperFidel.Library;
+using HyperFidel.Updates;
+
+namespace HyperFidel.Streaming;
+
+/// <summary>Artist entry returned by the HyperFidel Server API.</summary>
+/// <param name="Id">Database ID of the artist.</param>
+/// <param name="Name">Display name of the artist.</param>
+/// <param name="IsFavorite">Whether the artist is marked as favorite.</param>
+/// <param name="Biography">Cached artist biography, or <see langword="null"/>.</param>
+/// <param name="SourceUrl">Source URL for the cached biography, or <see langword="null"/>.</param>
+/// <param name="ProfileLanguage">Language code of the cached biography, or <see langword="null"/>.</param>
+/// <param name="ProfileFetchedAt">Unix timestamp of the cached profile refresh, or <see langword="null"/>.</param>
+/// <param name="HasBiography">Whether a cached biography exists.</param>
+/// <param name="HasImage">Whether a cached artist image exists.</param>
+/// <param name="ImageIsManual">Whether the artist image was manually selected.</param>
+public sealed record HyperFidelArtistInfo(
+    long Id,
+    string Name,
+    bool IsFavorite,
+    string? Biography = null,
+    string? SourceUrl = null,
+    string? ProfileLanguage = null,
+    long? ProfileFetchedAt = null,
+    bool HasBiography = false,
+    bool HasImage = false,
+    bool ImageIsManual = false);
+
+/// <summary>Album entry returned by the HyperFidel Server API.</summary>
+/// <param name="Id">Database ID of the album.</param>
+/// <param name="Album">Album title.</param>
+/// <param name="DisplayArtist">Display artist for the album, or <see langword="null"/>.</param>
+/// <param name="Year">Album year, or <see langword="null"/>.</param>
+/// <param name="ArtworkPath">Server-side 320-px artwork path, or <see langword="null"/> when the album has no cover.</param>
+/// <param name="ThumbnailPath">Server-side 96-px thumbnail path, or <see langword="null"/> when the album has no cover.</param>
+/// <param name="IsFavorite">Whether the album is marked as favorite on the server.</param>
+/// <param name="ArtistId">Database ID of the album artist, or <see langword="null"/>.</param>
+/// <param name="AddedAt">Unix timestamp of the newest library addition associated with the album.</param>
+public sealed record HyperFidelAlbumInfo(
+    long Id,
+    string Album,
+    string? DisplayArtist,
+    int? Year,
+    string? ArtworkPath = null,
+    string? ThumbnailPath = null,
+    bool IsFavorite = false,
+    long? ArtistId = null,
+    long? AddedAt = null);
+
+/// <summary>Recently added album entry returned by the HyperFidel Server dashboard endpoint.</summary>
+/// <param name="Id">Database album identifier.</param>
+/// <param name="Title">Album title.</param>
+/// <param name="Artist">Display artist name.</param>
+/// <param name="ArtistId">Database album-artist identifier, or <see langword="null"/>.</param>
+/// <param name="AddedAt">Unix timestamp of the most recently added track in the album.</param>
+/// <param name="HasArtwork">Whether the album has server-side artwork.</param>
+public sealed record HyperFidelRecentAlbum(
+    long Id,
+    string Title,
+    string Artist,
+    long? ArtistId,
+    long AddedAt,
+    bool HasArtwork);
+
+/// <summary>Compact remote album metadata used for dashboard recommendations.</summary>
+/// <param name="Id">Database album identifier.</param>
+/// <param name="Title">Album title.</param>
+/// <param name="Artist">Album-artist display name.</param>
+/// <param name="ArtistId">Database album-artist identifier, or <see langword="null"/>.</param>
+/// <param name="Genres">Distinct semicolon-separated track genres.</param>
+/// <param name="AverageBpm">Average positive track BPM, or <see langword="null"/>.</param>
+/// <param name="ArtworkPath">Server-side artwork path when present.</param>
+/// <param name="IsFavorite">Server-side favorite state.</param>
+public sealed record HyperFidelRecommendationAlbum(
+    long Id,
+    string Title,
+    string Artist,
+    long? ArtistId,
+    string? Genres,
+    double? AverageBpm,
+    string? ArtworkPath,
+    bool IsFavorite);
+
+/// <summary>Track entry returned by the HyperFidel Server API.</summary>
+/// <param name="Id">Database ID of the track.</param>
+/// <param name="Path">Playable library path.</param>
+/// <param name="SourcePath">Physical source path used for file-name and folder display, or <see langword="null"/>.</param>
+/// <param name="FileName">File name.</param>
+/// <param name="Title">Track title, or <see langword="null"/>.</param>
+/// <param name="Artist">Track artist, or <see langword="null"/>.</param>
+/// <param name="AlbumArtist">Album artist, or <see langword="null"/>.</param>
+/// <param name="Album">Album title, or <see langword="null"/>.</param>
+/// <param name="SortTitle">Sort title, or <see langword="null"/>.</param>
+/// <param name="Year">Track year, or <see langword="null"/>.</param>
+/// <param name="TrackNumber">Track number, or <see langword="null"/>.</param>
+/// <param name="TrackTotal">Track total, or <see langword="null"/>.</param>
+/// <param name="DiscNumber">Disc number, or <see langword="null"/>.</param>
+/// <param name="DiscTotal">Disc total, or <see langword="null"/>.</param>
+/// <param name="Genre">Genre text, or <see langword="null"/>.</param>
+/// <param name="Duration">Duration in seconds, or <see langword="null"/>.</param>
+/// <param name="Bitrate">Bitrate in kbps, or <see langword="null"/>.</param>
+/// <param name="SampleRate">Sample rate in Hz, or <see langword="null"/>.</param>
+/// <param name="BitDepth">Bit depth, or <see langword="null"/>.</param>
+/// <param name="Channels">Channel count, or <see langword="null"/>.</param>
+/// <param name="Composer">Composer text, or <see langword="null"/>.</param>
+/// <param name="Bpm">Beats per minute, or <see langword="null"/>.</param>
+/// <param name="FileSize">File size in bytes, or <see langword="null"/>.</param>
+/// <param name="AddedAt">Library-added timestamp in Unix seconds, or <see langword="null"/>.</param>
+/// <param name="ReplayGainTrack">Track ReplayGain value, or <see langword="null"/>.</param>
+/// <param name="ReplayGainAlbum">Album ReplayGain value, or <see langword="null"/>.</param>
+/// <param name="Format">Audio format label, or <see langword="null"/>.</param>
+/// <param name="IsFavorite">Whether the track is marked as favorite on the server.</param>
+/// <param name="IsCueTrack">Whether the track is a CUE or chapter-based virtual segment; the legacy property name is retained for API compatibility.</param>
+/// <param name="ArtistId">Database ID of the primary artist, or <see langword="null"/>.</param>
+/// <param name="UserRating">Server-side personal zero-to-five-star rating.</param>
+/// <param name="MusicBrainzRating">Cached MusicBrainz community rating.</param>
+/// <param name="MusicBrainzRatingVotes">Number of contributing MusicBrainz votes.</param>
+/// <param name="MusicBrainzTrackId">MusicBrainz recording identifier.</param>
+/// <param name="MusicBrainzRatingFetchedAt">Unix timestamp of the latest MusicBrainz rating lookup.</param>
+/// <param name="MusicBrainzGenres">JSON array of supplemental MusicBrainz genres.</param>
+/// <param name="MusicBrainzTags">JSON array of supplemental positively voted MusicBrainz tags.</param>
+public sealed record HyperFidelTrackInfo(
+    long Id,
+    string Path,
+    string? SourcePath,
+    string FileName,
+    string? Title,
+    string? Artist,
+    string? AlbumArtist,
+    string? Album,
+    string? SortTitle = null,
+    int? Year = null,
+    int? TrackNumber = null,
+    int? TrackTotal = null,
+    int? DiscNumber = null,
+    int? DiscTotal = null,
+    string? Genre = null,
+    double? Duration = null,
+    int? Bitrate = null,
+    int? SampleRate = null,
+    int? BitDepth = null,
+    int? Channels = null,
+    string? Composer = null,
+    int? Bpm = null,
+    long? FileSize = null,
+    long? AddedAt = null,
+    string? ReplayGainTrack = null,
+    string? ReplayGainAlbum = null,
+    string? Format = null,
+    bool IsFavorite = false,
+    bool IsCueTrack = false,
+    long? ArtistId = null,
+    long? AlbumId = null,
+    int UserRating = 0,
+    double? MusicBrainzRating = null,
+    int? MusicBrainzRatingVotes = null,
+    string? MusicBrainzTrackId = null,
+    long? MusicBrainzRatingFetchedAt = null,
+    string? MusicBrainzGenres = null,
+    string? MusicBrainzTags = null,
+    string? CamelotKey = null);
+
+/// <summary>Rating mutation sent to an HyperFidel Server.</summary>
+/// <param name="UserRating">Optional personal zero-to-five-star rating.</param>
+/// <param name="MusicBrainzTrackId">Optional resolved MusicBrainz recording identifier.</param>
+/// <param name="MusicBrainzRating">Optional cached MusicBrainz community rating.</param>
+/// <param name="MusicBrainzRatingVotes">Optional MusicBrainz vote count.</param>
+/// <param name="MusicBrainzRatingFetchedAt">Optional MusicBrainz lookup timestamp.</param>
+/// <param name="MusicBrainzGenres">Optional JSON array of supplemental MusicBrainz genres.</param>
+/// <param name="MusicBrainzTags">Optional JSON array of supplemental positively voted tags.</param>
+public sealed record HyperFidelTrackRatingUpdate(
+    int? UserRating = null,
+    string? MusicBrainzTrackId = null,
+    double? MusicBrainzRating = null,
+    int? MusicBrainzRatingVotes = null,
+    long? MusicBrainzRatingFetchedAt = null,
+    string? MusicBrainzGenres = null,
+    string? MusicBrainzTags = null);
+
+
+/// <summary>Lightweight remote track entry used for folder-tree construction.</summary>
+/// <param name="Id">Database ID of the track.</param>
+/// <param name="Path">Playable library path.</param>
+/// <param name="SourcePath">Physical source path used for folder grouping.</param>
+/// <param name="FileName">File name.</param>
+/// <param name="Title">Optional track title.</param>
+/// <param name="DiscNumber">Optional disc number.</param>
+/// <param name="TrackNumber">Optional track number.</param>
+/// <param name="Artist">Track artist, or <see langword="null"/>.</param>
+/// <param name="AlbumArtist">Album artist, or <see langword="null"/>.</param>
+/// <param name="Album">Album title, or <see langword="null"/>.</param>
+/// <param name="Duration">Duration in seconds, or <see langword="null"/>.</param>
+/// <param name="Format">Audio format label, or <see langword="null"/>.</param>
+/// <param name="IsFavorite">Whether the track is marked as favorite on the server.</param>
+/// <param name="ArtistId">Database ID of the primary artist, or <see langword="null"/>.</param>
+/// <param name="AlbumId">Database ID of the album, or <see langword="null"/>.</param>
+public sealed record HyperFidelTrackLiteInfo(
+    long Id,
+    string Path,
+    string SourcePath,
+    string FileName,
+    string? Title,
+    int? DiscNumber,
+    int? TrackNumber,
+    string? Artist = null,
+    string? AlbumArtist = null,
+    string? Album = null,
+    double? Duration = null,
+    string? Format = null,
+    bool IsFavorite = false,
+    long? ArtistId = null,
+    long? AlbumId = null);
+
+/// <summary>Track search response returned by the HyperFidel Server API.</summary>
+/// <param name="Tracks">Matching track rows.</param>
+public sealed record HyperFidelTrackSearchResult(IReadOnlyList<HyperFidelTrackInfo> Tracks);
+
+/// <summary>Categorised search response (tracks, albums, artists) from the HyperFidel Server API.</summary>
+/// <param name="Tracks">Matching track rows.</param>
+/// <param name="Albums">Matching album rows.</param>
+/// <param name="Artists">Matching artist rows.</param>
+public sealed record HyperFidelFullSearchResult(
+    IReadOnlyList<HyperFidelTrackInfo> Tracks,
+    IReadOnlyList<HyperFidelAlbumInfo> Albums,
+    IReadOnlyList<HyperFidelArtistInfo> Artists);
+
+/// <summary>Cached lyrics for a single track returned by the HyperFidel Server API.</summary>
+/// <param name="PlainLyrics">Unsynchronised plain-text lyrics, or <see langword="null"/>.</param>
+/// <param name="SyncedLyrics">LRC-formatted synchronised lyrics, or <see langword="null"/>.</param>
+/// <param name="FetchedAt">Unix-seconds timestamp of the last lyrics lookup, or <see langword="null"/>.</param>
+public sealed record HyperFidelLyrics(string? PlainLyrics, string? SyncedLyrics, long? FetchedAt = null);
+
+/// <summary>
+/// Profile-scoped last playback position of a remote track, used to resume it on
+/// another device.
+/// </summary>
+/// <param name="PositionSeconds">
+/// Stored position in seconds, or <see langword="null"/> when the track was never
+/// played on another device.
+/// </param>
+public sealed record TrackPositionDto(double? PositionSeconds);
+
+/// <summary>Compact waveform peak data returned by a remote HyperFidel Server.</summary>
+/// <param name="Version">Cache format version.</param>
+/// <param name="DurationSeconds">Logical track duration in seconds.</param>
+/// <param name="SampleCount">Number of peak buckets.</param>
+/// <param name="Peaks">Normalized peak amplitudes in the range 0..1.</param>
+public sealed record HyperFidelTrackWaveform(
+    int Version,
+    double DurationSeconds,
+    int SampleCount,
+    float[] Peaks);
+
+/// <summary>Playlist entry returned by a remote HyperFidel Server.</summary>
+/// <param name="Id">Playlist database ID.</param>
+/// <param name="Name">Playlist display name.</param>
+/// <param name="Description">Optional playlist description.</param>
+/// <param name="TrackCount">Number of tracks in the playlist.</param>
+/// <param name="IsSmartPlaylist">Whether the playlist is backed by smart criteria.</param>
+/// <param name="CreatedAt">Creation timestamp in Unix seconds.</param>
+/// <param name="ModifiedAt">Modification timestamp in Unix seconds.</param>
+/// <param name="FilterCriteria">Serialized smart-playlist criteria JSON, or <see langword="null"/> for a regular playlist.</param>
+public sealed record HyperFidelPlaylistInfo(
+    long Id,
+    string Name,
+    string? Description,
+    int TrackCount,
+    bool IsSmartPlaylist,
+    long CreatedAt,
+    long ModifiedAt,
+    string? FilterCriteria = null);
+
+/// <summary>Track row inside a remote HyperFidel Server playlist.</summary>
+/// <param name="PlaylistEntryId">Playlist entry database ID.</param>
+/// <param name="Position">One-based playlist position.</param>
+/// <param name="Path">Stored server-side path.</param>
+/// <param name="Track">Resolved track metadata, or <see langword="null"/> when the original file no longer exists.</param>
+public sealed record HyperFidelPlaylistTrackInfo(long PlaylistEntryId, int Position, string Path, HyperFidelTrackInfo? Track);
+
+/// <summary>Request body for creating a regular playlist on a remote HyperFidel Server.</summary>
+/// <param name="Name">Playlist display name.</param>
+/// <param name="TrackIds">Initial server-side track IDs.</param>
+public sealed record HyperFidelPlaylistCreateRequest(string Name, IReadOnlyList<long> TrackIds);
+
+/// <summary>Request body for appending tracks to a regular playlist on a remote HyperFidel Server.</summary>
+/// <param name="TrackIds">Server-side track IDs to append.</param>
+public sealed record HyperFidelPlaylistTrackAppendRequest(IReadOnlyList<long> TrackIds);
+
+/// <summary>Request body for creating or updating a smart playlist on a remote HyperFidel Server.</summary>
+/// <param name="Name">Playlist display name.</param>
+/// <param name="FilterCriteria">Serialized smart-playlist criteria JSON.</param>
+public sealed record HyperFidelSmartPlaylistSaveRequest(string Name, string FilterCriteria);
+
+/// <summary>Request body for resolving a remote smart playlist using client-side favourites.</summary>
+/// <param name="FavoriteTrackIds">Server-side track IDs the client treats as favourites.</param>
+public sealed record HyperFidelSmartPlaylistResolveRequest(IReadOnlyList<long> FavoriteTrackIds);
+
+/// <summary>Request body for counting how many server tracks match ad-hoc smart-playlist criteria.</summary>
+/// <param name="Criteria">Serialized smart-playlist criteria JSON.</param>
+/// <param name="FavoriteTrackIds">Server-side track IDs the client treats as favourites.</param>
+public sealed record HyperFidelSmartCriteriaResolveRequest(string Criteria, IReadOnlyList<long> FavoriteTrackIds);
+
+/// <summary>Match-count response returned by the smart-criteria resolve endpoint.</summary>
+/// <param name="Count">Number of tracks that match the supplied criteria.</param>
+public sealed record HyperFidelSmartCriteriaCount(int Count);
+
+/// <summary>Server info returned by <c>/api/info</c>.</summary>
+/// <param name="Name">Configured server display name.</param>
+/// <param name="Version">Build-time informational version.</param>
+/// <param name="ApiVersion">Server API compatibility version.</param>
+/// <param name="OperatingSystem">Runtime operating-system identifier.</param>
+/// <param name="Architecture">Runtime process architecture.</param>
+/// <param name="InstallType">Package/install type such as <c>deb</c>, <c>rpm</c>, or <c>portable</c>.</param>
+/// <param name="UpdateSupported">Whether this installation supports managed package updates.</param>
+public sealed record HyperFidelServerInfo(
+    string Name,
+    string Version,
+    int ApiVersion,
+    string? OperatingSystem = null,
+    string? Architecture = null,
+    string? InstallType = null,
+    bool UpdateSupported = false);
+
+/// <summary>Update state returned by a remote HyperFidel Server.</summary>
+/// <param name="Enabled">Whether remote updates are enabled in server configuration.</param>
+/// <param name="Supported">Whether the installation supports managed updates.</param>
+/// <param name="InstallType">Server package type.</param>
+/// <param name="Architecture">Server architecture.</param>
+/// <param name="Staged">Whether an update package is staged.</param>
+/// <param name="Ready">Whether installation has been requested.</param>
+/// <param name="Status">Last privileged-updater status.</param>
+public sealed record HyperFidelServerUpdateStatus(
+    bool Enabled,
+    bool Supported,
+    string InstallType,
+    string Architecture,
+    bool Staged,
+    bool Ready,
+    string? Status);
+
+/// <summary>
+/// Feature-support flags probed on a remote HyperFidel Server so the client can warn when an
+/// older server lacks specific endpoints. Each value is <see langword="true"/> (supported),
+/// <see langword="false"/> (missing), or <see langword="null"/> (probe inconclusive).
+/// </summary>
+/// <param name="TrackFacets">Whether the <c>/api/tracks/facets</c> endpoint exists.</param>
+/// <param name="RecentAlbums">Whether the <c>/api/albums/recent</c> endpoint exists.</param>
+/// <param name="Waveforms">Whether the <c>/api/tracks/{id}/waveform</c> endpoint exists.</param>
+public sealed record HyperFidelServerCapabilities(bool? TrackFacets, bool? RecentAlbums, bool? Waveforms);
+
+/// <summary>Library path configuration returned by the HyperFidel Server API.</summary>
+public sealed record HyperFidelLibraryPaths(IReadOnlyList<string> Paths);
+
+/// <summary>ReplayGain analysis settings returned by the HyperFidel Server API.</summary>
+/// <param name="CalculateMissingReplayGainDuringScan">Whether server scans calculate missing ReplayGain values.</param>
+public sealed record HyperFidelReplayGainSettings(bool CalculateMissingReplayGainDuringScan);
+
+/// <summary>Directory listing returned by the HyperFidel Server API.</summary>
+public sealed record HyperFidelDirectoryListing(
+    string Path,
+    bool IsRoot,
+    IReadOnlyList<HyperFidelDirectoryEntry> Directories);
+
+/// <summary>Single server-side directory entry returned by the HyperFidel Server API.</summary>
+public sealed record HyperFidelDirectoryEntry(
+    string Path,
+    string Name,
+    bool HasChildren);
+
+/// <summary>Summary of a completed scan reported by a remote HyperFidel Server.</summary>
+public sealed record HyperFidelScanResult(
+    int Total,
+    int Added,
+    int Updated,
+    int Removed,
+    int Failed);
+
+/// <summary>Current scan progress reported by a remote HyperFidel Server.</summary>
+/// <param name="IsRunning">Whether a scan is currently running.</param>
+/// <param name="Path">Library root currently being scanned.</param>
+/// <param name="Current">Number of processed files in the current root.</param>
+/// <param name="Total">Total files discovered in the current root.</param>
+/// <param name="CurrentFile">File currently being processed.</param>
+/// <param name="LastResult">Summary of the last completed root scan.</param>
+/// <param name="Error">Last scan error, if any.</param>
+/// <param name="LibraryChangedAt">Unix timestamp of the last scan that changed indexed tracks.</param>
+public sealed record HyperFidelScanStatus(
+    bool IsRunning,
+    string? Path,
+    int Current,
+    int Total,
+    string? CurrentFile,
+    HyperFidelScanResult? LastResult,
+    string? Error,
+    long? LibraryChangedAt = null);
+
+/// <summary>Compact Library Doctor finding returned by an HyperFidel Server.</summary>
+/// <param name="Code">Stable finding code.</param>
+/// <param name="Severity">Finding severity.</param>
+/// <param name="Count">Number of affected items.</param>
+/// <param name="RepairCapability">Supported repair category.</param>
+public sealed record HyperFidelLibraryDoctorFinding(
+    string Code,
+    LibraryDoctorSeverity Severity,
+    int Count,
+    LibraryDoctorRepairCapability RepairCapability);
+
+/// <summary>Compact server-side Library Doctor result for one physical folder.</summary>
+/// <param name="FolderPath">Physical folder path on the server.</param>
+/// <param name="TrackCount">Number of indexed tracks in the folder.</param>
+/// <param name="HighestSeverity">Highest severity among the findings.</param>
+/// <param name="Findings">Typed findings without track payloads or credentials.</param>
+public sealed record HyperFidelLibraryDoctorCandidate(
+    string FolderPath,
+    int TrackCount,
+    LibraryDoctorSeverity HighestSeverity,
+    IReadOnlyList<HyperFidelLibraryDoctorFinding> Findings);
+
+/// <summary>Request body used to store a client-refreshed artist profile on a remote HyperFidel Server.</summary>
+/// <param name="Biography">Downloaded artist biography, or <see langword="null"/> when no biography was found.</param>
+/// <param name="SourceUrl">Canonical source URL, or <see langword="null"/>.</param>
+/// <param name="Language">Preferred profile language.</param>
+/// <param name="ImageData">Optional client-downloaded artist image bytes.</param>
+/// <param name="ImageMimeType">MIME type for <paramref name="ImageData"/>.</param>
+public sealed record ArtistProfileUpdateRequest(
+    string? Biography,
+    string? SourceUrl,
+    string Language,
+    byte[]? ImageData,
+    string? ImageMimeType);
+
+/// <summary>Request body for renaming or merging an artist on a remote HyperFidel Server.</summary>
+/// <param name="ArtistName">Requested artist display name.</param>
+/// <param name="PreferredArtistId">Artist ID whose profile should survive a merge, or <see langword="null"/> to only rename or detect a collision.</param>
+public sealed record HyperFidelArtistRenameRequest(string ArtistName, long? PreferredArtistId = null);
+
+/// <summary>Response body for a remote artist rename or merge request.</summary>
+/// <param name="Result">Committed rename result, or <see langword="null"/> when a matching artist must be confirmed first.</param>
+/// <param name="MatchingArtist">Matching artist that would be merged, or <see langword="null"/> when the rename was committed.</param>
+public sealed record HyperFidelArtistRenameResponse(ArtistRenameResult? Result, HyperFidelArtistInfo? MatchingArtist);
+
+/// <summary>
+/// HTTP client for browsing and streaming a remote HyperFidel Server library.
+/// Each instance is stateless; methods accept <see cref="HyperFidelServerSettings"/> directly.
+/// </summary>
+public sealed class HyperFidelServerClient : IDisposable
+{
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
+    private readonly HttpClient _http;
+    private readonly HttpClient _maintenanceHttp;
+
+    /// <summary>Initialises a new client with a shared <see cref="HttpClient"/> instance.</summary>
+    public HyperFidelServerClient()
+    {
+        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+        _maintenanceHttp = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+    }
+
+    /// <summary>Initialises a client over a supplied HTTP client, used by tests.</summary>
+    /// <param name="http">HTTP client used for catalog and streaming requests.</param>
+    internal HyperFidelServerClient(HttpClient http)
+    {
+        _http = http;
+        _maintenanceHttp = http;
+    }
+
+    // ------------------------------------------------------------------
+    // Connection test
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Sends a request to <c>/api/info</c> to verify connectivity and the API key.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Server info on success; <see langword="null"/> on failure.</returns>
+    public async Task<HyperFidelServerInfo?> TestConnectionAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, BuildUrl(server, "/api/info"));
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode) return null;
+            return await response.Content.ReadFromJsonAsync<HyperFidelServerInfo>(JsonOptions, cancellationToken);
+        }
+        catch { return null; }
+    }
+
+    /// <summary>Gets managed-update state from a remote server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Update state, or <see langword="null"/> when unavailable.</returns>
+    public async Task<HyperFidelServerUpdateStatus?> GetUpdateStatusAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default)
+    {
+        try { return await GetJsonAsync<HyperFidelServerUpdateStatus>(server, "/api/update/status", cancellationToken); }
+        catch { return null; }
+    }
+
+    /// <summary>Relays a signed manifest and matching package to a remote server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="release">Verified release manifest bytes.</param>
+    /// <param name="packagePath">Verified local package path.</param>
+    /// <param name="packageFileName">Original release asset name.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server staged the package.</returns>
+    public async Task<bool> UploadUpdateAsync(
+        HyperFidelServerSettings server,
+        VerifiedReleaseManifest release,
+        string packagePath,
+        string packageFileName,
+        CancellationToken cancellationToken = default)
+    {
+        var bundlePath = Path.Combine(Path.GetTempPath(), $"hyperfidel-server-update-{Guid.NewGuid():N}.zip");
+        try
+        {
+            using (var archive = ZipFile.Open(bundlePath, ZipArchiveMode.Create))
+            {
+                var manifest = archive.CreateEntry("update-manifest.json", CompressionLevel.NoCompression);
+                using (var stream = manifest.Open()) stream.Write(release.ManifestBytes);
+                var signature = archive.CreateEntry("update-manifest.sig", CompressionLevel.NoCompression);
+                using (var stream = signature.Open()) stream.Write(release.SignatureBytes);
+                archive.CreateEntryFromFile(packagePath, Path.GetFileName(packageFileName), CompressionLevel.NoCompression);
+            }
+            using var uploadClient = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
+            await using var bundle = File.OpenRead(bundlePath);
+            using var request = new HttpRequestMessage(HttpMethod.Post, BuildUrl(server, "/api/update/package"))
+            {
+                Content = new StreamContent(bundle)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/zip");
+            using var response = await uploadClient.SendAsync(request, cancellationToken);
+            response.EnsureSuccessStatusCode();
+            return true;
+        }
+        finally { File.Delete(bundlePath); }
+    }
+
+    /// <summary>Requests installation of the already staged server package.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when installation was queued.</returns>
+    public async Task<bool> ApplyUpdateAsync(HyperFidelServerSettings server, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, BuildUrl(server, "/api/update/apply"));
+        request.Headers.Add("X-Api-Key", server.ApiKey);
+        using var response = await _http.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return true;
+    }
+
+    /// <summary>
+    /// Probes whether the server supports the newer feature endpoints (track facets, recent
+    /// albums, and per-track waveforms) so the client can concretely report what an older
+    /// server is missing. Because every server currently reports the same API version, this
+    /// tests the routes directly instead of relying on a version number.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The probed capability flags.</returns>
+    public async Task<HyperFidelServerCapabilities> GetCapabilitiesAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default)
+    {
+        var facets = ProbeRouteExistsAsync(server, "/api/tracks/facets", cancellationToken);
+        var recent = ProbeRouteExistsAsync(server, "/api/albums/recent", cancellationToken);
+        var waveform = ProbeRouteExistsAsync(server, "/api/tracks/0/waveform", cancellationToken);
+        await Task.WhenAll(facets, recent, waveform).ConfigureAwait(false);
+        return new HyperFidelServerCapabilities(facets.Result, recent.Result, waveform.Result);
+    }
+
+    /// <summary>
+    /// Tests whether a route exists by sending a method it does not implement: an existing
+    /// route replies <c>405 Method Not Allowed</c>, a missing route replies <c>404</c>. This
+    /// distinguishes "endpoint present" from "older server without the endpoint" without
+    /// downloading any payload.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="path">API path to probe.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the route exists, <see langword="false"/> when it is missing, or <see langword="null"/> when inconclusive.</returns>
+    private async Task<bool?> ProbeRouteExistsAsync(
+        HyperFidelServerSettings server,
+        string path,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Delete, BuildUrl(server, path));
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            return response.StatusCode switch
+            {
+                System.Net.HttpStatusCode.MethodNotAllowed => true,
+                System.Net.HttpStatusCode.NotFound => false,
+                System.Net.HttpStatusCode.Unauthorized => (bool?)null,
+                _ => true
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Artists
+    // ------------------------------------------------------------------
+
+    /// <summary>Returns aggregate library counters without downloading library rows.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The aggregate summary, or <see langword="null"/> when unavailable or unsupported.</returns>
+    public async Task<DashboardLibrarySummary?> GetLibrarySummaryAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<DashboardLibrarySummary>(
+                server,
+                "/api/library/summary",
+                cancellationToken);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Returns all artists in the server's library, sorted alphabetically.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="requireComplete">Propagate request and invalid-payload failures instead of returning an empty catalog.</param>
+    /// <returns>Artist entries; empty on error only when strict loading is disabled.</returns>
+    public async Task<List<HyperFidelArtistInfo>> GetArtistsAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default,
+        bool requireComplete = false)
+    {
+        try
+        {
+            return await GetJsonAsync<List<HyperFidelArtistInfo>>(server, "/api/artists", cancellationToken)
+                   ?? (requireComplete ? throw new JsonException("Missing catalog payload.") : []);
+        }
+        catch when (!requireComplete) { return []; }
+    }
+
+    /// <summary>
+    /// Returns the cached profile of a single artist on the remote server.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="artistId">Database ID of the artist.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The artist entry, or <see langword="null"/> when missing or the request fails.</returns>
+    public async Task<HyperFidelArtistInfo?> GetArtistAsync(
+        HyperFidelServerSettings server,
+        long artistId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<HyperFidelArtistInfo>(
+                server, $"/api/artists/{artistId}", cancellationToken);
+        }
+        catch { return null; }
+    }
+
+    // ------------------------------------------------------------------
+    // Albums
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns all albums belonging to a specific artist.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="artistId">Database ID of the artist.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of album entries, or empty on error.</returns>
+    public async Task<List<HyperFidelAlbumInfo>> GetAlbumsByArtistAsync(
+        HyperFidelServerSettings server,
+        long artistId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<List<HyperFidelAlbumInfo>>(
+                       server, $"/api/artists/{artistId}/albums", cancellationToken)
+                   ?? [];
+        }
+        catch { return []; }
+    }
+
+    /// <summary>
+    /// Returns all albums in the server's library.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="requireComplete">Propagate request and invalid-payload failures instead of returning an empty catalog.</param>
+    /// <returns>Album entries; empty on error only when strict loading is disabled.</returns>
+    public async Task<List<HyperFidelAlbumInfo>> GetAlbumsAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default,
+        bool requireComplete = false)
+    {
+        try
+        {
+            return await GetJsonAsync<List<HyperFidelAlbumInfo>>(server, "/api/albums", cancellationToken)
+                   ?? (requireComplete ? throw new JsonException("Missing catalog payload.") : []);
+        }
+        catch when (!requireComplete) { return []; }
+    }
+
+    /// <summary>
+    /// Returns the most recently added albums for the dashboard's Recently Added widget.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="limit">Maximum number of albums to return.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Recently added album entries, or empty on error or when the server is too old.</returns>
+    public async Task<List<HyperFidelRecentAlbum>> GetRecentAlbumsAsync(
+        HyperFidelServerSettings server,
+        int limit = 12,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<List<HyperFidelRecentAlbum>>(
+                       server, $"/api/albums/recent?limit={limit}", cancellationToken)
+                   ?? [];
+        }
+        catch { return []; }
+    }
+
+    /// <summary>Loads the non-secret profile identities configured on a server.</summary>
+    public async Task<List<HyperFidelServerProfile>> GetProfilesAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default)
+    {
+        try { return await GetJsonAsync<List<HyperFidelServerProfile>>(server, "/api/profiles", cancellationToken) ?? []; }
+        catch { return []; }
+    }
+
+    /// <summary>Loads recent playback history for the selected server profile.</summary>
+    public async Task<List<HyperFidelHistorySyncEntry>> GetHistorySyncAsync(
+        HyperFidelServerSettings server, int limit = 500, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<List<HyperFidelHistorySyncEntry>>(
+                server, $"/api/history/sync?limit={Math.Clamp(limit, 1, 5000)}", cancellationToken) ?? [];
+        }
+        catch { return []; }
+    }
+
+    /// <summary>Uploads local playback history to the selected server profile.</summary>
+    public async Task<bool> PushHistorySyncAsync(
+        HyperFidelServerSettings server, IReadOnlyList<HyperFidelHistorySyncEntry> entries,
+        CancellationToken cancellationToken = default)
+    {
+        if (entries.Count == 0) return true;
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, BuildUrl(server, "/api/history/sync"))
+            { Content = JsonContent.Create(entries, options: JsonOptions) };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            AddProfileHeader(request, server);
+            using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
+
+    /// <summary>Loads one album without transferring the complete remote album catalog.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="albumId">Provider-local album identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The requested album, or <see langword="null"/> when unavailable.</returns>
+    public async Task<HyperFidelAlbumInfo?> GetAlbumAsync(
+        HyperFidelServerSettings server,
+        long albumId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<HyperFidelAlbumInfo>(
+                server,
+                $"/api/albums/{albumId}",
+                cancellationToken);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Resolves at most one hundred selected albums, with bounded detail fallback on older servers.</summary>
+    /// <param name="server">Owning server settings.</param>
+    /// <param name="ids">Selected album identifiers.</param>
+    /// <param name="cancellationToken">Request cancellation.</param>
+    /// <returns>Matching compact albums; transport failures propagate.</returns>
+    public async Task<List<HyperFidelAlbumInfo>> GetAlbumsByIdsAsync(
+        HyperFidelServerSettings server, IReadOnlyList<long> ids, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var selected = ids.Distinct().ToArray();
+        if (selected.Length > 100) throw new ArgumentOutOfRangeException(nameof(ids));
+        if (selected.Length == 0) return [];
+        using var request = new HttpRequestMessage(HttpMethod.Post, BuildUrl(server, "/api/albums/by-ids"))
+        { Content = JsonContent.Create(selected, options: JsonOptions) };
+        request.Headers.Add("X-Api-Key", server.ApiKey);
+        AddProfileHeader(request, server);
+        using var response = await _http.SendAsync(request, cancellationToken);
+        if (response.StatusCode is not (HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed))
+        {
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<HyperFidelAlbumInfo>>(JsonOptions, cancellationToken)
+                ?? throw new JsonException("Missing album payload.");
+        }
+        // Compatibility uses bounded detail requests, never a full album catalog.
+        using var gate = new SemaphoreSlim(4);
+        var albums = await Task.WhenAll(selected.Select(async id =>
+        {
+            await gate.WaitAsync(cancellationToken);
+            try
+            {
+                using var detail = new HttpRequestMessage(HttpMethod.Get, BuildUrl(server, $"/api/albums/{id}"));
+                detail.Headers.Add("X-Api-Key", server.ApiKey);
+                AddProfileHeader(detail, server);
+                using var result = await _http.SendAsync(detail, cancellationToken);
+                if (result.StatusCode == HttpStatusCode.NotFound) return null;
+                result.EnsureSuccessStatusCode();
+                return await result.Content.ReadFromJsonAsync<HyperFidelAlbumInfo>(JsonOptions, cancellationToken)
+                    ?? throw new JsonException("Missing album payload.");
+            }
+            finally { gate.Release(); }
+        }));
+        return albums.OfType<HyperFidelAlbumInfo>().ToList();
+    }
+
+    /// <summary>Loads compact album candidates for history-based recommendations.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Recommendation candidates, or an empty list for older/unreachable servers.</returns>
+    public async Task<List<HyperFidelRecommendationAlbum>> GetRecommendationAlbumsAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<List<HyperFidelRecommendationAlbum>>(
+                       server,
+                       "/api/albums/recommendation-candidates",
+                       cancellationToken) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    /// <summary>Stores a client-refreshed artist profile on the remote server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="artistId">Database ID of the artist.</param>
+    /// <param name="biography">Downloaded artist biography, or <see langword="null"/>.</param>
+    /// <param name="sourceUrl">Canonical source URL, or <see langword="null"/>.</param>
+    /// <param name="language">Preferred profile language.</param>
+    /// <param name="imageData">Optional client-downloaded artist image bytes.</param>
+    /// <param name="imageMimeType">MIME type for <paramref name="imageData"/>.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated artist entry, or <see langword="null"/> when the request fails.</returns>
+    public async Task<HyperFidelArtistInfo?> UpdateArtistProfileAsync(
+        HyperFidelServerSettings server,
+        long artistId,
+        string? biography,
+        string? sourceUrl,
+        string language,
+        byte[]? imageData,
+        string? imageMimeType,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                BuildUrl(server, $"/api/artists/{artistId}/profile"))
+            {
+                Content = JsonContent.Create(
+                    new ArtistProfileUpdateRequest(biography, sourceUrl, language, imageData, imageMimeType),
+                    options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                return null;
+            return await response.Content.ReadFromJsonAsync<HyperFidelArtistInfo>(JsonOptions, cancellationToken);
+        }
+        catch { return null; }
+    }
+
+    /// <summary>
+    /// Renames an artist on a remote HyperFidel Server, or merges two artists when a preferred survivor is supplied.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="artistId">Database ID of the artist being edited.</param>
+    /// <param name="artistName">Requested artist display name.</param>
+    /// <param name="preferredArtistId">Artist ID whose profile should survive a merge, or <see langword="null"/> to only rename or detect a collision.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Rename response, or <see langword="null"/> when the request fails.</returns>
+    public async Task<HyperFidelArtistRenameResponse?> RenameArtistAsync(
+        HyperFidelServerSettings server,
+        long artistId,
+        string artistName,
+        long? preferredArtistId = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                BuildUrl(server, $"/api/artists/{artistId}/rename"))
+            {
+                Content = JsonContent.Create(
+                    new HyperFidelArtistRenameRequest(artistName, preferredArtistId),
+                    options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                return null;
+            return await response.Content.ReadFromJsonAsync<HyperFidelArtistRenameResponse>(JsonOptions, cancellationToken);
+        }
+        catch { return null; }
+    }
+
+    /// <summary>
+    /// Uploads client-selected artwork bytes and assigns them to an album on the remote server.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="albumId">Database ID of the album.</param>
+    /// <param name="imageData">Raw image bytes to upload.</param>
+    /// <param name="mimeType">Optional image MIME type.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server accepted the artwork.</returns>
+    public async Task<bool> UploadAlbumArtworkAsync(
+        HyperFidelServerSettings server,
+        long albumId,
+        byte[] imageData,
+        string? mimeType,
+        CancellationToken cancellationToken = default)
+        => await UploadImageAsync(server, $"/api/artwork/album/{albumId}", imageData, mimeType, cancellationToken);
+
+    /// <summary>Deletes the assigned artwork for a remote album.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="albumId">Database ID of the album.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server accepted the deletion.</returns>
+    public Task<bool> DeleteAlbumArtworkAsync(
+        HyperFidelServerSettings server,
+        long albumId,
+        CancellationToken cancellationToken = default)
+        => SendNoContentAsync(server, HttpMethod.Delete, $"/api/artwork/album/{albumId}", cancellationToken);
+
+    // ------------------------------------------------------------------
+    // Tracks
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns all tracks belonging to a specific album.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="albumId">Database ID of the album.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of track entries, or empty on error.</returns>
+    public async Task<List<HyperFidelTrackInfo>> GetTracksByAlbumAsync(
+        HyperFidelServerSettings server,
+        long albumId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<List<HyperFidelTrackInfo>>(
+                       server, $"/api/albums/{albumId}/tracks", cancellationToken)
+                   ?? [];
+        }
+        catch { return []; }
+    }
+
+    /// <summary>Returns playlists stored on the remote server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Playlist rows, or an empty list on error.</returns>
+    public async Task<List<HyperFidelPlaylistInfo>> GetPlaylistsAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<List<HyperFidelPlaylistInfo>>(server, "/api/playlists", cancellationToken) ?? [];
+        }
+        catch { return []; }
+    }
+
+    /// <summary>Returns resolved tracks for a remote playlist.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="playlistId">Remote playlist identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Playlist track rows, or an empty list on error.</returns>
+    public async Task<List<HyperFidelPlaylistTrackInfo>> GetPlaylistTracksAsync(
+        HyperFidelServerSettings server,
+        long playlistId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<List<HyperFidelPlaylistTrackInfo>>(
+                server,
+                $"/api/playlists/{playlistId}/tracks",
+                cancellationToken) ?? [];
+        }
+        catch { return []; }
+    }
+
+    /// <summary>Creates a regular playlist on the remote server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="name">Playlist name.</param>
+    /// <param name="trackIds">Initial server-side track IDs.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created playlist, or <see langword="null"/> on error.</returns>
+    public async Task<HyperFidelPlaylistInfo?> CreatePlaylistAsync(
+        HyperFidelServerSettings server,
+        string name,
+        IReadOnlyList<long> trackIds,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, BuildUrl(server, "/api/playlists"))
+            {
+                Content = JsonContent.Create(new HyperFidelPlaylistCreateRequest(name, trackIds), options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                return null;
+            return await response.Content.ReadFromJsonAsync<HyperFidelPlaylistInfo>(JsonOptions, cancellationToken);
+        }
+        catch { return null; }
+    }
+
+    /// <summary>Resolves a remote smart playlist using the client's favourite track IDs.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="playlistId">Remote smart playlist identifier.</param>
+    /// <param name="favoriteTrackIds">Server-side track IDs the client treats as favourites.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Resolved playlist track rows, or an empty list on error.</returns>
+    public async Task<List<HyperFidelPlaylistTrackInfo>> ResolveSmartPlaylistTracksAsync(
+        HyperFidelServerSettings server,
+        long playlistId,
+        IReadOnlyList<long> favoriteTrackIds,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, BuildUrl(server, $"/api/playlists/{playlistId}/resolve"))
+            {
+                Content = JsonContent.Create(new HyperFidelSmartPlaylistResolveRequest(favoriteTrackIds), options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                return [];
+            return await response.Content.ReadFromJsonAsync<List<HyperFidelPlaylistTrackInfo>>(JsonOptions, cancellationToken) ?? [];
+        }
+        catch { return []; }
+    }
+
+    /// <summary>
+    /// Counts how many of the server's tracks match ad-hoc smart-playlist criteria, for the
+    /// editor's live preview. Returns <see langword="null"/> when the server does not support
+    /// the resolve-count endpoint (older servers) or the request fails.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="criteriaJson">Serialized smart-playlist criteria JSON.</param>
+    /// <param name="favoriteTrackIds">Client-side favourite track IDs used for a FavoritesOnly criterion.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of matching tracks, or <see langword="null"/>.</returns>
+    public async Task<int?> ResolveSmartPlaylistCountAsync(
+        HyperFidelServerSettings server,
+        string criteriaJson,
+        IReadOnlyList<long> favoriteTrackIds,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, BuildUrl(server, "/api/playlists/resolve-count"))
+            {
+                Content = JsonContent.Create(
+                    new HyperFidelSmartCriteriaResolveRequest(criteriaJson, favoriteTrackIds), options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                return null;
+            var result = await response.Content.ReadFromJsonAsync<HyperFidelSmartCriteriaCount>(JsonOptions, cancellationToken);
+            return result?.Count;
+        }
+        catch { return null; }
+    }
+
+    /// <summary>Creates a smart playlist on the remote server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="name">Playlist name.</param>
+    /// <param name="filterCriteria">Serialized smart-playlist criteria JSON.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created playlist, or <see langword="null"/> on error.</returns>
+    public async Task<HyperFidelPlaylistInfo?> CreateSmartPlaylistAsync(
+        HyperFidelServerSettings server,
+        string name,
+        string filterCriteria,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, BuildUrl(server, "/api/playlists/smart"))
+            {
+                Content = JsonContent.Create(new HyperFidelSmartPlaylistSaveRequest(name, filterCriteria), options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                return null;
+            return await response.Content.ReadFromJsonAsync<HyperFidelPlaylistInfo>(JsonOptions, cancellationToken);
+        }
+        catch { return null; }
+    }
+
+    /// <summary>Updates a smart playlist's name and criteria on the remote server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="playlistId">Remote playlist identifier.</param>
+    /// <param name="name">New playlist name.</param>
+    /// <param name="filterCriteria">Serialized smart-playlist criteria JSON.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated playlist, or <see langword="null"/> on error.</returns>
+    public async Task<HyperFidelPlaylistInfo?> UpdateSmartPlaylistAsync(
+        HyperFidelServerSettings server,
+        long playlistId,
+        string name,
+        string filterCriteria,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Put, BuildUrl(server, $"/api/playlists/{playlistId}/smart"))
+            {
+                Content = JsonContent.Create(new HyperFidelSmartPlaylistSaveRequest(name, filterCriteria), options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                return null;
+            return await response.Content.ReadFromJsonAsync<HyperFidelPlaylistInfo>(JsonOptions, cancellationToken);
+        }
+        catch { return null; }
+    }
+
+    /// <summary>Appends tracks to a regular playlist on the remote server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="playlistId">Remote playlist identifier.</param>
+    /// <param name="trackIds">Server-side track IDs to append.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server accepted the update.</returns>
+    public async Task<bool> AddTracksToPlaylistAsync(
+        HyperFidelServerSettings server,
+        long playlistId,
+        IReadOnlyList<long> trackIds,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, BuildUrl(server, $"/api/playlists/{playlistId}/tracks"))
+            {
+                Content = JsonContent.Create(new HyperFidelPlaylistTrackAppendRequest(trackIds), options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
+
+    /// <summary>Deletes a playlist on the remote server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="playlistId">Remote playlist identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server deleted the playlist.</returns>
+    public async Task<bool> DeletePlaylistAsync(
+        HyperFidelServerSettings server,
+        long playlistId,
+        CancellationToken cancellationToken = default)
+        => await SendNoContentAsync(server, HttpMethod.Delete, $"/api/playlists/{playlistId}", cancellationToken);
+
+    /// <summary>Removes a playlist entry on the remote server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="playlistEntryId">Playlist entry identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server removed the entry.</returns>
+    public async Task<bool> RemovePlaylistEntryAsync(
+        HyperFidelServerSettings server,
+        long playlistEntryId,
+        CancellationToken cancellationToken = default)
+        => await SendNoContentAsync(server, HttpMethod.Delete, $"/api/playlist-tracks/{playlistEntryId}", cancellationToken);
+
+    /// <summary>
+    /// Returns a page of tracks from the server's library.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="page">Zero-based page index.</param>
+    /// <param name="pageSize">Number of tracks per page.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="requireComplete">Propagate request and invalid-payload failures instead of returning an empty page.</param>
+    /// <returns>Track entries; empty on error only when strict loading is disabled.</returns>
+    public async Task<List<HyperFidelTrackInfo>> GetTracksAsync(
+        HyperFidelServerSettings server,
+        int page = 0,
+        int pageSize = 500,
+        CancellationToken cancellationToken = default,
+        bool requireComplete = false)
+    {
+        try
+        {
+            return await GetJsonAsync<List<HyperFidelTrackInfo>>(
+                       server, $"/api/tracks?page={page}&pageSize={pageSize}", cancellationToken)
+                   ?? (requireComplete ? throw new JsonException("Missing catalog payload.") : []);
+        }
+        catch when (!requireComplete) { return []; }
+    }
+
+    /// <summary>
+    /// Searches tracks on the remote server using its Lucene index.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="query">Search query.</param>
+    /// <param name="limit">Maximum result count.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Matching track entries, or empty on error.</returns>
+    public async Task<List<HyperFidelTrackInfo>> SearchTracksAsync(
+        HyperFidelServerSettings server,
+        string query,
+        int limit = 500,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var result = await GetJsonAsync<HyperFidelTrackSearchResult>(
+                server,
+                $"/api/search?q={Uri.EscapeDataString(query)}&limit={limit}",
+                cancellationToken);
+            return result?.Tracks.ToList() ?? [];
+        }
+        catch { return []; }
+    }
+
+    /// <summary>
+    /// Performs a categorised search (tracks, albums, artists) using the server's
+    /// Lucene index, mirroring the local library's search result.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="query">Search query.</param>
+    /// <param name="limit">Maximum result count per category.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="requireComplete">Propagate HTTP, invalid-payload, and cancellation failures.</param>
+    /// <returns>Matching categories; empty on error only when strict loading is disabled.</returns>
+    public async Task<HyperFidelFullSearchResult> SearchFullAsync(
+        HyperFidelServerSettings server,
+        string query,
+        int limit = 50,
+        CancellationToken cancellationToken = default,
+        bool requireComplete = false)
+    {
+        try
+        {
+            var result = await GetJsonAsync<HyperFidelFullSearchResult>(
+                server,
+                $"/api/search/full?q={Uri.EscapeDataString(query)}&limit={limit}",
+                cancellationToken);
+            if (requireComplete && (result is null || result.Tracks is null || result.Albums is null || result.Artists is null))
+                throw new JsonException("Missing search categories.");
+            return result ?? new HyperFidelFullSearchResult([], [], []);
+        }
+        catch when (!requireComplete)
+        {
+            return new HyperFidelFullSearchResult([], [], []);
+        }
+    }
+
+    /// <summary>
+    /// Returns lightweight facet rows (id, favorite, genre, format, bitrate) for every track,
+    /// used to build the Tracks filter facets client-side.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="requireComplete">Propagate request and invalid-payload failures instead of returning empty facets.</param>
+    /// <returns>Facet rows; empty on error only when strict loading is disabled.</returns>
+    public async Task<List<TrackFacetInfo>> GetTrackFacetsAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default,
+        bool requireComplete = false)
+    {
+        try
+        {
+            return await GetJsonAsync<List<TrackFacetInfo>>(server, "/api/tracks/facets", cancellationToken)
+                   ?? (requireComplete ? throw new JsonException("Missing catalog payload.") : []);
+        }
+        catch when (!requireComplete) { return []; }
+    }
+
+    /// <summary>Performs a structured categorised library search on an HyperFidel Server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="query">Optional free-text query.</param>
+    /// <param name="resultType">One of <c>all</c>, <c>tracks</c>, <c>albums</c>, or <c>artists</c>.</param>
+    /// <param name="minimumYear">Inclusive minimum release year.</param>
+    /// <param name="maximumYear">Inclusive maximum release year.</param>
+    /// <param name="addedFrom">Inclusive lower library-added Unix timestamp.</param>
+    /// <param name="addedBefore">Exclusive upper library-added Unix timestamp.</param>
+    /// <param name="sort">Requested result ordering.</param>
+    /// <param name="limit">Maximum result count per category.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Matching tracks, albums, and artists.</returns>
+    /// <exception cref="HttpRequestException">Thrown when the server is unavailable or does not support structured search.</exception>
+    public async Task<HyperFidelFullSearchResult> SearchStructuredAsync(
+        HyperFidelServerSettings server,
+        string? query,
+        string resultType,
+        int? minimumYear,
+        int? maximumYear,
+        long? addedFrom,
+        long? addedBefore,
+        string sort,
+        int limit = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new List<string>
+        {
+            $"type={Uri.EscapeDataString(resultType)}",
+            $"sort={Uri.EscapeDataString(sort)}",
+            $"limit={limit}"
+        };
+        if (!string.IsNullOrWhiteSpace(query)) parameters.Add($"q={Uri.EscapeDataString(query)}");
+        if (minimumYear.HasValue) parameters.Add($"yearFrom={minimumYear.Value}");
+        if (maximumYear.HasValue) parameters.Add($"yearTo={maximumYear.Value}");
+        if (addedFrom.HasValue) parameters.Add($"addedFrom={addedFrom.Value}");
+        if (addedBefore.HasValue) parameters.Add($"addedBefore={addedBefore.Value}");
+        var result = await GetJsonAsync<HyperFidelFullSearchResult>(
+            server,
+            $"/api/search/structured?{string.Join('&', parameters)}",
+            cancellationToken);
+        return result ?? new HyperFidelFullSearchResult([], [], []);
+    }
+
+    /// <summary>Returns one compact genre-cloud level and bounded recommendation candidates.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="parentKey">Selected taxonomy key, or <see langword="null"/> for root genres.</param>
+    /// <param name="maximumCandidates">Maximum candidate track identifiers requested from the server.</param>
+    /// <param name="candidateOffset">Offset into the server's stable candidate order.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The genre-cloud snapshot, or an empty root snapshot when unavailable.</returns>
+    public async Task<GenreCloudSnapshot> GetGenreCloudAsync(
+        HyperFidelServerSettings server,
+        string? parentKey = null,
+        int maximumCandidates = 250,
+        int candidateOffset = 0,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var query = $"?candidates={Math.Clamp(maximumCandidates, 1, 2000)}&offset={Math.Max(0, candidateOffset)}";
+            if (!string.IsNullOrWhiteSpace(parentKey))
+                query += $"&parent={Uri.EscapeDataString(parentKey)}";
+            return await GetJsonAsync<GenreCloudSnapshot>(server, $"/api/genres/cloud{query}", cancellationToken)
+                   ?? new GenreCloudSnapshot(null, [], [], []);
+        }
+        catch
+        {
+            return new GenreCloudSnapshot(parentKey, [], [], []);
+        }
+    }
+
+    /// <summary>
+    /// Returns full track rows for the specified track identifiers, preserving the requested order.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="ids">Track identifiers to resolve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="requireComplete">Propagate request and invalid-payload failures instead of returning empty rows.</param>
+    /// <returns>Matching track rows; empty on error only when strict loading is disabled.</returns>
+    public async Task<List<HyperFidelTrackInfo>> GetTracksByIdsAsync(
+        HyperFidelServerSettings server,
+        IReadOnlyList<long> ids,
+        CancellationToken cancellationToken = default,
+        bool requireComplete = false)
+    {
+        if (requireComplete)
+            cancellationToken.ThrowIfCancellationRequested();
+        if (ids.Count == 0)
+            return [];
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                BuildUrl(server, "/api/tracks/by-ids"))
+            {
+                Content = JsonContent.Create(ids, options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            if (requireComplete)
+                response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+                return [];
+            return await response.Content.ReadFromJsonAsync<List<HyperFidelTrackInfo>>(JsonOptions, cancellationToken)
+                   ?? (requireComplete ? throw new JsonException("Missing catalog payload.") : []);
+        }
+        catch when (!requireComplete) { return []; }
+    }
+
+    /// <summary>
+    /// Returns the server-cached lyrics for a track, if any.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="trackId">Database ID of the track.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Cached lyrics, or <see langword="null"/> when none are stored or the request fails.</returns>
+    public async Task<HyperFidelLyrics?> GetTrackLyricsAsync(
+        HyperFidelServerSettings server,
+        long trackId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<HyperFidelLyrics>(
+                server, $"/api/tracks/{trackId}/lyrics", cancellationToken);
+        }
+        catch { return null; }
+    }
+
+    /// <summary>Stores personal or client-resolved MusicBrainz rating data on a remote server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="trackId">Server-side track identifier.</param>
+    /// <param name="update">Rating fields to update.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the update was accepted.</returns>
+    public async Task<bool> UpdateTrackRatingAsync(
+        HyperFidelServerSettings server,
+        long trackId,
+        HyperFidelTrackRatingUpdate update,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Put,
+                BuildUrl(server, $"/api/tracks/{trackId}/rating"))
+            {
+                Content = JsonContent.Create(update, options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            AddProfileHeader(request, server);
+            using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Reads the profile-scoped last playback position another device stored for a
+    /// remote track.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="trackId">Server-side track identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The stored position in seconds, or <see langword="null"/> when none exists.</returns>
+    public async Task<double?> GetTrackPositionAsync(
+        HyperFidelServerSettings server,
+        long trackId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var dto = await GetJsonAsync<TrackPositionDto>(
+                server, $"/api/tracks/{trackId}/position", cancellationToken).ConfigureAwait(false);
+            var position = dto?.PositionSeconds;
+            return position is double value && !double.IsNaN(value) && value > 0 ? value : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Stores the profile-scoped last playback position for a remote track.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="trackId">Server-side track identifier.</param>
+    /// <param name="positionSeconds">Position in seconds; zero clears the stored entry.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the update was accepted.</returns>
+    public async Task<bool> SaveTrackPositionAsync(
+        HyperFidelServerSettings server,
+        long trackId,
+        double positionSeconds,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Put,
+                BuildUrl(server, $"/api/tracks/{trackId}/position"))
+            {
+                Content = JsonContent.Create(
+                    new { positionSeconds = Math.Max(0, positionSeconds) },
+                    options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            AddProfileHeader(request, server);
+            using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>Stores the active profile's favorite state for a remote track.</summary>
+    public async Task<bool> UpdateTrackFavoriteAsync(
+        HyperFidelServerSettings server,
+        long trackId,
+        bool isFavorite,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Put,
+                BuildUrl(server, $"/api/tracks/{trackId}/favorite"))
+            {
+                Content = JsonContent.Create(new { isFavorite }, options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            AddProfileHeader(request, server);
+            using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
+
+    /// <summary>
+    /// Stores the library-only genre of a server track. The server records it as an
+    /// override and never rewrites the media file.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="trackId">Server-side track identifier.</param>
+    /// <param name="genre">Replacement genre, or <see langword="null"/> to clear it.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server accepted the update.</returns>
+    public async Task<bool> UpdateTrackGenreAsync(
+        HyperFidelServerSettings server,
+        long trackId,
+        string? genre,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Put,
+                BuildUrl(server, $"/api/tracks/{trackId}/genre"))
+            {
+                // Send an explicit empty value so clearing never depends on the
+                // serializer's null handling; the server trims it to a clear.
+                Content = JsonContent.Create(new { genre = genre ?? string.Empty }, options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            AddProfileHeader(request, server);
+            using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
+
+    /// <summary>Stores the active profile's favorite state for a remote artist.</summary>
+    public Task<bool> UpdateArtistFavoriteAsync(
+        HyperFidelServerSettings server,
+        long artistId,
+        bool isFavorite,
+        CancellationToken cancellationToken = default) =>
+        UpdateFavoriteAsync(server, $"/api/artists/{artistId}/favorite", isFavorite, cancellationToken);
+
+    /// <summary>Stores the active profile's favorite state for a remote album.</summary>
+    public Task<bool> UpdateAlbumFavoriteAsync(
+        HyperFidelServerSettings server,
+        long albumId,
+        bool isFavorite,
+        CancellationToken cancellationToken = default) =>
+        UpdateFavoriteAsync(server, $"/api/albums/{albumId}/favorite", isFavorite, cancellationToken);
+
+    private async Task<bool> UpdateFavoriteAsync(
+        HyperFidelServerSettings server,
+        string path,
+        bool isFavorite,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Put, BuildUrl(server, path))
+            {
+                Content = JsonContent.Create(new { isFavorite }, options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            AddProfileHeader(request, server);
+            using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
+
+    /// <summary>Gets cached or newly generated waveform data for a remote server track.</summary>
+    /// <param name="server">Remote server settings.</param>
+    /// <param name="trackId">Server-side track ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Waveform peak data, or <see langword="null"/> when unavailable.</returns>
+    public async Task<HyperFidelTrackWaveform?> GetTrackWaveformAsync(
+        HyperFidelServerSettings server,
+        long trackId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<HyperFidelTrackWaveform>(
+                server,
+                $"/api/tracks/{trackId}/waveform",
+                cancellationToken);
+        }
+        catch { return null; }
+    }
+
+    /// <summary>
+    /// Uploads client-downloaded lyrics for a track so the server caches them.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="trackId">Database ID of the track.</param>
+    /// <param name="plainLyrics">Unsynchronised plain-text lyrics, or <see langword="null"/>.</param>
+    /// <param name="syncedLyrics">LRC-formatted synchronised lyrics, or <see langword="null"/>.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server accepted the lyrics.</returns>
+    public async Task<bool> UploadTrackLyricsAsync(
+        HyperFidelServerSettings server,
+        long trackId,
+        string? plainLyrics,
+        string? syncedLyrics,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Put,
+                BuildUrl(server, $"/api/tracks/{trackId}/lyrics"))
+            {
+                Content = JsonContent.Create(
+                    new HyperFidelLyrics(plainLyrics, syncedLyrics),
+                    options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
+
+    /// <summary>
+    /// Returns lightweight track rows for building a remote folder tree.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of lightweight track entries, or empty on error.</returns>
+    public async Task<List<HyperFidelTrackLiteInfo>> GetTrackFoldersAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<List<HyperFidelTrackLiteInfo>>(server, "/api/folders/tracks", cancellationToken)
+                   ?? [];
+        }
+        catch { return []; }
+    }
+
+    /// <summary>
+    /// Uploads client-selected image bytes and assigns them to an artist on the remote server.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="artistId">Database ID of the artist.</param>
+    /// <param name="imageData">Raw image bytes to upload.</param>
+    /// <param name="mimeType">Optional image MIME type.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server accepted the artist image.</returns>
+    public async Task<bool> UploadArtistImageAsync(
+        HyperFidelServerSettings server,
+        long artistId,
+        byte[] imageData,
+        string? mimeType,
+        CancellationToken cancellationToken = default)
+        => await UploadImageAsync(server, $"/api/artwork/artist/{artistId}", imageData, mimeType, cancellationToken);
+
+    /// <summary>Deletes the cached image for a remote artist.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="artistId">Database ID of the artist.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server accepted the deletion.</returns>
+    public Task<bool> DeleteArtistImageAsync(
+        HyperFidelServerSettings server,
+        long artistId,
+        CancellationToken cancellationToken = default)
+        => SendNoContentAsync(server, HttpMethod.Delete, $"/api/artwork/artist/{artistId}", cancellationToken);
+
+    // ------------------------------------------------------------------
+    // Server library configuration
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns the library root directories configured on the remote server.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of server-side library root directories, or an empty list on error.</returns>
+    public async Task<List<string>> GetLibraryPathsAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var result = await GetJsonAsync<HyperFidelLibraryPaths>(
+                server,
+                "/api/settings/library-paths",
+                cancellationToken);
+            return result?.Paths.ToList() ?? [];
+        }
+        catch { return []; }
+    }
+
+    /// <summary>
+    /// Replaces the library root directories configured on the remote server.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="paths">Server-side library root directories.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server accepted and persisted the paths.</returns>
+    public async Task<bool> SetLibraryPathsAsync(
+        HyperFidelServerSettings server,
+        IReadOnlyList<string> paths,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Put,
+                BuildUrl(server, "/api/settings/library-paths"))
+            {
+                Content = JsonContent.Create(new HyperFidelLibraryPaths(paths), options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
+
+    /// <summary>
+    /// Lists child directories visible on the remote server.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="path">Server-side directory path to browse, or <see langword="null"/> for filesystem roots.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Directory listing, or <see langword="null"/> on error.</returns>
+    public async Task<HyperFidelDirectoryListing?> GetDirectoriesAsync(
+        HyperFidelServerSettings server,
+        string? path = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var url = string.IsNullOrWhiteSpace(path)
+                ? "/api/files/directories"
+                : $"/api/files/directories?path={Uri.EscapeDataString(path)}";
+            return await GetJsonAsync<HyperFidelDirectoryListing>(server, url, cancellationToken);
+        }
+        catch { return null; }
+    }
+
+    /// <summary>
+    /// Starts a full scan on the remote server.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="forceMetadataRefresh">Whether the server should re-read metadata from unchanged files.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server accepted the request.</returns>
+    public async Task<bool> TriggerScanAsync(
+        HyperFidelServerSettings server,
+        bool forceMetadataRefresh = false,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var path = forceMetadataRefresh
+                ? "/api/scan/metadata"
+                : "/api/scan";
+            using var request = new HttpRequestMessage(HttpMethod.Post, BuildUrl(server, path));
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
+
+    /// <summary>Returns the remote server's scan-time ReplayGain preference.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The server setting, or <see langword="null"/> when unavailable or unsupported.</returns>
+    public async Task<HyperFidelReplayGainSettings?> GetReplayGainSettingsAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<HyperFidelReplayGainSettings>(
+                server,
+                "/api/settings/replaygain",
+                cancellationToken);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Persists the remote server's scan-time ReplayGain preference.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="enabled">Whether missing ReplayGain values should be calculated during scans.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server accepted and persisted the setting.</returns>
+    public async Task<bool> SetReplayGainSettingsAsync(
+        HyperFidelServerSettings server,
+        bool enabled,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Put,
+                BuildUrl(server, "/api/settings/replaygain"))
+            {
+                Content = JsonContent.Create(
+                    new HyperFidelReplayGainSettings(enabled),
+                    options: JsonOptions)
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            AddProfileHeader(request, server);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>Gets compact read-only Library Doctor findings from a server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="inspectFiles">Whether the server should perform expensive physical-file checks.</param>
+    /// <returns>Findings, or <see langword="null"/> when the endpoint is unavailable.</returns>
+    public async Task<List<HyperFidelLibraryDoctorCandidate>?> GetLibraryDoctorAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default,
+        bool inspectFiles = true)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Get,
+                BuildUrl(server, inspectFiles ? "/api/library/doctor" : "/api/library/doctor?inspectFiles=false"));
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _maintenanceHttp.SendAsync(request, cancellationToken);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<HyperFidelLibraryDoctorCandidate>>(
+                JsonOptions,
+                cancellationToken);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Gets one compact page of similarity feature vectors.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="page">Zero-based page index.</param>
+    /// <param name="pageSize">Requested page size, bounded by the server.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="requireComplete">Whether HTTP, payload and cancellation failures must propagate.</param>
+    /// <returns>Provider-rebased vectors; tolerant callers receive an empty list on failure.</returns>
+    public async Task<List<SimilarityFeatureVector>> GetSimilarityFeaturesAsync(
+        HyperFidelServerSettings server,
+        int page = 0,
+        int pageSize = 500,
+        CancellationToken cancellationToken = default,
+        bool requireComplete = false)
+    {
+        if (requireComplete) cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            var vectors = await GetJsonAsync<List<SimilarityFeatureVector>>(
+                server,
+                $"/api/tracks/similarity-features?page={Math.Max(0, page)}&pageSize={Math.Clamp(pageSize, 1, 2000)}",
+                cancellationToken);
+            if (vectors is null && requireComplete)
+                throw new JsonException("Missing similarity feature array.");
+            var sourceKey = $"hyperfidel:{server.Id}";
+            return (vectors ?? []).Select(vector => vector with { SourceKey = sourceKey }).ToList();
+        }
+        catch when (!requireComplete)
+        {
+            return [];
+        }
+    }
+
+    /// <summary>Requests one bounded opportunistic acoustic-feature batch on a server.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="limit">Maximum tracks to analyze.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server accepted the batch.</returns>
+    public async Task<bool> TriggerAudioFeatureAnalysisAsync(
+        HyperFidelServerSettings server,
+        int limit = 4,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                BuildUrl(server, $"/api/tracks/audio-features/analyze?limit={Math.Clamp(limit, 1, 10)}"));
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            AddProfileHeader(request, server);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Requests an explicit calculation of missing ReplayGain values on a remote server.
+    /// Existing server-side track and album values are preserved.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when the server accepted the request.</returns>
+    public async Task<bool> TriggerReplayGainCalculationAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                BuildUrl(server, "/api/replaygain"));
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            AddProfileHeader(request, server);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>Downloads a complete server library backup to a local ZIP file.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="destinationPath">Local destination ZIP path.</param>
+    /// <param name="progress">Optional byte-transfer progress callback.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that completes after the destination has been atomically published.</returns>
+    public async Task DownloadLibraryBackupAsync(
+        HyperFidelServerSettings server,
+        string destinationPath,
+        IProgress<double?>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var transferClient = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+            using var request = new HttpRequestMessage(HttpMethod.Get, BuildUrl(server, "/api/library/backup"));
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await transferClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken);
+            response.EnsureSuccessStatusCode();
+            var total = response.Content.Headers.ContentLength;
+            await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
+            await WriteDownloadAtomicallyAsync(
+                input,
+                destinationPath,
+                total,
+                progress,
+                cancellationToken);
+        }
+        catch
+        {
+            var temporaryPath = destinationPath + ".tmp";
+            if (File.Exists(temporaryPath))
+                File.Delete(temporaryPath);
+            throw;
+        }
+    }
+
+    /// <summary>Writes a downloaded stream to a temporary file and closes it before publishing the destination.</summary>
+    /// <param name="input">Downloaded response stream.</param>
+    /// <param name="destinationPath">Final local destination path.</param>
+    /// <param name="totalBytes">Expected byte count, when known.</param>
+    /// <param name="progress">Optional percentage callback.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that completes after the temporary file has been atomically renamed.</returns>
+    internal static async Task WriteDownloadAtomicallyAsync(
+        Stream input,
+        string destinationPath,
+        long? totalBytes,
+        IProgress<double?>? progress,
+        CancellationToken cancellationToken)
+    {
+        var temporaryPath = destinationPath + ".tmp";
+        await using (var output = new FileStream(
+                         temporaryPath,
+                         FileMode.Create,
+                         FileAccess.Write,
+                         FileShare.None,
+                         128 * 1024,
+                         FileOptions.Asynchronous | FileOptions.SequentialScan))
+        {
+            await CopyWithProgressAsync(input, output, totalBytes, progress, cancellationToken);
+        }
+        File.Move(temporaryPath, destinationPath, overwrite: true);
+    }
+
+    /// <summary>Uploads and restores a complete server library backup.</summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="archivePath">Local source ZIP path.</param>
+    /// <param name="progress">Optional byte-transfer progress callback.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Library root paths restored by the server.</returns>
+    public async Task<IReadOnlyList<string>> RestoreLibraryBackupAsync(
+        HyperFidelServerSettings server,
+        string archivePath,
+        IProgress<double?>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        using var transferClient = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+        await using var input = new FileStream(
+            archivePath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            128 * 1024,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+        using var content = new ProgressStreamContent(input, progress, cancellationToken);
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/zip");
+        content.Headers.ContentLength = input.Length;
+        using var request = new HttpRequestMessage(HttpMethod.Put, BuildUrl(server, "/api/library/backup"))
+        {
+            Content = content
+        };
+        request.Headers.Add("X-Api-Key", server.ApiKey);
+        using var response = await transferClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<HyperFidelLibraryPaths>(JsonOptions, cancellationToken);
+        return result?.Paths ?? [];
+    }
+
+    private static async Task CopyWithProgressAsync(
+        Stream input,
+        Stream output,
+        long? totalBytes,
+        IProgress<double?>? progress,
+        CancellationToken cancellationToken)
+    {
+        var buffer = new byte[128 * 1024];
+        long transferred = 0;
+        int count;
+        while ((count = await input.ReadAsync(buffer, cancellationToken)) > 0)
+        {
+            await output.WriteAsync(buffer.AsMemory(0, count), cancellationToken);
+            transferred += count;
+            progress?.Report(totalBytes is > 0 ? transferred * 100d / totalBytes.Value : null);
+        }
+    }
+
+    private sealed class ProgressStreamContent : HttpContent
+    {
+        private readonly Stream _source;
+        private readonly IProgress<double?>? _progress;
+        private readonly CancellationToken _cancellationToken;
+
+        public ProgressStreamContent(
+            Stream source,
+            IProgress<double?>? progress,
+            CancellationToken cancellationToken)
+        {
+            _source = source;
+            _progress = progress;
+            _cancellationToken = cancellationToken;
+        }
+
+        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+            => await CopyWithProgressAsync(
+                _source,
+                stream,
+                _source.CanSeek ? _source.Length : null,
+                _progress,
+                _cancellationToken);
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = _source.CanSeek ? _source.Length : 0;
+            return _source.CanSeek;
+        }
+    }
+
+    /// <summary>
+    /// Returns the current scan status from the remote server.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Scan status, or <see langword="null"/> when the request fails.</returns>
+    public async Task<HyperFidelScanStatus?> GetScanStatusAsync(
+        HyperFidelServerSettings server,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await GetJsonAsync<HyperFidelScanStatus>(server, "/api/scan", cancellationToken);
+        }
+        catch { return null; }
+    }
+
+    // ------------------------------------------------------------------
+    // URL helpers (no HTTP calls)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns the authenticated stream URL for a track.
+    /// The URL is safe to pass directly to FFmpeg.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="trackId">Database ID of the track to stream.</param>
+    /// <returns>Authenticated HTTP URL for the audio stream.</returns>
+    public static string GetStreamUrl(HyperFidelServerSettings server, long trackId)
+    {
+        var url = $"{server.BaseUrl.TrimEnd('/')}/api/stream/{trackId}?key={Uri.EscapeDataString(server.ApiKey)}";
+        if (!string.IsNullOrWhiteSpace(server.StreamingFormat))
+        {
+            url += $"&format={Uri.EscapeDataString(server.StreamingFormat)}";
+            if (server.StreamingBitrateKbps is int bitrate)
+                url += $"&bitrate={bitrate.ToString(CultureInfo.InvariantCulture)}";
+        }
+
+        return url;
+    }
+
+    /// <summary>
+    /// Returns the URL for an album's artwork thumbnail.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="albumId">Database ID of the album.</param>
+    /// <param name="size">Thumbnail size: 96 or 320.</param>
+    /// <returns>Authenticated HTTP URL for the artwork image.</returns>
+    public static string GetAlbumArtworkUrl(HyperFidelServerSettings server, long albumId, int size)
+        => $"{server.BaseUrl.TrimEnd('/')}/api/artwork/album/{albumId}?size={size}&key={Uri.EscapeDataString(server.ApiKey)}";
+
+    /// <summary>
+    /// Returns the URL for an artist image.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="artistId">Database ID of the artist.</param>
+    /// <returns>Authenticated HTTP URL for the artist image.</returns>
+    public static string GetArtistArtworkUrl(HyperFidelServerSettings server, long artistId)
+        => $"{server.BaseUrl.TrimEnd('/')}/api/artwork/artist/{artistId}?key={Uri.EscapeDataString(server.ApiKey)}";
+
+    /// <summary>
+    /// Returns the URL for a track's artwork thumbnail by track ID.
+    /// </summary>
+    /// <param name="server">Server connection settings.</param>
+    /// <param name="trackId">Database ID of the track.</param>
+    /// <param name="size">Thumbnail size (<c>96</c> or <c>320</c>); omit for the original.</param>
+    /// <returns>The authenticated track-artwork URL.</returns>
+    public static string GetTrackArtworkUrl(HyperFidelServerSettings server, long trackId, int? size = null)
+    {
+        var sizeParam = size is int s ? $"size={s}&" : string.Empty;
+        return $"{server.BaseUrl.TrimEnd('/')}/api/artwork/track/{trackId}?{sizeParam}key={Uri.EscapeDataString(server.ApiKey)}";
+    }
+
+    // ------------------------------------------------------------------
+    // Internals
+    // ------------------------------------------------------------------
+
+    private async Task<T?> GetJsonAsync<T>(
+        HyperFidelServerSettings server,
+        string path,
+        CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, BuildUrl(server, path));
+        request.Headers.Add("X-Api-Key", server.ApiKey);
+        if (!string.IsNullOrWhiteSpace(server.ProfileId))
+            request.Headers.Add("X-HyperFidel-Profile", server.ProfileId);
+        using var response = await _http.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken);
+    }
+
+    private async Task<bool> UploadImageAsync(
+        HyperFidelServerSettings server,
+        string path,
+        byte[] imageData,
+        string? mimeType,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var content = new ByteArrayContent(imageData);
+            if (!string.IsNullOrWhiteSpace(mimeType))
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mimeType);
+
+            using var request = new HttpRequestMessage(HttpMethod.Put, BuildUrl(server, path))
+            {
+                Content = content
+            };
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            AddProfileHeader(request, server);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
+
+    private async Task<bool> SendNoContentAsync(
+        HyperFidelServerSettings server,
+        HttpMethod method,
+        string path,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(method, BuildUrl(server, path));
+            request.Headers.Add("X-Api-Key", server.ApiKey);
+            using var response = await _http.SendAsync(request, cancellationToken);
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
+
+    private static string BuildUrl(HyperFidelServerSettings server, string path)
+    {
+        var separator = path.Contains('?') ? '&' : '?';
+        var profile = string.IsNullOrWhiteSpace(server.ProfileId)
+            ? "standard"
+            : server.ProfileId.Trim();
+        return $"{server.BaseUrl.TrimEnd('/')}{path}{separator}profile={Uri.EscapeDataString(profile)}";
+    }
+
+    private static void AddProfileHeader(HttpRequestMessage request, HyperFidelServerSettings server)
+    {
+        if (!string.IsNullOrWhiteSpace(server.ProfileId))
+            request.Headers.Add("X-HyperFidel-Profile", server.ProfileId);
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        _http.Dispose();
+        _maintenanceHttp.Dispose();
+    }
+}

@@ -5,17 +5,17 @@
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleDisplayName</key>
-  <string>HyperFi</string>
+  <string>HyperFidel</string>
   <key>CFBundleExecutable</key>
-  <string>HyperFi</string>
+  <string>HyperFidel</string>
   <key>CFBundleIconFile</key>
-  <string>HyperFi.icns</string>
+  <string>HyperFidel.icns</string>
   <key>CFBundleIdentifier</key>
-  <string>com.wuuwuu26.hyperfi</string>
+  <string>com.wuuwuu26.hyperfidel</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
-  <string>HyperFi</string>
+  <string>HyperFidel</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>

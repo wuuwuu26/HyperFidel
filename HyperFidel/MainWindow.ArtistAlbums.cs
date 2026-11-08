@@ -1,0 +1,232 @@
+using System.IO;
+using System.Diagnostics;
+using System.Globalization;
+using System.Net.Http;
+using System.Net;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Security.Cryptography;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Templates;
+using Avalonia.Data;
+using Avalonia.Data.Converters;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
+using Avalonia.Reactive;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using Avalonia.Controls.Primitives;
+using Avalonia.Styling;
+using AvaloniaEllipse = Avalonia.Controls.Shapes.Ellipse;
+using AvaloniaPath = Avalonia.Controls.Shapes.Path;
+using HyperFidel.Audio;
+using HyperFidel.Controls;
+using HyperFidel.Library;
+using HyperFidel.Localization;
+using HyperFidel.Streaming;
+using Windows.Media;
+
+namespace HyperFidel;
+
+/// <summary>
+/// Unified local and HyperFidel Server artist album navigation.
+/// </summary>
+public partial class MainWindow : Window
+{
+    /// <summary>Opens every matching local and HyperFidel Server album for a local artist name.</summary>
+    /// <param name="artistId">Local artist identifier retained by the calling navigation surface.</param>
+    /// <param name="artistName">Artist display name used for cross-library identity matching.</param>
+    /// <returns>A task representing the unified navigation operation.</returns>
+    private Task ShowArtistAlbumsAsync(long artistId, string artistName) =>
+        ShowUnifiedArtistAlbumsAsync(artistName);
+
+    private bool IsCurrentArtistDetailLoad(int loadVersion, string artistName) =>
+        loadVersion == _artistDetailLoadVersion &&
+        ArtistInfoView.IsVisible &&
+        string.Equals(_artistInfoUnifiedArtistName, artistName, StringComparison.Ordinal);
+
+    /// <summary>Opens unified artist detail while preserving current nested Back ownership.</summary>
+    /// <param name="artistName">Artist display name used across libraries.</param>
+    /// <returns>A task completing after detail loading or abandonment.</returns>
+    private async Task ShowUnifiedArtistAlbumsAsync(string artistName)
+    {
+        if (!_navigationRestores.TryAdmitNavigation()) return;
+        var restoreRequest = _navigationRestores.Context;
+        var loadVersion = ++_artistDetailLoadVersion;
+        bool OwnsAdmission() => loadVersion == _artistDetailLoadVersion &&
+            (restoreRequest is null || _navigationRestores.IsCurrent(restoreRequest));
+        bool CanPublish() => OwnsAdmission() && IsCurrentArtistDetailLoad(loadVersion, artistName);
+        CancelArtistProfileLoad();
+        if (!OwnsAdmission()) return;
+        PushCurrentNavigationState();
+        if (!OwnsAdmission()) return;
+        _currentTopLevelTag = "UnifiedArtistAlbums";
+        _activeArtistFilterId = null;
+        _activeArtistFilterName = artistName;
+        _activeAlbumFilterId = null;
+        _activeAlbumFilterTitle = null;
+        ContentTitleTextBlock.Text = artistName;
+        ContentCountTextBlock.Text = string.Empty;
+        AlbumViewModeBorder.IsVisible = false;
+        TrackFilterButton.IsVisible = false;
+        SaveSmartPlaylistButton.IsVisible = false;
+        UpdateEntityFavoritesFilterToggle(null);
+        LyricsView.IsVisible = false;
+        PodcastInfoView.IsVisible = false;
+        ArtistInfoView.IsVisible = true;
+        ArtistInfoScrollViewer.Offset = default;
+        ArtistInfoTitleButton.Content = artistName;
+        ResetArtistInfoSurface(artistName);
+        ArtistInfoStatusTextBlock.Text = LocalizationManager.Current.ArtistInfoLoading;
+        ArtistInfoStatusTextBlock.IsVisible = true;
+        ResetArtistInfoAlbums();
+        SetArtistInfoFavoriteState(false);
+        _artistInfoUnifiedArtistName = artistName;
+        var comparisonKey = ArtistNameNormalizer.CreateComparisonKey(artistName);
+        var albumSources = new List<(LibraryCatalogAlbum Album, HyperFidelServerSettings? Server)>();
+        var artistSources = new List<(LibraryCatalogArtist Artist, HyperFidelServerSettings? Server)>();
+        var trackRequests = new List<(ILibraryCatalogProvider Provider, HyperFidelServerSettings? Server, long ArtistId, long AlbumId)>();
+        var localArtists = await Task.Run(async () =>
+            await _localCatalogProvider.GetArtistsAsync());
+        if (!CanPublish())
+            return;
+        var matchingLocalArtists = localArtists.Where(candidate =>
+                ArtistNameNormalizer.CreateComparisonKey(candidate.Name) == comparisonKey)
+            .ToList();
+        artistSources.AddRange(matchingLocalArtists.Select(artist => (
+            artist,
+            (HyperFidelServerSettings?)null)));
+        var isFavorite = matchingLocalArtists.Any(artist => artist.IsFavorite);
+        var localCatalogLists = await Task.Run(async () =>
+        {
+            var lists = new List<(long ArtistId, IReadOnlyList<LibraryCatalogAlbum> Albums)>();
+            foreach (var artist in matchingLocalArtists)
+            {
+                var albums = await _localCatalogProvider.GetAlbumsByArtistAsync(artist.Id, includeArtwork: true);
+                lists.Add((artist.Id, albums));
+            }
+            return lists;
+        });
+        if (!CanPublish())
+            return;
+        foreach (var catalog in localCatalogLists)
+        {
+            albumSources.AddRange(catalog.Albums.Select(album => (album, (HyperFidelServerSettings?)null)));
+            trackRequests.AddRange(catalog.Albums.Select(album => (
+                (ILibraryCatalogProvider)_localCatalogProvider,
+                (HyperFidelServerSettings?)null,
+                catalog.ArtistId,
+                album.Id)));
+        }
+        PopulateUnifiedArtistInfoAlbums(albumSources);
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+
+        if (!CanPublish()) return;
+        ContentRow? matchingRemoteRow = null;
+        var remoteLoads = (_settings.HyperFidelServers ?? [])
+            .Select(async server =>
+            {
+                try
+                {
+                    var provider = CreateHyperFidelCatalogProvider(server);
+                    var artists = await provider.GetArtistsAsync();
+                    var matches = artists.Where(candidate =>
+                            ArtistNameNormalizer.CreateComparisonKey(candidate.Name) == comparisonKey)
+                        .ToList();
+                    var albums = new List<LibraryCatalogAlbum>();
+                    var albumRequests = new List<(long ArtistId, long AlbumId)>();
+                    foreach (var artist in matches)
+                    {
+                        var artistAlbums = await provider.GetAlbumsByArtistAsync(
+                            artist.Id,
+                            includeArtwork: true);
+                        albums.AddRange(artistAlbums);
+                        foreach (var album in artistAlbums)
+                            albumRequests.Add((artist.Id, album.Id));
+                    }
+                    return (Server: server, Artists: matches, Albums: albums, AlbumRequests: albumRequests);
+                }
+                catch
+                {
+                    return (
+                        Server: server,
+                        Artists: new List<LibraryCatalogArtist>(),
+                        Albums: new List<LibraryCatalogAlbum>(),
+                        AlbumRequests: new List<(long ArtistId, long AlbumId)>());
+                }
+            })
+            .ToList();
+        foreach (var remote in await Task.WhenAll(remoteLoads))
+        {
+            if (!CanPublish())
+                return;
+            foreach (var artist in remote.Artists)
+            {
+                isFavorite |= artist.IsFavorite;
+                matchingRemoteRow ??= ToCatalogArtistContentRow(artist, remote.Server);
+                artistSources.Add((artist, remote.Server));
+            }
+            albumSources.AddRange(remote.Albums.Select(album => (
+                album,
+                (HyperFidelServerSettings?)remote.Server)));
+            var provider = CreateHyperFidelCatalogProvider(remote.Server);
+            trackRequests.AddRange(remote.AlbumRequests.Select(request => (
+                (ILibraryCatalogProvider)provider,
+                (HyperFidelServerSettings?)remote.Server,
+                request.ArtistId,
+                request.AlbumId)));
+            PopulateUnifiedArtistInfoAlbums(albumSources);
+        }
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+        if (!CanPublish())
+            return;
+
+        using (var artworkSyncCts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+        {
+            try
+            {
+                await SynchronizeMissingArtistArtworkAsync(artistName, artistSources, artworkSyncCts.Token, CanPublish);
+                albumSources = await SynchronizeMissingAlbumArtworkAsync(albumSources, artworkSyncCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Artwork synchronization is optional and must not block artist navigation.
+            }
+        }
+        if (!CanPublish())
+            return;
+
+        _ = LoadAndPopulateArtistInfoTracksAsync(
+            trackRequests,
+            loadVersion,
+            artistName);
+
+        if (matchingLocalArtists.FirstOrDefault() is { } localArtist)
+            await ShowArtistInfoAsync(localArtist.Id, forceRefresh: false);
+        else if (matchingRemoteRow is not null)
+            await ShowHyperFidelArtistInfoAsync(matchingRemoteRow, forceRefresh: false);
+        else
+        {
+            ArtistInfoTitleButton.Content = artistName;
+            ArtistInfoStatusTextBlock.Text = LocalizationManager.Current.ArtistInfoNotFound;
+            ArtistInfoStatusTextBlock.IsVisible = true;
+        }
+
+        if (!CanPublish()) return;
+        _artistInfoUnifiedArtistName = artistName;
+        PopulateUnifiedArtistInfoAlbums(albumSources);
+        SetArtistInfoFavoriteState(isFavorite);
+        ArtistInfoCloseButton.IsVisible = false;
+        BackButton.IsVisible = true;
+    }
+}

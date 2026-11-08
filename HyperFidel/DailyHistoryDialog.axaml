@@ -1,0 +1,285 @@
+<Window x:Class="HyperFidel.DailyHistoryDialog"
+        x:DataType="local:DailyHistoryDialog"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:HyperFidel"
+        Title="{Binding DialogTitle}"
+        Icon="avares://HyperFidel/Assets/HyperFidel.ico"
+        Width="1040"
+        Height="620"
+        MinWidth="760"
+        MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource AppContentBrush}">
+    <Window.Styles>
+        <Style Selector="Button.dialogAction">
+            <Setter Property="Background" Value="{DynamicResource AppButtonBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppButtonTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppButtonBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Button.dialogAction:pointerover /template/ Border#Bd">
+            <Setter Property="Background" Value="{DynamicResource AppButtonHoverBrush}"/>
+        </Style>
+        <Style Selector="Button.dialogAction:pressed /template/ Border#Bd">
+            <Setter Property="Background" Value="{DynamicResource AppButtonPressedBrush}"/>
+        </Style>
+        <Style Selector="DataGrid">
+            <Setter Property="Background" Value="{DynamicResource AppContentBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppGridLineBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource AppColumnHeaderBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,9"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppGridLineBrush}"/>
+        </Style>
+        <Style Selector="DataGridRow">
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppPrimaryTextBrush}"/>
+            <Setter Property="MinHeight" Value="30"/>
+        </Style>
+        <Style Selector="DataGridRow:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceHoverBrush}"/>
+        </Style>
+        <Style Selector="DataGridRow:selected">
+            <Setter Property="Background" Value="{DynamicResource AppSurfaceSelectedBrush}"/>
+        </Style>
+        <Style Selector="DataGridCell">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppPrimaryTextBrush}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Padding="{TemplateBinding Padding}"
+                            Background="Transparent">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="DataGridCell TextBlock">
+            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=DataGridCell}}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+        <Style Selector="DataGrid Button">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="MinHeight" Value="24"/>
+        </Style>
+        <Style Selector="Button.historylink">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppAccentBrush}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.historylink /template/ ContentPresenter">
+            <Setter Property="TextBlock.Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+            <Setter Property="TextBlock.FontSize" Value="11"/>
+        </Style>
+        <Style Selector="Button.historylink:pointerover /template/ ContentPresenter">
+        </Style>
+        <Style Selector="Button.historylink:disabled">
+            <Setter Property="Foreground" Value="{DynamicResource AppSecondaryTextBrush}"/>
+            <Setter Property="Cursor" Value="Arrow"/>
+        </Style>
+        <Style Selector="ToggleButton.filterChip">
+            <Setter Property="Background" Value="{DynamicResource AppButtonBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppSecondaryTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppButtonBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="MinHeight" Value="28"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}"
+                            CornerRadius="14">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          TextBlock.Foreground="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="ToggleButton.filterChip:pointerover /template/ Border#Bd">
+            <Setter Property="Background" Value="{DynamicResource AppButtonHoverBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.filterChip:checked">
+            <Setter Property="Background" Value="{DynamicResource AppAccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppAccentTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
+        </Style>
+        <Style Selector="ToggleButton.filterChip:checked /template/ Border#Bd">
+            <Setter Property="Background" Value="{DynamicResource AppAccentBrush}"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{Binding DialogTitle}"
+                   FontSize="{DynamicResource FontSizeTitle}"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource AppPrimaryTextBrush}"
+                   Margin="0,0,0,16"/>
+
+        <WrapPanel x:Name="FilterPanel"
+                   Grid.Row="1"
+                   Orientation="Horizontal"
+                   Margin="0,0,0,14"/>
+
+        <Grid Grid.Row="2">
+            <TextBlock Text="{DynamicResource L_DailyHistoryNoEntries}"
+                       IsVisible="{Binding ShowEmpty}"
+                       Foreground="{DynamicResource AppSecondaryTextBrush}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+
+            <DataGrid x:Name="HistoryDataGrid"
+                      ItemsSource="{Binding Rows}"
+                      IsVisible="{Binding ShowGrid}"
+                      AutoGenerateColumns="False"
+                      CanUserSortColumns="True"
+                      IsReadOnly="True"
+                      CanUserReorderColumns="True"
+                      CanUserResizeColumns="True"
+                      SelectionMode="Single"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{DynamicResource L_PlayedAt}"
+                              x:DataType="local:DailyHistoryRow"
+                                        Binding="{Binding PlayedAt}"
+                                        SortMemberPath="PlayedAtSort"
+                                        Tag="playedAt"
+                                        Width="90"/>
+                    <DataGridTextColumn Header="{DynamicResource L_MediaType}"
+                              x:DataType="local:DailyHistoryRow"
+                                        Binding="{Binding MediaType}"
+                                        SortMemberPath="MediaType"
+                                        Tag="mediaType"
+                                        Width="90"/>
+                    <DataGridTemplateColumn Header="{DynamicResource L_Title}" SortMemberPath="Title" Tag="title" Width="2*">
+                        <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="local:DailyHistoryRow">
+                                <Grid>
+                                    <Button Classes="historylink"
+                                            IsVisible="{Binding CanOpenTrack}"
+                                            Click="TrackButton_OnClick">
+                                        <TextBlock Text="{Binding Title}"
+                                                   FontSize="{DynamicResource FontSizeMeta}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </Button>
+                                    <TextBlock Text="{Binding Title}"
+                                               IsVisible="{Binding IsPlainTitle}"
+                                               FontSize="{DynamicResource FontSizeMeta}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="{DynamicResource L_Artist}" SortMemberPath="Artist" Tag="artist" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="local:DailyHistoryRow">
+                                <Grid>
+                                    <Button Classes="historylink"
+                                            IsVisible="{Binding CanOpenArtist}"
+                                            Click="ArtistButton_OnClick">
+                                        <TextBlock Text="{Binding Artist}"
+                                                   FontSize="{DynamicResource FontSizeMeta}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </Button>
+                                    <TextBlock Text="{Binding Artist}"
+                                               IsVisible="{Binding IsPlainArtist}"
+                                               FontSize="{DynamicResource FontSizeMeta}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="{DynamicResource L_Album}" SortMemberPath="Album" Tag="album" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="local:DailyHistoryRow">
+                                <Grid>
+                                    <Button Classes="historylink"
+                                            IsVisible="{Binding CanOpenAlbum}"
+                                            Click="AlbumButton_OnClick">
+                                        <TextBlock Text="{Binding Album}"
+                                                   FontSize="{DynamicResource FontSizeMeta}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </Button>
+                                    <TextBlock Text="{Binding Album}"
+                                               IsVisible="{Binding IsPlainAlbum}"
+                                               FontSize="{DynamicResource FontSizeMeta}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="{DynamicResource L_ListenedDuration}"
+                              x:DataType="local:DailyHistoryRow"
+                                        Binding="{Binding ListenedDuration}"
+                                        SortMemberPath="ListenedDurationSort"
+                                        Tag="listened"
+                                        Width="100"/>
+                    <DataGridTextColumn Header="{DynamicResource L_Duration}"
+                              x:DataType="local:DailyHistoryRow"
+                                        Binding="{Binding TotalDuration}"
+                                        SortMemberPath="TotalDurationSort"
+                                        Tag="duration"
+                                        Width="100"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <Button Grid.Row="3"
+                Classes="dialogAction"
+                Content="{DynamicResource L_Close}"
+                Width="100"
+                Height="34"
+                Margin="0,16,0,0"
+                HorizontalAlignment="Right"
+                Click="CloseButton_OnClick"/>
+    </Grid>
+</Window>

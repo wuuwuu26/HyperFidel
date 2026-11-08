@@ -13,7 +13,7 @@
 #include <string>
 #include <string_view>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 namespace {
 
 using fxchain::airplay::Bytes;
@@ -158,4 +158,4 @@ TransientPairingKeys TransientPairing::run(Socket& control) {
     return keys;
 }
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

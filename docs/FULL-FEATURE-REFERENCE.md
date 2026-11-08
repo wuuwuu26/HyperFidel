@@ -1,31 +1,31 @@
-# HyperFi — Full Feature & Technical Reference
+# HyperFidel — Full Feature & Technical Reference
 
-> This is the complete feature and technical reference for HyperFi, moved out
+> This is the complete feature and technical reference for HyperFidel, moved out
 > of [`README.md`](../README.md) to keep the introduction concise. The product
 > introduction, downloads, and quick start live in the README; end-user
-> documentation lives in the [GitHub Wiki](https://github.com/wuuwuu26/HyperFi/wiki).
+> documentation lives in the [GitHub Wiki](https://github.com/wuuwuu26/HyperFidel/wiki).
 
 <!-- markdownlint-disable MD033 MD041 -->
 <p align="center">
-  <img src="../Logo/logo_about.png" alt="HyperFi" width="720">
+  <img src="../Logo/logo_about.png" alt="HyperFidel" width="720">
 </p>
 
-# HyperFi
+# HyperFidel
 
 An Avalonia desktop music library for Windows, Linux, and macOS, plus a
 cross-platform music server for local Hi-Fi libraries.
 
-**Official website:** [github.com/wuuwuu26/HyperFi](https://github.com/wuuwuu26/HyperFi/) · **Documentation:**
-[GitHub Wiki](https://github.com/wuuwuu26/HyperFi/wiki) · **Downloads:**
-[Latest release](https://github.com/wuuwuu26/HyperFi/releases/latest)
+**Official website:** [github.com/wuuwuu26/HyperFidel](https://github.com/wuuwuu26/HyperFidel/) · **Documentation:**
+[GitHub Wiki](https://github.com/wuuwuu26/HyperFidel/wiki) · **Downloads:**
+[Latest release](https://github.com/wuuwuu26/HyperFidel/releases/latest)
 
 cwASIO/Steinberg ASIO/WASAPI · DSD/DSF/DFF · Gapless Playback · ReplayGain ·
 Parametric EQ Plex · Radio · Podcasts · AI Chat · MCP Server · Network Streaming
 
 
-## Why HyperFi?
+## Why HyperFidel?
 
-HyperFi is for people who still own and manage a local music library and want a
+HyperFidel is for people who still own and manage a local music library and want a
 modern Windows, Linux, or macOS player with serious audio output support — and
 the ability to reach that library from any device on the local network.
 
@@ -38,11 +38,11 @@ the ability to reach that library from any device on the local network.
 - CUE sheet support
 - ReplayGain and parametric EQ
 - Multi-select bulk editing in the shared Tracks table, applying favorite,
-  unfavorite, or a personal rating to every selected local or HyperFi Server
+  unfavorite, or a personal rating to every selected local or HyperFidel Server
   track at once, plus a genre field that stores a library-only override for the
-  selected local or HyperFi Server tracks (media files are never modified)
+  selected local or HyperFidel Server tracks (media files are never modified)
 - Local library, playlists, smart playlists and full-text search
-- Empty-library guidance opens Directories, HyperFi servers or Output device in
+- Empty-library guidance opens Directories, HyperFidel servers or Output device in
   Settings, with localized, wrapped and keyboard-focusable setup actions. Tab
   and Shift+Tab reach each sidebar setup action; Enter activates it. Keyboard
   focus highlights setup and output-profile actions in both themes. Setup hints
@@ -63,7 +63,7 @@ the ability to reach that library from any device on the local network.
   result, and returns only for a current successful empty load.
 - Unified artist detail pages with an album-style image-and-biography hero,
   synchronized favorites, image management, refreshable biographies, and
-  combined local/HyperFi Server albums. Their cards include cover search,
+  combined local/HyperFidel Server albums. Their cards include cover search,
   favorites, and local/server source badges, and a source-aware track table
   below them lists the artist's tracks ordered by album and track number. Manual
   biography refresh can use an editable external lookup name without changing
@@ -71,7 +71,7 @@ the ability to reach that library from any device on the local network.
   loading and remain available throughout it; profile text follows German,
   English, French, Spanish, Russian, Simplified Chinese, or Hindi
 - Hierarchical Genre Cloud with source-aware track and album recommendations
-  across the local library and connected HyperFi Servers, backed by a subtle
+  across the local library and connected HyperFidel Servers, backed by a subtle
   cached grayscale mosaic of matching artist images
 - Shared Artists, Albums, and Tracks views retain available local/server results
   when a source is unavailable. Only complete loads are cached, so reopening a
@@ -97,10 +97,10 @@ the ability to reach that library from any device on the local network.
   MusicBrainz artist IDs unify verified spelling variants
 - Optional curated Fanart.tv artist thumbnails. Enter a personal key under
   Settings > Artist information, or set the `FANART_TV_API_KEY` environment
-  variable before starting HyperFi. Entered keys are stored in HyperFi's
+  variable before starting HyperFidel. Entered keys are stored in HyperFidel's
   encrypted current-user credential container. Manual artist images always take
   priority. The same Settings section can fill missing artist images in the
-  local library and every configured HyperFi Server sequentially, trying
+  local library and every configured HyperFidel Server sequentially, trying
   Fanart.tv first when a key is available and Wikimedia Commons as the fallback.
   With a configured Fanart.tv key, the review dialog can automatically accept
   Fanart.tv results for the remainder of the run. Wikimedia candidates always
@@ -108,20 +108,20 @@ the ability to reach that library from any device on the local network.
   be cancelled from the review dialog. Manual image searches from artist
   information use an editable query and the same Fanart.tv-first, Wikimedia-
   fallback order. The batch displays progress and an estimated remaining time
-- Unified local and HyperFi Server artist browsing: matching artists appear once
+- Unified local and HyperFidel Server artist browsing: matching artists appear once
   in Artists and search, and every artist link opens one combined album view
   across those libraries regardless of which source the clicked item came from.
   Renaming a unified artist applies the new name to its matching local identity
-  and to its matching artists on every reachable configured HyperFi Server;
+  and to its matching artists on every reachable configured HyperFidel Server;
   local merge-priority choices are applied to equivalent server collisions.
   Cached biographies and images are shared across matching identities, and new
   profile downloads or manual image selections are synchronized to each source.
   Opening a unified artist or album also fills missing artwork in either the
-  local library or matching reachable HyperFi Servers from an existing
+  local library or matching reachable HyperFidel Servers from an existing
   counterpart.
 - AI control via local LLMs, LM Studio/Ollama/OpenAI-compatible endpoints
 - MCP server for external AI assistants
-- **HyperFi Server** — headless cross-platform music server (Linux, macOS,
+- **HyperFidel Server** — headless cross-platform music server (Linux, macOS,
   Windows) that exposes the same library over the local network via REST and
   HTTP streaming
 
@@ -129,7 +129,7 @@ the ability to reach that library from any device on the local network.
 
 ## Product website
 
-The official website is available at [github.com/wuuwuu26/HyperFi](https://github.com/wuuwuu26/HyperFi/). Its
+The official website is available at [github.com/wuuwuu26/HyperFidel](https://github.com/wuuwuu26/HyperFidel/). Its
 self-contained responsive source lives in [`html/`](../html/). It defaults to
 English, can switch to German, French, Spanish, Russian, Simplified Chinese or
 Hindi, and includes current application screenshots, feature and installation
@@ -161,15 +161,15 @@ listening levels instead of mapping the slider directly to linear PCM gain. The
 receiver now-playing display receives the current title, artist, album, and
 bounded JPEG/PNG cover artwork when it is available locally or through the
 active library provider. Receiver-side Play, Pause, Next, and Previous controls
-are synchronized back to HyperFi through the authenticated AirPlay event
+are synchronized back to HyperFidel through the authenticated AirPlay event
 channel. Resuming after a receiver-side pause rebuilds the stream at its current
 position for Sonos compatibility. Receiver-originated timeline seeking is not
 currently supported; it requires a separate DACP control endpoint rather than
 the reverse event channel used by those buttons. If the bridge is unavailable,
-HyperFi falls back to a compatible `raop_play` executable beside HyperFi or on
+HyperFidel falls back to a compatible `raop_play` executable beside HyperFidel or on
 `PATH`. The helper is deliberately not bundled because available RAOP
-implementations use licenses independent of HyperFi's Apache-2.0 distribution.
-Gapless transitions and HyperFi's parametric equalizer are not yet supported for
+implementations use licenses independent of HyperFidel's Apache-2.0 distribution.
+Gapless transitions and HyperFidel's parametric equalizer are not yet supported for
 either network path.
 
 > **Experimental:** Native AirPlay 2 support is an interoperability
@@ -191,7 +191,7 @@ Apache-2.0 ALAC encoder separately.
 Development of that component has started in
 [`Native/AirPlay2Bridge`](../Native/AirPlay2Bridge/README.md). It is deliberately a
 standalone CMake project with a versioned C ABI and no dependency on Avalonia,
-HyperFi, or Qt, so it can later be published and consumed independently. The
+HyperFidel, or Qt, so it can later be published and consumed independently. The
 current milestone provides portable sockets, fail-closed transient pairing,
 authenticated encrypted control, unicast gPTP timing, timing-peer registration,
 session/audio-stream SETUP, official Apple ALAC support, partial-PCM buffering,
@@ -203,27 +203,27 @@ receiver volume, RTP-anchored DMAP metadata, encrypted teardown, and
 PTP/buffered-packet diagnostics are included. These paths are backed by native
 tests. Session negotiation, encrypted media, PTP timing, retransmission,
 teardown, and clean audible playback are verified against a Sonos stereo-pair
-receiver. The Windows build copies the bridge beside HyperFi and loads it
+receiver. The Windows build copies the bridge beside HyperFidel and loads it
 through its stable C ABI.
 
 Settings > Playback offers mutually exclusive DSD routing preferences for lossy
 DSD-to-PCM conversion and bit-perfect DSD over PCM (DoP). DoP requires a
 DoP-capable DAC and an exact-rate output path; PCM volume, ReplayGain, boost,
 and equalizer processing do not apply to the encapsulated DSD payload. The Linux
-path supports local and HyperFi-Server-streamed stereo DSF and uncompressed
+path supports local and HyperFidel-Server-streamed stereo DSF and uncompressed
 stereo DFF/DSDIFF through direct ALSA. When ALSA exposes the native `DSD_U32_BE`
-hardware format, HyperFi sends bit-perfect DSD directly to the DAC; otherwise it
+hardware format, HyperFidel sends bit-perfect DSD directly to the DAC; otherwise it
 uses DoP as a fallback (for example a 176.4-kHz carrier for DSD64). Neither
-Linux DSD path requires cwASIO, the Steinberg SDK, or an HyperFi native bridge.
+Linux DSD path requires cwASIO, the Steinberg SDK, or an HyperFidel native bridge.
 
-API keys and access tokens for Last.fm, Fanart.tv, AI Chat, HyperFi Server,
-Plex, and streaming providers are kept out of `settings.json`. HyperFi stores
+API keys and access tokens for Last.fm, Fanart.tv, AI Chat, HyperFidel Server,
+Plex, and streaming providers are kept out of `settings.json`. HyperFidel stores
 them in one current-user encrypted credential container: Windows uses
 current-user DPAPI; Linux and macOS use AES-GCM with a separate random key file
 restricted to the current operating-system user. Existing plaintext settings and
 the older Windows Plex/streaming credential files are migrated automatically.
 
-The application uses the HyperFi wordmark in the startup screen, sidebar, and
+The application uses the HyperFidel wordmark in the startup screen, sidebar, and
 About dialog, plus a multi-resolution Windows application icon based on the
 standalone logo.
 
@@ -239,9 +239,9 @@ The desktop project selects its target from the build host:
 - Linux builds target `net10.0`; PCM audio is rendered through direct ALSA or
   OpenAL. While a direct ALSA profile is selected, the compatibility
   endpoint-volume service mirrors the PipeWire/PulseAudio default sink volume
-  through `pactl`, so desktop volume keys and mute changes drive HyperFi's
+  through `pactl`, so desktop volume keys and mute changes drive HyperFidel's
   software gain. System-media integration is provided by MPRIS 2
-  (`org.mpris.MediaPlayer2.hyperfi`) for desktop media keys and panels.
+  (`org.mpris.MediaPlayer2.hyperfidel`) for desktop media keys and panels.
 - macOS builds target `net10.0`; PCM audio is rendered through Apple's system
   OpenAL framework. Windows audio, endpoint-volume, and SMTC integrations are
   replaced by compatibility services, and native DSD output is not currently
@@ -257,42 +257,42 @@ The desktop project selects its target from the build host:
 Build the Linux desktop with .NET 10:
 
 ```bash
-dotnet restore HyperFi/HyperFi.csproj
-dotnet build HyperFi/HyperFi.csproj --configuration Release
-dotnet run --project HyperFi/HyperFi.csproj
+dotnet restore HyperFidel/HyperFidel.csproj
+dotnet build HyperFidel/HyperFidel.csproj --configuration Release
+dotnet run --project HyperFidel/HyperFidel.csproj
 ```
 
 Create the same self-contained `linux-x64` output produced by CI:
 
 ```bash
-dotnet restore HyperFi/HyperFi.csproj --runtime linux-x64
-dotnet publish HyperFi/HyperFi.csproj --configuration Release \
+dotnet restore HyperFidel/HyperFidel.csproj --runtime linux-x64
+dotnet publish HyperFidel/HyperFidel.csproj --configuration Release \
   --runtime linux-x64 --self-contained true --no-restore \
-  --output artifacts/HyperFi-linux-x64
+  --output artifacts/HyperFidel-linux-x64
 ```
 
 Version tags publish self-contained desktop releases for `linux-x64` and
 `linux-arm64`. Each architecture receives a portable `.tar.gz`, a DEB package,
 and an RPM package; Arch Linux additionally receives an `x86_64 .pkg.tar.zst`.
-Installed packages place HyperFi under `/usr/lib/hyperfi`, add the `hyperfi`
+Installed packages place HyperFidel under `/usr/lib/hyperfidel`, add the `hyperfidel`
 command, and register a desktop launcher. All Linux player artifacts are covered
 by the signed release manifest.
 
 Build and publish the macOS desktop for either supported architecture:
 
 ```bash
-dotnet restore HyperFi/HyperFi.csproj --runtime osx-arm64
-dotnet publish HyperFi/HyperFi.csproj --configuration Release \
+dotnet restore HyperFidel/HyperFidel.csproj --runtime osx-arm64
+dotnet publish HyperFidel/HyperFidel.csproj --configuration Release \
   --runtime osx-arm64 --self-contained true --no-restore \
-  --output artifacts/HyperFi-osx-arm64
+  --output artifacts/HyperFidel-osx-arm64
 ```
 
 Use `osx-x64` instead on an Intel Mac. Tagged releases package both runtime
-identifiers as self-contained installable PKGs, portable `HyperFi.app` ZIPs, and
-tar archives. HyperFi detects FFmpeg and FFprobe in the normal Homebrew,
+identifiers as self-contained installable PKGs, portable `HyperFidel.app` ZIPs, and
+tar archives. HyperFidel detects FFmpeg and FFprobe in the normal Homebrew,
 MacPorts, pkgsrc, Fink, and per-user binary locations even when it is launched
 from Finder. If neither tool is installed, it downloads architecture-matching
-builds into the HyperFi per-user cache. OpenAL is provided by macOS.
+builds into the HyperFidel per-user cache. OpenAL is provided by macOS.
 
 An X11 or Wayland desktop session is required to run the Avalonia UI. FFmpeg and
 FFprobe must be installed and available on `PATH` for playback, media probing,
@@ -305,7 +305,7 @@ system/default route.
 
 ## AI Integration
 
-HyperFi includes two complementary AI interfaces that share the same 32
+HyperFidel includes two complementary AI interfaces that share the same 32
 player-control, queue-management, and library tools.
 
 ### Embedded AI Chat
@@ -321,7 +321,7 @@ _"Spiele alle Beatles-Alben"_ makes it search the library, fill the queue with
 the results, and start playback, all in one turn.
 
 Configure the endpoint URL, optional API key, model name, and max-token limit
-under **Settings → Integration → AI Chat**. HyperFi queries the
+under **Settings → Integration → AI Chat**. HyperFidel queries the
 OpenAI-compatible `/v1/models` endpoint when this section is opened or the
 connection values change, presents the returned identifiers in a selectable
 list, and retains a free-form model field for compatibility endpoints that do
@@ -342,7 +342,7 @@ saved AI Chat configuration.
 | Favorites, ratings, and discovery | `set_current_favorite`, `set_tracks_favorite`, `set_tracks_rating`, `control_infinite_mix`                     |
 | Audio configuration               | `list_output_profiles`, `select_output_profile`, `list_equalizer_profiles`, `configure_equalizer`              |
 | Lyrics                            | `get_current_lyrics`                                                                                           |
-| HyperFi Server                    | `list_hyperfi_servers`, `scan_hyperfi_server`                                                                  |
+| HyperFidel Server                    | `list_hyperfidel_servers`, `scan_hyperfidel_server`                                                                  |
 | Playlists                         | `list_playlists`, `get_playlist_tracks`, `create_playlist`, `create_smart_playlist`, `create_similar_playlist` |
 | History                           | `get_play_history`, `get_year_in_review`                                                                       |
 | Web                               | `search_web`, `fetch_page`, `fetch_page_as_markdown`                                                           |
@@ -352,17 +352,17 @@ saved AI Chat configuration.
 years, inclusive ISO-8601 `addedFrom`/`addedTo` library dates, and relevance,
 title, release-year, or library-addition ordering. This supports requests such
 as “show newly added tracks”, “albums added since 2026-08-01”, and “albums from
-1998”. The year is the release year stored in the media metadata; HyperFi does
+1998”. The year is the release year stored in the media metadata; HyperFidel does
 not currently store a separate composition year. Filtered remote queries need an
-HyperFi Server version that provides the authenticated structured-search
+HyperFidel Server version that provides the authenticated structured-search
 endpoint.
 
 The model picks the right queue tool automatically: `replace_queue` clears the
 old list and starts playing immediately when the user asks for new content;
 `queue_append` adds to the existing queue when the user wants to add more;
 `clear_queue` empties the queue without interrupting the current track. Library
-search includes configured HyperFi Server libraries as opaque
-`hyperfi://serverId/track/trackId` references. Playback and queue tools resolve
+search includes configured HyperFidel Server libraries as opaque
+`hyperfidel://serverId/track/trackId` references. Playback and queue tools resolve
 those references inside the app, so API keys and authenticated stream URLs are
 not exposed to the model.
 
@@ -371,10 +371,10 @@ not exposed to the model.
 The mobile web remote can be enabled under its separate **Settings → Integration
 → Mobile web remote** page. It listens on its own LAN port (default **49201**)
 and uses a dedicated generated bearer token; MCP permissions and its token are
-not reused. Open `http://<address-of-the-hyperfi-computer>:49201/remote` on a
+not reused. Open `http://<address-of-the-hyperfidel-computer>:49201/remote` on a
 phone, enter the remote token, and keep the page open for reconnecting live
 player updates. The bare address
-`http://<address-of-the-hyperfi-computer>:49201` redirects to that page as well.
+`http://<address-of-the-hyperfidel-computer>:49201` redirects to that page as well.
 Missing or rejected tokens are reported directly on the sign-in card. Tokens are
 held only in the open page's memory, not in browser storage; reloading or
 opening the plain URL requires entering the token again. The desktop stores this
@@ -398,15 +398,15 @@ without disclosing file paths or authenticated stream URLs. Previous,
 play/pause, next, stop, seek, volume, and direct queue-entry controls are
 available. Current artwork is transferred as a bounded thumbnail and retained
 through private browser cache headers. The search field queries tracks in the
-local library and every configured HyperFi Server concurrently. Results can be
+local library and every configured HyperFidel Server concurrently. Results can be
 played immediately, inserted next, or appended; the browser receives only an
 opaque identity and display metadata, never a physical path, server address, or
 API key. LAN access is disabled by default. The current track can be marked as a
 favourite, configured output profiles can be selected, and queue entries can be
 moved or removed without opening the desktop window. The library section browses
 artists, their albums, and album tracks from both the local catalog and every
-configured HyperFi Server. The Playlists section uses the desktop's shared
-regular and smart playlists, including resolvable local and HyperFi Server
+configured HyperFidel Server. The Playlists section uses the desktop's shared
+regular and smart playlists, including resolvable local and HyperFidel Server
 tracks. Open a playlist to browse its tracks, play the entire list (replacing
 the queue), or append it without replacing the current music. Smart criteria are
 resolved live. Unresolved entries and standalone imported streams not indexed in
@@ -506,11 +506,11 @@ size/redirect/timeout limits, no arbitrary downloads, request logging).
 Configure the SearXNG URL and limits under **Settings → Integration → MCP Server
 → Web browsing**.
 
-## HyperFi Server
+## HyperFidel Server
 
-`HyperFi.Server` is a self-contained headless music server that runs on
+`HyperFidel.Server` is a self-contained headless music server that runs on
 **Windows, Linux, and macOS**. It scans the same local library directories and
-exposes them over the local network so any HTTP client — another HyperFi
+exposes them over the local network so any HTTP client — another HyperFidel
 instance, a media player, or a custom app — can browse and stream your music.
 
 ### API
@@ -583,8 +583,8 @@ Edit `appsettings.json` before first use:
 
 ```json
 {
-  "HyperFi": {
-    "ServerName": "HyperFi Server",
+  "HyperFidel": {
+    "ServerName": "HyperFidel Server",
     "ApiKey": "change-this-to-a-long-random-string",
     "LibraryPaths": ["/music", "/mnt/nas/music"],
     "ScanOnStartup": true,
@@ -610,7 +610,7 @@ defaults to one FFmpeg worker thread and a cancellable 250 ms pause between
 analysed tracks. Packaged Linux services also use reduced CPU and I/O priority
 so SSH and API traffic remain responsive. Set `ReplayGainFfmpegThreads` to `0`
 to restore FFmpeg's automatic thread choice; both limits can be overridden
-through `/etc/default/hyperfi-server` with the usual `HyperFi__...`
+through `/etc/default/hyperfidel-server` with the usual `HyperFidel__...`
 environment-variable names. ReplayGain maintenance keeps only compact album
 identifiers between its track and album phases and refreshes the search index in
 bounded batches, so memory usage remains proportional to a small work set rather
@@ -625,13 +625,13 @@ archive so no extra state is stored, and the section holds no credentials. Audio
 files are never included.
 
 `AllowRemoteUpdates` is disabled by default. When enabled on a packaged Linux
-server, an authenticated HyperFi desktop client can download the matching signed
+server, an authenticated HyperFidel desktop client can download the matching signed
 DEB/RPM release, relay it to a server without internet access, and request its
 installation. The server verifies the signed manifest and package hash again;
 the unprivileged server process only stages the files. A narrowly scoped root
 systemd updater performs the package-manager operation and restarts the service.
 Automated DEB upgrades retain the existing administrator-edited
-`/etc/hyperfi-server/appsettings.json` without prompting. Release builds
+`/etc/hyperfidel-server/appsettings.json` without prompting. Release builds
 normalize and validate the packaged Bash maintainer scripts so DEB installation
 cannot fail because of Windows CRLF shebang line endings. Portable, development,
 Windows, and macOS server installations currently report managed updates as
@@ -640,9 +640,9 @@ unsupported.
 The server binds to `http://0.0.0.0:5280` by default. Override the port in
 `appsettings.json` under `Kestrel:Endpoints:Http:Url`.
 
-When the Windows player is connected to an HyperFi Server, the server's music
-directories can also be managed from the HyperFi Server connection dialog in
-Settings → Library → HyperFi Server. The directory browser shows the server
+When the Windows player is connected to an HyperFidel Server, the server's music
+directories can also be managed from the HyperFidel Server connection dialog in
+Settings → Library → HyperFidel Server. The directory browser shows the server
 filesystem, not the local Windows filesystem: Unix-like servers open at `/`,
 while Windows servers expose their drive roots. The same dialog can start a
 normal incremental server scan or explicitly re-read metadata from every file,
@@ -653,7 +653,7 @@ Track favorites and artist profiles remain untouched; when corrected tags create
 a replacement album identity in the same physical directory, downloaded album
 artwork and the album favorite flag are carried forward as well. Inaccessible
 subdirectories such as Linux `lost+found` folders are skipped instead of
-aborting the complete scan. Configured HyperFi Server connections are merged
+aborting the complete scan. Configured HyperFidel Server connections are merged
 into the main Artists, Albums, Tracks, and search-result library views. Rows
 from a server are marked with an optional `OS` source badge that shows the
 server name as a tooltip. The same connection dialog can download or restore a
@@ -663,11 +663,11 @@ Audio files and API keys are never included. Restore validates the ZIP before
 replacing data, rebuilds the search index, and leaves the original library in
 place if installation fails. The shared Folder structure view is also available
 with server-only configurations; a local library directory is not required to
-browse folders reported by an HyperFi Server. The Windows client probes server
+browse folders reported by an HyperFidel Server. The Windows client probes server
 compatibility in Settings, reports missing newer endpoints explicitly, shows the
 last successful connection time when a server is unreachable, and can clear
 cached remote artwork, track lists, and folder trees per server or globally.
-Each HyperFi Server connection stores its own streaming quality: **Original**,
+Each HyperFidel Server connection stores its own streaming quality: **Original**,
 or a lossy transcode at a chosen bitrate (`Opus` or `AAC`, 64–320 kbps). Lossy
 requests are validated server-side and rejected with HTTP 400 when the format or
 bitrate is unsupported, so the setting is safe to leave on a server that cannot
@@ -679,20 +679,20 @@ original and transcoded streams.
 **dotnet:**
 
 ```bash
-dotnet run --project HyperFi.Server/HyperFi.Server.csproj
+dotnet run --project HyperFidel.Server/HyperFidel.Server.csproj
 ```
 
 **Linux (after package install):**
 
 ```bash
 # Edit config first
-sudo nano /etc/hyperfi-server/appsettings.json
+sudo nano /etc/hyperfidel-server/appsettings.json
 
 # Enable and start the service
-sudo systemctl enable --now hyperfi-server
+sudo systemctl enable --now hyperfidel-server
 
 # Check logs
-journalctl -u hyperfi-server -f
+journalctl -u hyperfidel-server -f
 ```
 
 FFmpeg must be installed separately on Linux and macOS and is required only for
@@ -708,7 +708,7 @@ byte-range streaming without FFmpeg.
 - Automatic PCM down-conversion through `ffmpeg` when the source sample rate
   exceeds the selected ASIO or WASAPI device's capabilities; WASAPI uses the
   highest supported 32-bit float, 24-bit PCM, or 16-bit PCM output format
-- Native stereo DSD playback for local and HyperFi-Server-streamed DSF and
+- Native stereo DSD playback for local and HyperFidel-Server-streamed DSF and
   uncompressed DFF files. Linux uses the kernel/ALSA `DSD_U32_BE` interface
   directly, with DoP fallback and no cwASIO/Steinberg/native bridge dependency;
   Windows uses cwASIO or the optional Steinberg ASIO bridge. Remote streams are
@@ -724,12 +724,12 @@ byte-range streaming without FFmpeg.
 - PCM playback through `ffmpeg`
 - Multiple named output profiles for quickly switching between configured output
   devices; a quick-pick popup in the transport bar selects the active profile
-  without opening Settings. On first start, HyperFi creates and selects a
+  without opening Settings. On first start, HyperFidel creates and selects a
   `Default` WASAPI profile from the Windows default multimedia output device
   when no output has been configured yet.
 - A lock button beside the transport Equalizer and Output quick-pickers can
   close the active exclusive player and release its audio device for another
-  application. HyperFi preserves the source and playback position; selecting the
+  application. HyperFidel preserves the source and playback position; selecting the
   open lock reacquires the device and resumes playback without restarting the
   application. Explicit release waits for both the active player and any earlier
   player cleanup still running after a track transition's wait limit. It also
@@ -759,15 +759,15 @@ byte-range streaming without FFmpeg.
 - Optional fade transitions can smooth queue advances that are not already
   handled by the gapless PCM engine.
 - The transport progress control shows a waveform-style peak view for local
-  audio files and remote HyperFi Server tracks, caches compact peak data, and
+  audio files and remote HyperFidel Server tracks, caches compact peak data, and
   keeps click/drag seeking on the same timeline. Remote tracks first use the
   server waveform endpoint and fall back to local FFmpeg analysis of the
   authenticated stream URL when the server cannot analyse the source format.
-- Remote HyperFi Server tracks keep their library title, artist, album, and
+- Remote HyperFidel Server tracks keep their library title, artist, album, and
   duration in transport metadata, play history, and **Up next**. Authenticated
   `?key=` stream URLs are not shown as titles and are not persisted in the
   playback queue.
-- Configured HyperFi Server libraries are included in the same Artists, Albums,
+- Configured HyperFidel Server libraries are included in the same Artists, Albums,
   Tracks, and search-result infrastructure as the local library. Server rows
   reuse the local table/artwork masks and show an optional `OS` source badge
   with the server name as tooltip. To avoid Avalonia DataGrid stalls, mixed
@@ -776,16 +776,16 @@ byte-range streaming without FFmpeg.
   Remote artwork is loaded lazily from authenticated server artwork endpoints
   and cached in the Windows client's local data directory.
 - The Tracks filter includes a **Source** section with Local and every
-  configured HyperFi Server. Saved smart playlists can store the same source
+  configured HyperFidel Server. Saved smart playlists can store the same source
   restriction through stable source keys (`local`, `server:<id>`).
-- Remote HyperFi Server artist-info pages support renaming/merging artists and
+- Remote HyperFidel Server artist-info pages support renaming/merging artists and
   assigning Wikimedia artist images. The Windows client performs the image
   search and uploads the selected image to the server. For a unified artist,
   biographies and images are synchronized with the matching local and other
-  reachable HyperFi Server identities while manual images remain protected.
+  reachable HyperFidel Server identities while manual images remain protected.
 - Album and artist detail headers also accept JPEG, PNG, or WebP files selected
   from the local device. Uploaded covers and artist images are stored in the
-  owning local or HyperFi Server cache; adjacent trash actions remove them.
+  owning local or HyperFidel Server cache; adjacent trash actions remove them.
   Unified artist-image uploads and deletions are applied to every matching
   reachable library identity.
 - Opening a remote server album from a selected artist initially scopes the
@@ -795,7 +795,7 @@ byte-range streaming without FFmpeg.
   album's source-specific artist identity, initially scopes the track list to
   the selected artist, and offers the checkbox to show all album tracks.
 - Album views, Dashboard recommendations, and Recently Added displays combine
-  local and HyperFi Server records with the same artist and album title into one
+  local and HyperFidel Server records with the same artist and album title into one
   source-aware logical album (`Local+OS` when both contribute). When matching tags
   occur in several physical folders (for example an original release, a sampler,
   and a hi-res collection), the detail view retains every track and presents
@@ -804,28 +804,28 @@ byte-range streaming without FFmpeg.
   album-card/catalog surfaces because they cannot be identified usefully; their
   tracks remain available through Tracks, folders, playlists, and track search.
   Album database records without any remaining indexed tracks are also omitted
-  from local and HyperFi Server catalogs, detail views, recent lists, and
+  from local and HyperFidel Server catalogs, detail views, recent lists, and
   aggregate counts. Artwork cards show the complete album title in a tooltip
   when the visible card label is shortened to fit.
-- File and directory context menus in an HyperFi Server Folder structure view
+- File and directory context menus in an HyperFidel Server Folder structure view
   can append tracks to an existing mixed playlist or create a new shared local
-  playlist. Folder descendants are stored as stable `hyperfi://` references;
+  playlist. Folder descendants are stored as stable `hyperfidel://` references;
   authenticated playback URLs are never written as playlist entries.
 - Playlists live under the Library sidebar and can contain mixed local and
-  HyperFi Server tracks. Server tracks are stored in local playlists as stable
-  `hyperfi://` references and resolved to authenticated stream URLs only when
+  HyperFidel Server tracks. Server tracks are stored in local playlists as stable
+  `hyperfidel://` references and resolved to authenticated stream URLs only when
   they are opened or queued, so `?key=` stream URLs are not persisted. Playlist
   tables show the favorite heart first and the source column next to it. Regular
   mixed playlists batch local metadata and remote ID lookups, preserve order and
   duplicate entries, and cancel abandoned loads. Unavailable entries stay
   visible as non-playable placeholders that can be removed. Failed sources offer
   **Try again**, retaining usable rows and the selected entry/position. Smart
-  playlists resolve against the combined local and configured HyperFi Server
+  playlists resolve against the combined local and configured HyperFidel Server
   track set. Server catalogs are loaded across all pages; outdated incomplete
   track caches are rebuilt automatically without changing favorites.
-- Remote HyperFi Server artists, albums, and tracks can be marked as favorites;
+- Remote HyperFidel Server artists, albums, and tracks can be marked as favorites;
   those favorite flags are stored only in the Windows client's settings.
-- Remote HyperFi Server album covers and artist images can be searched from the
+- Remote HyperFidel Server album covers and artist images can be searched from the
   Windows client; the client uploads the selected image bytes to the server, and
   the server stores them in its own artwork cache.
 - Album cover searches display small previews as they arrive (up to three
@@ -834,7 +834,7 @@ byte-range streaming without FFmpeg.
   Searches are cancelled when replaced or closed. Metadata-free timing records
   in `logs/cover-search-performance.log` separate preview arrival, decoding, and
   UI publication for troubleshooting; they contain no album names or URLs.
-- Remote HyperFi Server artist biographies can be refreshed from the Windows
+- Remote HyperFidel Server artist biographies can be refreshed from the Windows
   client. Last.fm or Wikipedia requests run on the client; the server receives
   only the resulting biography, source URL, language, and optional image bytes
   to cache.
@@ -843,14 +843,14 @@ byte-range streaming without FFmpeg.
   authorization. Scrobbles are queued and flushed in the background, so playback
   and artist-information lookups are never blocked; the session key and the API
   secret are stored only in the encrypted per-user credential container.
-  Scrobbling applies to local and HyperFi Server library tracks, and both the
+  Scrobbling applies to local and HyperFidel Server library tracks, and both the
   scrobble threshold and the pending queue survive restarts. The favourite
   button also mirrors the current track as loved or unloved on Last.fm, which is
   best effort and never blocks playback.
 - Windows System Media Transport Controls integration with global media keys,
   play/pause/previous/next/stop and seek requests, system-overlay and
   lock-screen metadata, album art, playback state, and timeline synchronization
-- Linux MPRIS 2 media player integration (`org.mpris.MediaPlayer2.hyperfi`) for
+- Linux MPRIS 2 media player integration (`org.mpris.MediaPlayer2.hyperfidel`) for
   desktop media keys, panels, and applets, with the same transport commands,
   metadata, position, playback status, and volume; credential-bearing remote
   artwork URLs are never published to the session bus
@@ -898,7 +898,7 @@ byte-range streaming without FFmpeg.
 - Artist, album, track, and folder views
 - Localized interface languages: German, English, French, Spanish, Russian,
   Simplified Chinese, and Hindi. All seven use the same complete built-in
-  resources, documented in `HyperFi/Localization/README.md`.
+  resources, documented in `HyperFidel/Localization/README.md`.
 - Resizable table columns whose widths are preserved separately for each
   library, search, playlist, Plex, radio, podcast, and history table
 - Context-sensitive column selection by right-clicking a table header, including
@@ -906,9 +906,9 @@ byte-range streaming without FFmpeg.
   fields for radio and podcasts
 - Track context menus include **Show track information**, which displays the
   physical file path first and then the complete available track metadata.
-  Remote playback URLs and credentials are never shown; HyperFi Server paths
+  Remote playback URLs and credentials are never shown; HyperFidel Server paths
   include the configured server name (for example,
-  `Plex HyperFi: /u02/flac/file.flac`).
+  `Plex HyperFidel: /u02/flac/file.flac`).
 - Drag-and-drop table-column ordering persisted independently for each table and
   main-content view
 - Space-saving accordion sections in the main sidebar, with configurable
@@ -925,7 +925,7 @@ byte-range streaming without FFmpeg.
   tracks
 - Session-wide Back navigation across sidebar views, search results, dashboard
   links, artist/album drill-downs, playlists, podcasts, radio, folders, and Plex
-  library views. Mixed local/HyperFi Server artist and album views remain
+  library views. Mixed local/HyperFidel Server artist and album views remain
   unified when restored, including source-aware selection when IDs overlap.
   Remote details retain their owning server; invalid or removed source tags
   cannot reopen an album from another active server. Server overview loads
@@ -953,18 +953,18 @@ byte-range streaming without FFmpeg.
   by editable album/artist search terms, title similarity, and all available
   approximate track durations, then apply a confirmed release as persistent
   library-only metadata without rewriting files. Explicit analysis runs outside
-  the UI thread and can be cancelled. Updated connected HyperFi Servers
+  the UI thread and can be cancelled. Updated connected HyperFidel Servers
   contribute compact read-only findings through the authenticated API; older or
   unavailable servers are reported without preventing local results.
 - A versioned provider-neutral similarity feature foundation combines existing
   genre, BPM, mood-tag, favourite, rating, and listening-history signals in
   Core. It performs no background audio analysis and is designed for identical
-  local and HyperFi Server ranking contracts. Its deterministic
+  local and HyperFidel Server ranking contracts. Its deterministic
   nearest-neighbour ranker applies artist and album diversity limits to avoid
   repetitive results. Remote vectors are retrieved in bounded authenticated
   pages and are assigned the configured server's stable identity without
   embedding its URL or API key. A track's context menu exposes **Play more like
-  this** for local and HyperFi Server library tracks. HyperFi loads and ranks
+  this** for local and HyperFidel Server library tracks. HyperFidel loads and ranks
   the compact vectors away from the UI thread, creates a diverse cross-library
   queue, and begins with the selected track. Its transient ranked profile then
   uses the existing Infinite Mix threshold refill, so playback continues beyond
@@ -993,7 +993,7 @@ byte-range streaming without FFmpeg.
   Favorites-only filtering in both modes
 - Interactive count-scaled genre cloud with hierarchical drill-down and
   listening-history-based track suggestions, aggregated across the local library
-  and every configured HyperFi Server; recommendations can be viewed as playable
+  and every configured HyperFidel Server; recommendations can be viewed as playable
   tracks or as album artwork cards. Its curated graph supports genres with
   multiple parents, while unknown tags remain discoverable by their real names
   under **More genres**. Opening a suggested album uses the full album detail
@@ -1001,7 +1001,7 @@ byte-range streaming without FFmpeg.
   label sizes represent tracks in Tracks mode and distinct albums in Albums
   mode.
 - Infinite Mix builds a continuously replenished Up Next queue from recent
-  listening habits, favorites, the local library, and all reachable HyperFi
+  listening habits, favorites, the local library, and all reachable HyperFidel
   Servers. It balances discovery with genre affinity and suppresses immediate
   track, album, and artist repetition. Initial preparation is surfaced through a
   progress overlay; later refills rotate through the complete matching genre
@@ -1012,12 +1012,12 @@ byte-range streaming without FFmpeg.
   their ranking order. The estimated key appears as an optional **Key** column
   in the track tables and in **Show track information**; Settings > Playback
   offers **Analyze audio features** to analyze the complete library and the
-  configured HyperFi Servers instead of waiting for the background batches.
+  configured HyperFidel Servers instead of waiting for the background batches.
 - A Dashboard **Year in review** summary for any year with listening history:
   listened hours, active days, a monthly breakdown, and the leading genres,
   albums, and artists, exportable as a shareable PNG image or a single-page PDF
 - Dashboard with an artwork-backed greeting hero with a lightened-artwork rim,
-  live library counters (including local and configured HyperFi Server track
+  live library counters (including local and configured HyperFidel Server track
   favorites), random playback and queue shortcuts, parallel Recently
   Played/Recently Added artwork strips, album links plus source and favorite
   state on history cards, a period-aware listening seven-point labeled and
@@ -1027,17 +1027,17 @@ byte-range streaming without FFmpeg.
   playback calendar. Album rankings retain artwork, and linked genres open the
   matching filtered track list.
 - Dashboard performance investigations can use the bounded rolling
-  `logs/dashboard-performance.log` beneath the HyperFi data directory. It
+  `logs/dashboard-performance.log` beneath the HyperFidel data directory. It
   contains only phase names, elapsed times, build outcome, and server count;
   library paths, media names, URLs, and credentials are never recorded.
   Dashboard displays its last available sections immediately and refreshes
   counters, media, recommendations, and listening statistics independently.
   Unchanged sections retain their controls and scroll position; overlapping
   source loads are coalesced. Sanitized restart previews also make the previous
-  Dashboard available before server requests finish after launching HyperFi.
+  Dashboard available before server requests finish after launching HyperFidel.
   Without a previous preview, the greeting appears first and data follows.
 - The last selectable sidebar view is restored on restart, including Genre
-  Cloud, Dashboard, AI Chat, playlists, saved radio/podcast entries, HyperFi
+  Cloud, Dashboard, AI Chat, playlists, saved radio/podcast entries, HyperFidel
   Server views, and Plex libraries. Missing or removed entries fall back to
   Tracks.
 - Clickable populated calendar days with a modal daily listening history; local
@@ -1068,7 +1068,7 @@ byte-range streaming without FFmpeg.
 - Regular playlists and live smart playlists with metadata, library-age,
   playback-history, similarity, ordering, and result-limit criteria. A track's
   context menu offers **Save as smart playlist: similar tracks**, which keeps
-  the nearest local and HyperFi Server neighbours of that reference track.
+  the nearest local and HyperFidel Server neighbours of that reference track.
   Shared smart playlists load selected sources with at most three simultaneous
   server requests, retain available results after source failures, and offer
   **Try again** with the selected track retained. A similarity reference can
@@ -1078,11 +1078,11 @@ byte-range streaming without FFmpeg.
 - Smart playlists are created directly from active track filters and can be
   refined later through their sidebar context menu. The editor previews the live
   match count while criteria are changed, including unified local/server counts
-  and server-side counts when the connected HyperFi Server supports them, and it
+  and server-side counts when the connected HyperFidel Server supports them, and it
   shows every stored criterion — including the reference track of a similarity
   smart playlist, whose minimum similarity score stays editable. The reference
   can be replaced with **Choose reference track**, which searches the local
-  library and every configured HyperFi Server, or removed entirely.
+  library and every configured HyperFidel Server, or removed entirely.
 - UTF-8 M3U8 import and export for regular playlists, including relative local
   paths, retained missing-file entries, and HTTP/HTTPS streams; credentialed
   Plex URLs are excluded
@@ -1210,8 +1210,8 @@ byte-range streaming without FFmpeg.
   minutes, while bounded curve smoothing keeps the plotted height proportional
   to that Y-axis scale without overshooting measured values
 - Dashboard favorite totals match the unified Favorites view by counting only
-  currently resolvable local and HyperFi Server tracks
-- Persistent personal 1–5-star ratings for local and HyperFi Server tracks,
+  currently resolvable local and HyperFidel Server tracks
+- Persistent personal 1–5-star ratings for local and HyperFidel Server tracks,
   editable through the bulk action bar and MCP. An optional MusicBrainz rating
   column shows cached community scores and vote counts; lookups prefer embedded
   recording MBIDs and conservatively match artist, title, and duration only when
@@ -1234,8 +1234,8 @@ byte-range streaming without FFmpeg.
   at least two positive votes. They remain separate from embedded genres but
   supplement Genre Cloud classification, genre filters, Infinite Mix, and
   full-text search. Normal scans never contact MusicBrainz or rewrite files.
-  During active music playback, HyperFi continues this enrichment in one
-  rate-limited background queue for the local library and configured HyperFi
+  During active music playback, HyperFidel continues this enrichment in one
+  rate-limited background queue for the local library and configured HyperFidel
   Servers. Pausing or stopping playback pauses the queue; opening an album or
   explicitly requesting a rating takes priority. Known recordings refresh after
   30 days, while unresolved artist/title matches wait 90 days before a retry so
@@ -1267,14 +1267,14 @@ byte-range streaming without FFmpeg.
 ### Genre discovery and Infinite Mix
 
 Open **Genre Cloud** from the Library section to explore the genres found in the
-local library and every configured HyperFi Server. The first level groups the
+local library and every configured HyperFidel Server. The first level groups the
 library into broad families. Selecting a label reveals its more specific genres
 and immediately updates the recommendations below the cloud. The breadcrumb
 buttons return to an earlier level. A leaf without further children remains
 visible as the large center label instead of producing an empty view. The
 **Start Infinite Mix from cloud** action opens the normal profile editor with
 the genres represented at that level already selected. After confirmation,
-HyperFi queries the selected branch and every recursive subgenre directly,
+HyperFidel queries the selected branch and every recursive subgenre directly,
 including tracks tagged with the parent genre itself; on a leaf level, only that
 selected genre is used.
 
@@ -1334,13 +1334,13 @@ loading.
 
 The current level uses available images from its recommended local and remote
 artists as a muted grayscale tile background. Images are proportionally fitted
-inside their tiles so portraits and landscape artwork remain complete. HyperFi
+inside their tiles so portraits and landscape artwork remain complete. HyperFidel
 caches only the rendered mosaic for 24 hours; authenticated server artwork URLs
 are never stored in that Genre Cloud cache. The generated backgrounds can be
 cleared independently under **Settings > Appearance** without removing
 downloaded artist images or other artwork. In the same section, the background
 can be disabled entirely or switched between album covers and artist images. If
-only a few matching images are available, HyperFi centers that set instead of
+only a few matching images are available, HyperFidel centers that set instead of
 repeating it across the complete surface. The number of requested tiles follows
 the current cloud width (up to 32), while a perceptual image fingerprint removes
 duplicate pictures even when local and server copies use different files or
@@ -1353,7 +1353,7 @@ background-cache clear action.
 **Infinite Mix** can be started from the Dashboard, **Up next**, or the current
 Genre Cloud level. Before starting, its compact profile editor selects a calm,
 balanced, or energetic mood; familiar-to-adventurous discovery level; 3, 7, 30,
-or 90-day history period; local and individual HyperFi Server sources; favorite
+or 90-day history period; local and individual HyperFidel Server sources; favorite
 and rarely-played weighting; and optional included or excluded genres.
 **Focus**, **Workout**, and **Wind down** presets pre-fill those fields as a
 starting point and can be adjusted afterwards. Initial creation shows a blocking
@@ -1364,7 +1364,7 @@ and immediate track, album, and artist repetitions are avoided. Selection
 prefers different artists and albums first, then fills the batch with additional
 eligible tracks when a narrow genre contains too few distinct albums to reach
 the normal 20-track batch size. Genre rules use removable chips with type-ahead
-suggestions gathered from the currently enabled local and HyperFi Server
+suggestions gathered from the currently enabled local and HyperFidel Server
 libraries; custom genre text remains possible when a library does not offer a
 matching suggestion.
 
@@ -1382,8 +1382,8 @@ The user interface recognizes, among others:
 `AAC`, `OGG`, `Opus`, `WMA`, and CUE sheets referencing PCM source files such as
 FLAC or WAV.
 
-PCM formats are decoded by `ffmpeg`, which HyperFi downloads automatically on
-Windows into `%LOCALAPPDATA%\HyperFi\ffmpeg` on first start if not already
+PCM formats are decoded by `ffmpeg`, which HyperFidel downloads automatically on
+Windows into `%LOCALAPPDATA%\HyperFidel\ffmpeg` on first start if not already
 installed. The Windows downloader resolves the current BtbN LGPL ZIP asset from
 the GitHub release API so it is not tied to one fixed archive name. Actual codec
 support depends on the build. MKA files containing Matroska chapters are
@@ -1395,12 +1395,12 @@ library track. MKA chapter probing limits FFprobe's analysis window and times
 out after 30 seconds per file so damaged or slow network media cannot block a
 complete scan. Library-only title corrections for virtual chapters are persisted
 separately in SQLite and survive later scans without changing the MKA container.
-For CUE sheets, HyperFi uses `INDEX 01` boundaries to seek and stop FFmpeg
+For CUE sheets, HyperFidel uses `INDEX 01` boundaries to seek and stop FFmpeg
 within the referenced source file; no temporary split files are created. When
 WASAPI is selected, DSD audio in DSF or DFF containers is converted to PCM in
 real time without creating a temporary file. When cwASIO or the optional
 Steinberg ASIO backend is selected, DSF and uncompressed stereo DFF can be sent
-as native DSD when the driver reports compatible DSD support; otherwise HyperFi
+as native DSD when the driver reports compatible DSD support; otherwise HyperFidel
 can fall back to the same FFmpeg-backed DSD-to-PCM path. On Linux, DSF and
 uncompressed stereo DFF are sent directly through ALSA as native `DSD_U32_BE`,
 with DoP as the fallback when the DAC supports it; no ASIO bridge is involved.
@@ -1418,7 +1418,7 @@ converted by `ffmpeg`.
   building)
 - [FFmpeg](https://ffmpeg.org/) — downloaded automatically on first start if not
   already present. To use a specific build, place `ffmpeg.exe` and `ffprobe.exe`
-  in `PATH`, next to `HyperFi.exe`, or in `%LOCALAPPDATA%\HyperFi\ffmpeg`.
+  in `PATH`, next to `HyperFidel.exe`, or in `%LOCALAPPDATA%\HyperFidel\ffmpeg`.
 - For cwASIO: Visual Studio 2022 with the **Desktop development with C++**
   workload and an installed ASIO driver
 - Optional Steinberg bridge: Steinberg ASIO SDK 2.3
@@ -1443,12 +1443,12 @@ development environments, `C:\Dev\asiosdk_2.3`. When no SDK is found, only
 
 The Linux player does not build or load `AsioBridge.dll` or `CwAsioBridge.dll`.
 Native DSF and uncompressed DFF output is sent directly through ALSA, so neither
-the Steinberg ASIO SDK nor a platform-specific HyperFi bridge is required.
+the Steinberg ASIO SDK nor a platform-specific HyperFidel bridge is required.
 
 ### macOS player
 
 - macOS 10.15 or newer on Apple Silicon (`arm64`) or Intel (`x64`)
-- FFmpeg and FFprobe from `PATH`, common package-manager locations, or HyperFi's
+- FFmpeg and FFprobe from `PATH`, common package-manager locations, or HyperFidel's
   automatic per-user download
 - The system OpenAL framework used for PCM output
 - Avalonia OpenGL rendering with a software fallback for Macs whose Metal shader
@@ -1460,7 +1460,7 @@ so the .NET runtime is not required. Development builds require the .NET 10 SDK.
 The signed update mechanism selects and verifies the PKG matching the running
 architecture before opening the normal macOS Installer.
 
-### HyperFi Server
+### HyperFidel Server
 
 - Linux, macOS, or Windows; x64 or ARM64
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (for
@@ -1474,14 +1474,14 @@ architecture before opening the normal macOS Installer.
 ## Download
 
 Download the latest builds from
-[Releases](https://github.com/wuuwuu26/HyperFi/releases).
+[Releases](https://github.com/wuuwuu26/HyperFidel/releases).
 
 ### Windows player
 
 | Package                                  | Description                                       |
 | ---------------------------------------- | ------------------------------------------------- |
-| `HyperFi-{version}-win-x64-Setup.exe`    | Installer — Start Menu entry and uninstaller      |
-| `HyperFi-{version}-win-x64-Portable.zip` | Portable — extract anywhere and run `HyperFi.exe` |
+| `HyperFidel-{version}-win-x64-Setup.exe`    | Installer — Start Menu entry and uninstaller      |
+| `HyperFidel-{version}-win-x64-Portable.zip` | Portable — extract anywhere and run `HyperFidel.exe` |
 
 Both packages are self-contained (.NET 10 bundled, no prerequisites).
 
@@ -1489,11 +1489,11 @@ Both packages are self-contained (.NET 10 bundled, no prerequisites).
 
 | Package                                                              | Description             |
 | -------------------------------------------------------------------- | ----------------------- |
-| `HyperFi-{version}-linux-x64.tar.gz`                                 | Portable x86-64 archive |
-| `HyperFi-{version}-linux-arm64.tar.gz`                               | Portable ARM64 archive  |
-| `hyperfi_{version}_amd64.deb` / `hyperfi_{version}_arm64.deb`        | Debian / Ubuntu         |
-| `hyperfi-{version}-1.x86_64.rpm` / `hyperfi-{version}-1.aarch64.rpm` | Fedora / Rocky / RHEL   |
-| `hyperfi-{version}-1-x86_64.pkg.tar.zst`                             | Arch Linux x86-64       |
+| `HyperFidel-{version}-linux-x64.tar.gz`                                 | Portable x86-64 archive |
+| `HyperFidel-{version}-linux-arm64.tar.gz`                               | Portable ARM64 archive  |
+| `hyperfidel_{version}_amd64.deb` / `hyperfidel_{version}_arm64.deb`        | Debian / Ubuntu         |
+| `hyperfidel-{version}-1.x86_64.rpm` / `hyperfidel-{version}-1.aarch64.rpm` | Fedora / Rocky / RHEL   |
+| `hyperfidel-{version}-1-x86_64.pkg.tar.zst`                             | Arch Linux x86-64       |
 
 The Linux packages are self-contained with respect to .NET. FFmpeg, ALSA, and
 OpenAL remain system runtime dependencies as described above. Tagged release
@@ -1505,7 +1505,7 @@ distributions. After verifying the selected package digest it requests
 administrator authorization through PolicyKit and installs it with the native
 package manager. CachyOS is treated as Arch Linux and receives the signed
 `.pkg.tar.zst` package; the package file itself is never launched as an
-executable. HyperFi remains open until the privileged package manager exits and
+executable. HyperFidel remains open until the privileged package manager exits and
 closes only after a successful installation. Authentication cancellation or a
 package-manager error leaves the update window open with a failure status.
 
@@ -1513,46 +1513,46 @@ package-manager error leaves the update window open with a failure status.
 
 | Package                                    | Description                               |
 | ------------------------------------------ | ----------------------------------------- |
-| `HyperFi-{version}-osx-arm64.pkg`          | Installer for Apple Silicon Macs          |
-| `HyperFi-{version}-osx-x64.pkg`            | Installer for Intel Macs                  |
-| `HyperFi-{version}-osx-arm64-Portable.zip` | Portable app for Apple Silicon Macs       |
-| `HyperFi-{version}-osx-x64-Portable.zip`   | Portable app for Intel Macs               |
-| `HyperFi-{version}-osx-arm64.tar.gz`       | Alternative app archive for Apple Silicon |
-| `HyperFi-{version}-osx-x64.tar.gz`         | Alternative app archive for Intel         |
+| `HyperFidel-{version}-osx-arm64.pkg`          | Installer for Apple Silicon Macs          |
+| `HyperFidel-{version}-osx-x64.pkg`            | Installer for Intel Macs                  |
+| `HyperFidel-{version}-osx-arm64-Portable.zip` | Portable app for Apple Silicon Macs       |
+| `HyperFidel-{version}-osx-x64-Portable.zip`   | Portable app for Intel Macs               |
+| `HyperFidel-{version}-osx-arm64.tar.gz`       | Alternative app archive for Apple Silicon |
+| `HyperFidel-{version}-osx-x64.tar.gz`         | Alternative app archive for Intel         |
 
-The PKG installs `HyperFi.app` under `/Applications`. The bundle includes the
-native HyperFi application icon. For portable use, extract the ZIP and open
-`HyperFi.app` from any writable directory. The builds are self-contained with
+The PKG installs `HyperFidel.app` under `/Applications`. The bundle includes the
+native HyperFidel application icon. For portable use, extract the ZIP and open
+`HyperFidel.app` from any writable directory. The builds are self-contained with
 respect to .NET; FFmpeg and FFprobe are found in common package-manager
 locations or downloaded automatically when absent. The current packages are not
 code-signed or notarized, so macOS Gatekeeper may require explicitly opening the
 app or installer from Finder's context menu.
 
-HyperFi's startup and About-window update checks support both Mac architectures.
+HyperFidel's startup and About-window update checks support both Mac architectures.
 They select the matching PKG from the signed release manifest, verify its
 SHA-256 digest, and open it in the macOS Installer. Installation still requires
-the normal explicit macOS confirmation; HyperFi never invokes a privileged
+the normal explicit macOS confirmation; HyperFidel never invokes a privileged
 installation command itself.
 
 ### Linux server
 
 | Package                                  | Architecture                           |
 | ---------------------------------------- | -------------------------------------- |
-| `hyperfi-server_{version}_amd64.deb`     | Debian / Ubuntu (x86-64)               |
-| `hyperfi-server_{version}_arm64.deb`     | Debian / Ubuntu (ARM64 / Raspberry Pi) |
-| `hyperfi-server-{version}-1.x86_64.rpm`  | Fedora / Rocky / RHEL (x86-64)         |
-| `hyperfi-server-{version}-1.aarch64.rpm` | Fedora / Rocky / RHEL (ARM64)          |
+| `hyperfidel-server_{version}_amd64.deb`     | Debian / Ubuntu (x86-64)               |
+| `hyperfidel-server_{version}_arm64.deb`     | Debian / Ubuntu (ARM64 / Raspberry Pi) |
+| `hyperfidel-server-{version}-1.x86_64.rpm`  | Fedora / Rocky / RHEL (x86-64)         |
+| `hyperfidel-server-{version}-1.aarch64.rpm` | Fedora / Rocky / RHEL (ARM64)          |
 
 All packages are self-contained (.NET 10 bundled). See the
-[Server section](#hyperfi-server) for post-install setup.
+[Server section](#hyperfidel-server) for post-install setup.
 
 ## Build
 
 Clone the repository:
 
 ```powershell
-git clone https://github.com/wuuwuu26/HyperFi.git
-cd HyperFi
+git clone https://github.com/wuuwuu26/HyperFidel.git
+cd HyperFidel
 ```
 
 ### Windows player
@@ -1591,15 +1591,15 @@ output.
 The managed unit tests run on any platform:
 
 ```bash
-dotnet test HyperFi.Core.Tests/HyperFi.Core.Tests.csproj
-dotnet test HyperFi.Tests/HyperFi.Tests.csproj
-dotnet test HyperFi.Server.Tests/HyperFi.Server.Tests.csproj
+dotnet test HyperFidel.Core.Tests/HyperFidel.Core.Tests.csproj
+dotnet test HyperFidel.Tests/HyperFidel.Tests.csproj
+dotnet test HyperFidel.Server.Tests/HyperFidel.Server.Tests.csproj
 ```
 
-`HyperFi.Core.Tests` covers the cross-platform core library, including the
-credential-free `QueuePathPolicy` and ReplayGain conversion. `HyperFi.Tests`
+`HyperFidel.Core.Tests` covers the cross-platform core library, including the
+credential-free `QueuePathPolicy` and ReplayGain conversion. `HyperFidel.Tests`
 covers pure desktop helpers such as the transport accent colour maths; it never
-starts the Avalonia UI. `HyperFi.Server.Tests` covers the server's API key and
+starts the Avalonia UI. `HyperFidel.Server.Tests` covers the server's API key and
 profile-context middleware without starting the web host. Every database test
 creates its own temporary library, so the suite is safe to run in parallel and
 never touches your real library data.
@@ -1656,7 +1656,7 @@ CI timing gates. See
 ### Windows headless workflow smoke
 
 ```bash
-dotnet run --project HyperFi.Ui.Smoke/HyperFi.Ui.Smoke.csproj -c Debug
+dotnet run --project HyperFidel.Ui.Smoke/HyperFidel.Ui.Smoke.csproj -c Debug
 ```
 
 The tracked smoke suite runs in a separate process with a unique temporary data
@@ -1678,24 +1678,24 @@ headless scroll host performs layout. No playback, hardware checks or real
 dialogs run. Windows CI executes the suite in Debug and Release; Linux/macOS
 runtime coverage remains a follow-up.
 
-### HyperFi Server
+### HyperFidel Server
 
 The server has no native dependencies and builds on any platform:
 
 ```bash
-dotnet build HyperFi.Server/HyperFi.Server.csproj
-dotnet run --project HyperFi.Server/HyperFi.Server.csproj
+dotnet build HyperFidel.Server/HyperFidel.Server.csproj
+dotnet run --project HyperFidel.Server/HyperFidel.Server.csproj
 ```
 
 To publish a self-contained binary for a specific platform:
 
 ```bash
 # Linux x64
-dotnet publish HyperFi.Server/HyperFi.Server.csproj \
+dotnet publish HyperFidel.Server/HyperFidel.Server.csproj \
   --runtime linux-x64 --self-contained true --output out/linux-x64
 
 # Linux ARM64
-dotnet publish HyperFi.Server/HyperFi.Server.csproj \
+dotnet publish HyperFidel.Server/HyperFidel.Server.csproj \
   --runtime linux-arm64 --self-contained true --output out/linux-arm64
 ```
 
@@ -1713,7 +1713,7 @@ git push origin v0.14.0
 
 | Workflow                   | Runner  | Output                                                              |
 | -------------------------- | ------- | ------------------------------------------------------------------- |
-| `release.yml`              | Windows | `HyperFi-{v}-win-x64-Setup.exe`, `HyperFi-{v}-win-x64-Portable.zip` |
+| `release.yml`              | Windows | `HyperFidel-{v}-win-x64-Setup.exe`, `HyperFidel-{v}-win-x64-Portable.zip` |
 | `player-macos-release.yml` | macOS   | Intel/Apple-Silicon PKGs, portable ZIPs, and tar archives           |
 | `server-release.yml`       | Ubuntu  | `amd64`/`arm64` `.deb` and `x86_64`/`aarch64` `.rpm` packages       |
 
@@ -1744,9 +1744,9 @@ openssl ecparam -name prime256v1 -genkey -noout -out update-signing-private.pem
 openssl ec -in update-signing-private.pem -pubout -outform DER \
   | base64 -w0 > update-signing-public.txt
 gh secret set UPDATE_SIGNING_PRIVATE_KEY_PEM \
-  --repo wuuwuu26/HyperFi < update-signing-private.pem
+  --repo wuuwuu26/HyperFidel < update-signing-private.pem
 gh variable set UPDATE_SIGNING_PUBLIC_KEY_BASE64 \
-  --repo wuuwuu26/HyperFi < update-signing-public.txt
+  --repo wuuwuu26/HyperFidel < update-signing-public.txt
 ```
 
 Older GitHub CLI versions do not provide `gh variable`. Upgrade `gh`, or create
@@ -1754,13 +1754,13 @@ the public repository variable through the GitHub API (the value is a public
 verification key, not the private signing secret):
 
 ```bash
-gh api --method POST repos/wuuwuu26/HyperFi/actions/variables \
+gh api --method POST repos/wuuwuu26/HyperFidel/actions/variables \
   -f name=UPDATE_SIGNING_PUBLIC_KEY_BASE64 \
   -f value="$(cat update-signing-public.txt)"
 ```
 
 If the variable already exists, replace `POST` with `PATCH` and use the endpoint
-`repos/wuuwuu26/HyperFi/actions/variables/UPDATE_SIGNING_PUBLIC_KEY_BASE64`.
+`repos/wuuwuu26/HyperFidel/actions/variables/UPDATE_SIGNING_PUBLIC_KEY_BASE64`.
 
 Store an offline backup of the private key; rotating it requires a transition
 release because already-installed builds trust the public key embedded at their
@@ -1768,7 +1768,7 @@ own build time.
 
 The About window displays the embedded version and can download, verify, and
 launch a newer Windows installer, a distribution-matching Linux package, or the
-architecture-matching macOS PKG. Settings > HyperFi Server offers the same
+architecture-matching macOS PKG. Settings > HyperFidel Server offers the same
 signed update for supported DEB/RPM servers and relays the package from the
 desktop when the server itself cannot reach GitHub. Connected server rows show
 the version returned by their authenticated info endpoint, and the complete
@@ -1778,7 +1778,7 @@ the background at startup and reports a newer matching desktop version. The
 notification offers a localized **Download and install** action that starts the
 same verified update flow as the About window; no download begins without that
 explicit choice. Settings > Appearance also controls whether the main window
-starts maximized. When maximized startup is disabled, HyperFi remembers the last
+starts maximized. When maximized startup is disabled, HyperFidel remembers the last
 normal window size and position and restores it only when that placement still
 intersects an attached screen. The embedded Settings view adapts to smaller
 window heights by scrolling the active section while keeping its Save and Cancel
@@ -1786,9 +1786,9 @@ actions available. Server package uploads use a route-specific one-GiB safety
 limit so self-contained DEB/RPM packages are not rejected by Kestrel's smaller
 default request limit. The server also reapplies
 `Kestrel:Limits:MaxRequestBodySize` after loading the editable
-`/etc/hyperfi-server/appsettings.json`, so that global override is effective
+`/etc/hyperfidel-server/appsettings.json`, so that global override is effective
 despite the configuration file being layered after builder creation. When a
-desktop update is explicitly installed from About, HyperFi first relays the same
+desktop update is explicitly installed from About, HyperFidel first relays the same
 signed release to every reachable update-enabled configured server. If a server
 update fails, its name is shown before the user chooses whether the platform
 installer should continue.
@@ -1800,11 +1800,11 @@ from the development branch are intentionally ignored.
 ## Run
 
 ```powershell
-.\HyperFi\bin\Debug\net10.0-windows10.0.19041.0\HyperFi.exe
+.\HyperFidel\bin\Debug\net10.0-windows10.0.19041.0\HyperFidel.exe
 ```
 
 Library directories and the desired output device can then be configured in
-Settings. When no output has been configured yet, HyperFi creates a `Default`
+Settings. When no output has been configured yet, HyperFidel creates a `Default`
 WASAPI output from the Windows default multimedia output device so playback
 works without manual setup. Named output profiles allow saving multiple backend
 and device combinations; a quick-pick popup on the transport bar switches
@@ -1817,10 +1817,10 @@ disabled by default because analysing complete audio files makes initial scans
 substantially slower. The first subsequent scan of each configured library root
 refreshes unchanged files once to import existing ReplayGain tags regardless of
 that option. The dedicated calculation button fills missing values later in the
-local library and on every configured HyperFi Server, reporting each server's
+local library and on every configured HyperFidel Server, reporting each server's
 progress in turn. Values already present are preserved. The desktop checkbox
 controls local scans only. Each remote server exposes its own equivalent
-checkbox in **Settings → Library → HyperFi Server**; opening the server dialog
+checkbox in **Settings → Library → HyperFidel Server**; opening the server dialog
 loads the current value from that server, and saving applies and persists it
 there without requiring a service restart. Configured server rows provide
 separate **Scan library** and **Calculate ReplayGain** buttons. Each action
@@ -1858,7 +1858,7 @@ identity within the same physical directory. Transient metadata-read failures
 are retried and reported as failed files; they never replace an existing track's
 tags with empty values. The Library Doctor also highlights conservatively
 matched artist-name variants across the local library. These are review hints
-only: HyperFi does not merge artists automatically because punctuation or
+only: HyperFidel does not merge artists automatically because punctuation or
 spelling differences can still identify distinct performers. Guided MusicBrainz
 correction displays the current and proposed album identity and a track-by-track
 title/artist preview. Nothing is written until the user selects a release and
@@ -1867,20 +1867,20 @@ explicitly applies that correction.
 ## Project Structure
 
 ```text
-HyperFi/
+HyperFidel/
 ├── Native/                  Native C++ bridges
 │   ├── AirPlay2Bridge/      Standalone AirPlay 2 sender (versioned C ABI, CMake)
 │   ├── AsioBridge/          Steinberg ASIO bridge
 │   └── CwAsioBridge/        cwASIO bridge
 ├── third_party/cwasio/      Vendored cwASIO sources under the MIT License
-├── HyperFi.Core/            Cross-platform library (net10.0, no platform dependencies)
+├── HyperFidel.Core/            Cross-platform library (net10.0, no platform dependencies)
 │   ├── Audio/               FFmpeg decoder, acoustic analysis, ReplayGain, equalizer, crossfeed
 │   ├── Library/             SQLite database, scanner, watcher, Lucene search, backups, models
 │   ├── Scrobbling/          Last.fm request signing, scrobble rules, and HTTP client
-│   ├── Streaming/           Provider-neutral contracts plus the Plex and HyperFi Server clients
+│   ├── Streaming/           Provider-neutral contracts plus the Plex and HyperFidel Server clients
 │   ├── Updates/             Signed release-update verification and asset selection
 │   └── Web/                 SSRF-guarded page fetching and SearXNG search
-├── HyperFi/                 Avalonia desktop client (Windows, Linux, macOS)
+├── HyperFidel/                 Avalonia desktop client (Windows, Linux, macOS)
 │   ├── AI/                  Embedded AI chat, OpenAI-compatible client, Markdown rendering
 │   ├── Assets/              Logos, application icon, and dashboard artwork
 │   ├── Audio/               ASIO, cwASIO, WASAPI, OpenAL, AirPlay, PCM and DSD playback
@@ -1892,16 +1892,16 @@ HyperFi/
 │   ├── Scrobbling/          Desktop scrobbling service and pending-scrobble store
 │   ├── Streaming/           Credential-store facades and the inactive Qobuz provider scaffold
 │   └── MainWindow.*.cs      Main window, split into domain-sized partials
-├── HyperFi.Server/          Cross-platform headless server (net10.0, ASP.NET Core)
+├── HyperFidel.Server/          Cross-platform headless server (net10.0, ASP.NET Core)
 │   ├── Endpoints/           Core, library, streaming, configuration, backup, and update routes
 │   ├── Middleware/          API key and user-profile authentication
 │   ├── Services/            Hosted library scan, watcher, and audio-feature maintenance
 │   ├── Program.cs           Server entry point
 │   └── appsettings.json     Default configuration
-├── HyperFi.Core.Tests/      Unit tests for the cross-platform core library
-├── HyperFi.Tests/           Unit tests for pure desktop helpers (no running UI required)
-├── HyperFi.Ui.Smoke/        Windows headless synthetic artist/search/album workflows
-├── HyperFi.Server.Tests/    Server middleware and isolated in-memory endpoint tests
+├── HyperFidel.Core.Tests/      Unit tests for the cross-platform core library
+├── HyperFidel.Tests/           Unit tests for pure desktop helpers (no running UI required)
+├── HyperFidel.Ui.Smoke/        Windows headless synthetic artist/search/album workflows
+├── HyperFidel.Server.Tests/    Server middleware and isolated in-memory endpoint tests
 ├── scripts/                 Verification and smoke-test harnesses
 │   ├── verify-localization-parity.ps1   Seven-language desktop/website/mobile parity
 │   ├──     verify-mcp-tool-parity.ps1       MCP, AI tool schema, and Settings checklist parity
@@ -1919,7 +1919,7 @@ HyperFi/
 │   ├── workflows/           CI, Windows/macOS/Linux and server releases, manifest signing
 │   └── dependabot.yml       Weekly NuGet and GitHub Actions updates
 ├── build.ps1                Builds the native bridges and the .NET application
-├── HyperFi.sln              Visual Studio solution
+├── HyperFidel.sln              Visual Studio solution
 ├── AGENTS.md                Repository-wide contributor and architecture rules
 ├── CHANGELOG.md             Release notes
 └── README.md                This document
@@ -1927,13 +1927,13 @@ HyperFi/
 
 ## Local Data
 
-HyperFi stores player data under `%LOCALAPPDATA%\HyperFi\` on Windows and the
+HyperFidel stores player data under `%LOCALAPPDATA%\HyperFidel\` on Windows and the
 operating system's local application-data directory (normally
-`$HOME/.local/share/HyperFi/`) on Linux and macOS. `HYPERFI_DATA_DIR` can
-override that root; packaged Linux servers use `/var/lib/hyperfi-server`.
+`$HOME/.local/share/HyperFidel/`) on Linux and macOS. `HYPERFIDEL_DATA_DIR` can
+override that root; packaged Linux servers use `/var/lib/hyperfidel-server`.
 
 - `settings.json`: non-secret application settings
-- `credentials.dat`: encrypted Last.fm, Fanart.tv, AI Chat, HyperFi Server,
+- `credentials.dat`: encrypted Last.fm, Fanart.tv, AI Chat, HyperFidel Server,
   Plex, and streaming-provider credentials
 - `credentials.key`: Linux/macOS AES-GCM key, readable and writable only by the
   current operating-system user (Windows uses DPAPI and does not create it)
@@ -1943,10 +1943,10 @@ override that root; packaged Linux servers use `/var/lib/hyperfi-server`.
   diagnostics
 - `artworks\`: original artwork and generated thumbnails
 - `artist-images\`: cached Wikipedia/Wikimedia artist images
-- `remote-artworks\`: artwork downloaded from connected HyperFi Servers
+- `remote-artworks\`: artwork downloaded from connected HyperFidel Servers
 - `remote-track-cache\` and `remote-folder-cache\`: bounded remote-library
   metadata caches, invalidated when the server reports a newer library scan
-- `server-status.json`: last successful connection time for configured HyperFi
+- `server-status.json`: last successful connection time for configured HyperFidel
   Servers
 - `search-index\`: Lucene.NET search index
 - `waveforms\`: compact cached peak data for the transport waveform
@@ -1960,7 +1960,7 @@ These files are not part of the repository.
 The note button in the transport bar replaces the current main content with a
 large lyrics view that also covers the content header. The current cover is
 shown dimmed in the background, while the cover, title, artist, album and output
-quality sit on a black retro Hi-Fi panel with gold trim. HyperFi first uses
+quality sit on a black retro Hi-Fi panel with gold trim. HyperFidel first uses
 cached synchronized lyrics, then downloaded or embedded plain lyrics as a
 fallback. Missing lyrics can be requested from the public LRCLIB API and are
 stored in `library.db`; synchronized LRC lines are highlighted and kept in view
@@ -1994,7 +1994,7 @@ artwork, rebasing paths, and rebuilding the search index.
 **Scheduled backups** can create that archive automatically. Choose an enable
 toggle, an interval in days, how many backups to keep, and a backup folder
 (default: a `backups` folder beneath the per-user data directory), or run one
-immediately with **Back up now**. HyperFi writes the archive, removes older ones
+immediately with **Back up now**. HyperFidel writes the archive, removes older ones
 beyond the retention count, and shows the last successful run.
 
 **Cloud backup target** additionally uploads every completed archive to a WebDAV
@@ -2015,7 +2015,7 @@ supports nothing at or below the cap.
 
 ## Cross-device resume
 
-Remote HyperFi Server tracks remember where you stopped. The client publishes
+Remote HyperFidel Server tracks remember where you stopped. The client publishes
 the audible position at most every 20 seconds to the authenticated,
 profile-scoped `/api/tracks/{id}/position` endpoint, and starting that track on
 another device offers a **Resume** transport action when the stored position is
@@ -2047,7 +2047,7 @@ required checks for each held-back line are recorded in
   route may still be mixed or resampled by PipeWire, PulseAudio, or OpenAL.
 - Linux supports stereo DSF and uncompressed stereo DFF/DSDIFF as native,
   bit-perfect `DSD_U32_BE` through a compatible direct ALSA endpoint, including
-  authenticated HyperFi Server streams, with DoP as the fallback. DST-compressed
+  authenticated HyperFidel Server streams, with DoP as the fallback. DST-compressed
   DFF remains unsupported for direct DSD output. DSD is not sent through OpenAL
   because its mixing, gain, or format conversion could corrupt the payload or
   DoP markers.
@@ -2068,9 +2068,9 @@ required checks for each held-back line are recorded in
 - Plex browsing is paginated to keep very large libraries responsive. Playback
   availability depends on every selected Plex media part being directly
   accessible and decodable by the installed FFmpeg build. Unexpected HTTP stream
-  termination is retried from the last decoded position before HyperFi advances
+  termination is retried from the last decoded position before HyperFidel advances
   to the next queue item.
-- Renaming or merging artists updates HyperFi's internal library, album
+- Renaming or merging artists updates HyperFidel's internal library, album
   assignments, and search index. It does not modify tags in the audio files.
 - ASIO devices may be unavailable for inspection or playback while another
   application holds them exclusively.
@@ -2085,7 +2085,7 @@ required checks for each held-back line are recorded in
 ## Contributing
 
 Bug reports and reproducible improvement proposals can be submitted through
-[GitHub Issues](https://github.com/wuuwuu26/HyperFi/issues). For audio issues,
+[GitHub Issues](https://github.com/wuuwuu26/HyperFidel/issues). For audio issues,
 include the output backend, device, file format, and sample rate.
 
 Contributor architecture and maintenance guidance is indexed in
@@ -2095,7 +2095,7 @@ implementation milestones.
 
 ## Dependencies and Notices
 
-HyperFi uses components under MIT, Apache-2.0, LGPL-2.1-only, and other
+HyperFidel uses components under MIT, Apache-2.0, LGPL-2.1-only, and other
 compatible terms. This includes Avalonia, SkiaSharp, Lucene.NET,
 Microsoft.Data.Sqlite, NAudio, TagLibSharp, SQLitePCLRaw, cwASIO, and their
 transitive dependencies.
@@ -2105,12 +2105,12 @@ The complete attribution and redistribution information is maintained in
 provided in [`licenses/`](licenses/) and are copied into build and publish
 outputs.
 
-FFmpeg is run as a separate executable. If it is not installed, HyperFi
-downloads the BtbN LGPL essentials build into `%LOCALAPPDATA%\HyperFi\ffmpeg` on
+FFmpeg is run as a separate executable. If it is not installed, HyperFidel
+downloads the BtbN LGPL essentials build into `%LOCALAPPDATA%\HyperFidel\ffmpeg` on
 Windows by resolving the current release asset through the GitHub API. On macOS,
 the matching `eugeneware/ffmpeg-static` FFmpeg and FFprobe release assets are
-downloaded into HyperFi's per-user cache. FFmpeg remains subject to its own
-license and is not covered by the HyperFi license.
+downloaded into HyperFidel's per-user cache. FFmpeg remains subject to its own
+license and is not covered by the HyperFidel license.
 
 ASIO is a trademark and software of Steinberg Media Technologies GmbH. The
 optional Steinberg ASIO SDK is not included in this repository and must be
@@ -2119,12 +2119,12 @@ independent MIT-licensed implementation.
 
 ## License
 
-Copyright 2026 HyperFi contributors.
+Copyright 2026 HyperFidel contributors.
 Original Orynivo code Copyright 2026 Björn Schlaack.
 
-HyperFi's source code and documentation are licensed under the
+HyperFidel's source code and documentation are licensed under the
 [Apache License 2.0](LICENSE). The license does not grant trademark rights in
-the HyperFi name, wordmark, logo, or application icon.
+the HyperFidel name, wordmark, logo, or application icon.
 
 Third-party components and the optional Steinberg ASIO SDK are excluded from
 that grant and remain subject to their respective terms. See [NOTICE](NOTICE)
@@ -2148,13 +2148,13 @@ unrestricted device selection.
 
 ## Fresh profiles and legacy data
 
-The default data directory is the HyperFi folder under local application data.
-On its first start, HyperFi copies missing files from the former Player folder
-and records completion in `.legacy-data-migrated`. Renaming HyperFi alone
+The default data directory is the HyperFidel folder under local application data.
+On its first start, HyperFidel copies missing files from the former Player folder
+and records completion in `.legacy-data-migrated`. Renaming HyperFidel alone
 removes that marker and can therefore import old settings and large artwork
 caches again. Existing destination files are never overwritten.
 
-For a clean test, use an explicit `HYPERFI_DATA_DIR` pointing to a separate
+For a clean test, use an explicit `HYPERFIDEL_DATA_DIR` pointing to a separate
 folder. Explicit roots do not import legacy settings or caches. On Windows,
 `scripts/prepare-first-playback-check.ps1 -Scenario Local -Start` prepares and
 opens an isolated profile with a small test track; the original data stays in

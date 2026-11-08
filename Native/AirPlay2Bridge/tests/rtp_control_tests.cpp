@@ -7,12 +7,12 @@
 #include <cstddef>
 
 int main() {
-    const auto sync = hyperfi::airplay2::buildRtpSyncPacket(100000, 44100, true);
+    const auto sync = hyperfidel::airplay2::buildRtpSyncPacket(100000, 44100, true);
     assert(sync[0] == std::byte{0x90} && sync[1] == std::byte{0xd4});
     assert(sync[16] == std::byte{0x00} && sync[17] == std::byte{0x01});
     assert(sync[18] == std::byte{0x86} && sync[19] == std::byte{0xa0});
 
-    const auto ptpSync = hyperfi::airplay2::buildPtpRtpSyncPacket(
+    const auto ptpSync = hyperfidel::airplay2::buildPtpRtpSyncPacket(
         0xffffd4efU, 66150, 0x0102030405060708ULL, 0x1112131415161718ULL, true);
     assert(ptpSync[0] == std::byte{0x90} && ptpSync[1] == std::byte{0xd7});
     assert(ptpSync[4] == std::byte{0xff} && ptpSync[5] == std::byte{0xff});
@@ -20,14 +20,14 @@ int main() {
     assert(ptpSync[16] == std::byte{0x00} && ptpSync[17] == std::byte{0x00});
     assert(ptpSync[18] == std::byte{0xd7} && ptpSync[19] == std::byte{0x55});
 
-    auto control = hyperfi::airplay2::Socket::bindUdp();
-    hyperfi::airplay2::RtpRetransmitResponder responder(control);
+    auto control = hyperfidel::airplay2::Socket::bindUdp();
+    hyperfidel::airplay2::RtpRetransmitResponder responder(control);
     std::array<std::byte, 16> original{};
     original[0] = std::byte{0x80}; original[1] = std::byte{0x60};
     original[2] = std::byte{0x12}; original[3] = std::byte{0x34};
     responder.store(original);
 
-    auto receiver = hyperfi::airplay2::Socket::bindUdp();
+    auto receiver = hyperfidel::airplay2::Socket::bindUdp();
     std::array<std::byte, 8> request{
         std::byte{0x80}, std::byte{0xd5}, std::byte{0xab}, std::byte{0xcd},
         std::byte{0x12}, std::byte{0x34}, std::byte{0x00}, std::byte{0x01}};

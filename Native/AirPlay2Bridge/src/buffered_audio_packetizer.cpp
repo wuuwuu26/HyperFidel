@@ -7,7 +7,7 @@
 #include <array>
 #include <stdexcept>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 namespace {
 void writeBigEndian32(std::byte* destination, std::uint32_t value) {
     destination[0] = static_cast<std::byte>(value >> 24);
@@ -65,4 +65,4 @@ std::vector<std::byte> BufferedAudioPacketizer::packetize(std::span<const std::b
     return frame;
 }
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2

@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 #include <windows.h>
-#ifdef HYPERFI_CWASIO
+#ifdef HYPERFIDEL_CWASIO
 extern "C"
 {
 #include "cwASIO.h"
@@ -56,7 +56,7 @@ namespace
 
     BridgeState g_state;
 
-#ifdef HYPERFI_CWASIO
+#ifdef HYPERFIDEL_CWASIO
     struct DriverEntry
     {
         std::string name;
@@ -298,7 +298,7 @@ extern "C"
 {
     __declspec(dllexport) int asio_get_driver_count()
     {
-#ifdef HYPERFI_CWASIO
+#ifdef HYPERFIDEL_CWASIO
         return static_cast<int>(getDrivers().size());
 #else
         AsioDrivers drivers;
@@ -313,7 +313,7 @@ extern "C"
             return -1;
         }
 
-#ifdef HYPERFI_CWASIO
+#ifdef HYPERFIDEL_CWASIO
         const auto drivers = getDrivers();
         if (index < 0 || static_cast<size_t>(index) >= drivers.size())
         {

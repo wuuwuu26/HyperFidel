@@ -29,25 +29,25 @@ jobs:
           for ATTEMPT in $(seq 1 60); do
             rm -f assets/*
             gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir assets
-            if compgen -G 'assets/HyperFi-*-win-x64-Setup.exe' > /dev/null \
-              && compgen -G 'assets/HyperFi-*-win-x64-Portable.zip' > /dev/null \
-              && compgen -G 'assets/HyperFi-*-linux-x64.tar.gz' > /dev/null \
-              && compgen -G 'assets/HyperFi-*-linux-arm64.tar.gz' > /dev/null \
-              && compgen -G 'assets/HyperFi-*-osx-x64.tar.gz' > /dev/null \
-              && compgen -G 'assets/HyperFi-*-osx-arm64.tar.gz' > /dev/null \
-              && compgen -G 'assets/HyperFi-*-osx-x64-Portable.zip' > /dev/null \
-              && compgen -G 'assets/HyperFi-*-osx-arm64-Portable.zip' > /dev/null \
-              && compgen -G 'assets/HyperFi-*-osx-x64.pkg' > /dev/null \
-              && compgen -G 'assets/HyperFi-*-osx-arm64.pkg' > /dev/null \
-              && compgen -G 'assets/hyperfi_*_amd64.deb' > /dev/null \
-              && compgen -G 'assets/hyperfi_*_arm64.deb' > /dev/null \
-              && compgen -G 'assets/hyperfi-[0-9]*-1.x86_64.rpm' > /dev/null \
-              && compgen -G 'assets/hyperfi-[0-9]*-1.aarch64.rpm' > /dev/null \
-              && compgen -G 'assets/hyperfi-[0-9]*-1-x86_64.pkg.tar.zst' > /dev/null \
-              && compgen -G 'assets/hyperfi-server_*_amd64.deb' > /dev/null \
-              && compgen -G 'assets/hyperfi-server_*_arm64.deb' > /dev/null \
-              && compgen -G 'assets/hyperfi-server-*-1.x86_64.rpm' > /dev/null \
-              && compgen -G 'assets/hyperfi-server-*-1.aarch64.rpm' > /dev/null; then
+            if compgen -G 'assets/HyperFidel-*-win-x64-Setup.exe' > /dev/null \
+              && compgen -G 'assets/HyperFidel-*-win-x64-Portable.zip' > /dev/null \
+              && compgen -G 'assets/HyperFidel-*-linux-x64.tar.gz' > /dev/null \
+              && compgen -G 'assets/HyperFidel-*-linux-arm64.tar.gz' > /dev/null \
+              && compgen -G 'assets/HyperFidel-*-osx-x64.tar.gz' > /dev/null \
+              && compgen -G 'assets/HyperFidel-*-osx-arm64.tar.gz' > /dev/null \
+              && compgen -G 'assets/HyperFidel-*-osx-x64-Portable.zip' > /dev/null \
+              && compgen -G 'assets/HyperFidel-*-osx-arm64-Portable.zip' > /dev/null \
+              && compgen -G 'assets/HyperFidel-*-osx-x64.pkg' > /dev/null \
+              && compgen -G 'assets/HyperFidel-*-osx-arm64.pkg' > /dev/null \
+              && compgen -G 'assets/hyperfidel_*_amd64.deb' > /dev/null \
+              && compgen -G 'assets/hyperfidel_*_arm64.deb' > /dev/null \
+              && compgen -G 'assets/hyperfidel-[0-9]*-1.x86_64.rpm' > /dev/null \
+              && compgen -G 'assets/hyperfidel-[0-9]*-1.aarch64.rpm' > /dev/null \
+              && compgen -G 'assets/hyperfidel-[0-9]*-1-x86_64.pkg.tar.zst' > /dev/null \
+              && compgen -G 'assets/hyperfidel-server_*_amd64.deb' > /dev/null \
+              && compgen -G 'assets/hyperfidel-server_*_arm64.deb' > /dev/null \
+              && compgen -G 'assets/hyperfidel-server-*-1.x86_64.rpm' > /dev/null \
+              && compgen -G 'assets/hyperfidel-server-*-1.aarch64.rpm' > /dev/null; then
               exit 0
             fi
             echo "Release assets are incomplete (attempt ${ATTEMPT}/60); waiting 20 seconds."
@@ -65,25 +65,25 @@ jobs:
             FILE="$(basename "$PATHNAME")"
             COMPONENT="" OS="" ARCH="" TYPE=""
             case "$FILE" in
-              HyperFi-*-win-x64-Setup.exe) COMPONENT=desktop; OS=windows; ARCH=x64; TYPE=installer ;;
-              HyperFi-*-win-x64-Portable.zip) COMPONENT=desktop; OS=windows; ARCH=x64; TYPE=portable ;;
-              HyperFi-*-linux-x64.tar.gz) COMPONENT=desktop; OS=linux; ARCH=x64; TYPE=archive ;;
-              HyperFi-*-linux-arm64.tar.gz) COMPONENT=desktop; OS=linux; ARCH=arm64; TYPE=archive ;;
-              HyperFi-*-osx-x64.tar.gz) COMPONENT=desktop; OS=macos; ARCH=x64; TYPE=archive ;;
-              HyperFi-*-osx-arm64.tar.gz) COMPONENT=desktop; OS=macos; ARCH=arm64; TYPE=archive ;;
-              HyperFi-*-osx-x64-Portable.zip) COMPONENT=desktop; OS=macos; ARCH=x64; TYPE=portable ;;
-              HyperFi-*-osx-arm64-Portable.zip) COMPONENT=desktop; OS=macos; ARCH=arm64; TYPE=portable ;;
-              HyperFi-*-osx-x64.pkg) COMPONENT=desktop; OS=macos; ARCH=x64; TYPE=pkg ;;
-              HyperFi-*-osx-arm64.pkg) COMPONENT=desktop; OS=macos; ARCH=arm64; TYPE=pkg ;;
-              hyperfi_*_amd64.deb) COMPONENT=desktop; OS=linux; ARCH=x64; TYPE=deb ;;
-              hyperfi_*_arm64.deb) COMPONENT=desktop; OS=linux; ARCH=arm64; TYPE=deb ;;
-              hyperfi-[0-9]*-1.x86_64.rpm) COMPONENT=desktop; OS=linux; ARCH=x64; TYPE=rpm ;;
-              hyperfi-[0-9]*-1.aarch64.rpm) COMPONENT=desktop; OS=linux; ARCH=arm64; TYPE=rpm ;;
-              hyperfi-[0-9]*-1-x86_64.pkg.tar.zst) COMPONENT=desktop; OS=linux; ARCH=x64; TYPE=arch ;;
-              hyperfi-server_*_amd64.deb) COMPONENT=server; OS=linux; ARCH=x64; TYPE=deb ;;
-              hyperfi-server_*_arm64.deb) COMPONENT=server; OS=linux; ARCH=arm64; TYPE=deb ;;
-              hyperfi-server-*-1.x86_64.rpm) COMPONENT=server; OS=linux; ARCH=x64; TYPE=rpm ;;
-              hyperfi-server-*-1.aarch64.rpm) COMPONENT=server; OS=linux; ARCH=arm64; TYPE=rpm ;;
+              HyperFidel-*-win-x64-Setup.exe) COMPONENT=desktop; OS=windows; ARCH=x64; TYPE=installer ;;
+              HyperFidel-*-win-x64-Portable.zip) COMPONENT=desktop; OS=windows; ARCH=x64; TYPE=portable ;;
+              HyperFidel-*-linux-x64.tar.gz) COMPONENT=desktop; OS=linux; ARCH=x64; TYPE=archive ;;
+              HyperFidel-*-linux-arm64.tar.gz) COMPONENT=desktop; OS=linux; ARCH=arm64; TYPE=archive ;;
+              HyperFidel-*-osx-x64.tar.gz) COMPONENT=desktop; OS=macos; ARCH=x64; TYPE=archive ;;
+              HyperFidel-*-osx-arm64.tar.gz) COMPONENT=desktop; OS=macos; ARCH=arm64; TYPE=archive ;;
+              HyperFidel-*-osx-x64-Portable.zip) COMPONENT=desktop; OS=macos; ARCH=x64; TYPE=portable ;;
+              HyperFidel-*-osx-arm64-Portable.zip) COMPONENT=desktop; OS=macos; ARCH=arm64; TYPE=portable ;;
+              HyperFidel-*-osx-x64.pkg) COMPONENT=desktop; OS=macos; ARCH=x64; TYPE=pkg ;;
+              HyperFidel-*-osx-arm64.pkg) COMPONENT=desktop; OS=macos; ARCH=arm64; TYPE=pkg ;;
+              hyperfidel_*_amd64.deb) COMPONENT=desktop; OS=linux; ARCH=x64; TYPE=deb ;;
+              hyperfidel_*_arm64.deb) COMPONENT=desktop; OS=linux; ARCH=arm64; TYPE=deb ;;
+              hyperfidel-[0-9]*-1.x86_64.rpm) COMPONENT=desktop; OS=linux; ARCH=x64; TYPE=rpm ;;
+              hyperfidel-[0-9]*-1.aarch64.rpm) COMPONENT=desktop; OS=linux; ARCH=arm64; TYPE=rpm ;;
+              hyperfidel-[0-9]*-1-x86_64.pkg.tar.zst) COMPONENT=desktop; OS=linux; ARCH=x64; TYPE=arch ;;
+              hyperfidel-server_*_amd64.deb) COMPONENT=server; OS=linux; ARCH=x64; TYPE=deb ;;
+              hyperfidel-server_*_arm64.deb) COMPONENT=server; OS=linux; ARCH=arm64; TYPE=deb ;;
+              hyperfidel-server-*-1.x86_64.rpm) COMPONENT=server; OS=linux; ARCH=x64; TYPE=rpm ;;
+              hyperfidel-server-*-1.aarch64.rpm) COMPONENT=server; OS=linux; ARCH=arm64; TYPE=rpm ;;
               *) continue ;;
             esac
             HASH="$(sha256sum "$PATHNAME" | cut -d' ' -f1)"

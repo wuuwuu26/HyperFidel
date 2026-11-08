@@ -2,24 +2,24 @@
 set -e
 
 # Create system group and user for the service
-if ! getent group hyperfi-server > /dev/null 2>&1; then
-    groupadd --system hyperfi-server
+if ! getent group hyperfidel-server > /dev/null 2>&1; then
+    groupadd --system hyperfidel-server
 fi
-if ! id -u hyperfi-server > /dev/null 2>&1; then
+if ! id -u hyperfidel-server > /dev/null 2>&1; then
     useradd --system --no-create-home --shell /usr/sbin/nologin \
-        --gid hyperfi-server hyperfi-server
+        --gid hyperfidel-server hyperfidel-server
 fi
 
 # Ensure correct permissions
-chmod 755 /usr/lib/hyperfi-server/HyperFi.Server
-chown -R root:root /usr/lib/hyperfi-server
-chown -R hyperfi-server:hyperfi-server /etc/hyperfi-server
+chmod 755 /usr/lib/hyperfidel-server/HyperFidel.Server
+chown -R root:root /usr/lib/hyperfidel-server
+chown -R hyperfidel-server:hyperfidel-server /etc/hyperfidel-server
 
 # Data directory for the service (SQLite database, caches, downloaded artwork).
 # The service user has no writable home, so the server is pointed here via
-# HYPERFI_DATA_DIR in the systemd unit; create it owned by the service user.
-install -d -o hyperfi-server -g hyperfi-server /var/lib/hyperfi-server
+# HYPERFIDEL_DATA_DIR in the systemd unit; create it owned by the service user.
+install -d -o hyperfidel-server -g hyperfidel-server /var/lib/hyperfidel-server
 
 # Register the systemd unit (do not auto-start — user must configure first)
 systemctl daemon-reload
-systemctl enable --now hyperfi-server-updater.path
+systemctl enable --now hyperfidel-server-updater.path

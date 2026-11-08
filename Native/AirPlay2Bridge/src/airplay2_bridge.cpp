@@ -25,7 +25,7 @@
 #include <thread>
 #include <vector>
 
-using hyperfi::airplay2::Socket;
+using hyperfidel::airplay2::Socket;
 
 struct ap2_session {
     std::mutex mutex;
@@ -49,15 +49,15 @@ struct ap2_session {
     Socket audio;
     Socket audioControl;
     Socket events;
-    std::unique_ptr<hyperfi::airplay2::EventChannel> eventChannel;
-    hyperfi::airplay2::TransientPairingKeys pairingKeys;
-    std::unique_ptr<hyperfi::airplay2::EncryptedRtsp> rtsp;
-    std::unique_ptr<hyperfi::airplay2::NtpTimingResponder> timing;
-    std::unique_ptr<hyperfi::airplay2::PtpTimingGrandmaster> ptp;
-    std::unique_ptr<hyperfi::airplay2::RealtimeAudioPacketizer> packetizer;
-    std::unique_ptr<hyperfi::airplay2::BufferedAudioPacketizer> bufferedPacketizer;
-    std::unique_ptr<hyperfi::airplay2::PacketPacer> pacer;
-    std::unique_ptr<hyperfi::airplay2::RtpRetransmitResponder> retransmit;
+    std::unique_ptr<hyperfidel::airplay2::EventChannel> eventChannel;
+    hyperfidel::airplay2::TransientPairingKeys pairingKeys;
+    std::unique_ptr<hyperfidel::airplay2::EncryptedRtsp> rtsp;
+    std::unique_ptr<hyperfidel::airplay2::NtpTimingResponder> timing;
+    std::unique_ptr<hyperfidel::airplay2::PtpTimingGrandmaster> ptp;
+    std::unique_ptr<hyperfidel::airplay2::RealtimeAudioPacketizer> packetizer;
+    std::unique_ptr<hyperfidel::airplay2::BufferedAudioPacketizer> bufferedPacketizer;
+    std::unique_ptr<hyperfidel::airplay2::PacketPacer> pacer;
+    std::unique_ptr<hyperfidel::airplay2::RtpRetransmitResponder> retransmit;
     std::vector<std::byte> pendingPcm;
     std::uint16_t eventPort = 0;
     std::uint16_t dataPort = 0;
@@ -172,8 +172,8 @@ void prepareReceiverForAudio(ap2_session& session) {
     std::vector<std::uint8_t> metadata(8, 0);
     metadata[0] = 'm'; metadata[1] = 'l'; metadata[2] = 'i'; metadata[3] = 't';
     metadata.insert(metadata.end(), {'m', 'i', 'k', 'd', 0, 0, 0, 1, 2});
-    appendDmapString(metadata, "minm", session.title.empty() ? "HyperFi" : session.title);
-    appendDmapString(metadata, "asar", session.artist.empty() ? "HyperFi" : session.artist);
+    appendDmapString(metadata, "minm", session.title.empty() ? "HyperFidel" : session.title);
+    appendDmapString(metadata, "asar", session.artist.empty() ? "HyperFidel" : session.artist);
     appendDmapString(metadata, "asal", session.album);
     metadata.insert(metadata.end(), {'a', 's', 't', 'n', 0, 0, 0, 2, 0, 1});
     const auto payloadSize = static_cast<std::uint32_t>(metadata.size() - 8);
@@ -298,9 +298,9 @@ ap2_result AP2_CALL ap2_session_start(ap2_session* session) {
         notify(*session, AP2_STATE_CONNECTING, "Connecting to AirPlay 2 receiver.");
         session->control = Socket::connectTcp(session->host, session->port, std::chrono::seconds(5));
         notify(*session, AP2_STATE_PAIRING, "Performing fail-closed AirPlay 2 transient pairing.");
-        session->pairingKeys = hyperfi::airplay2::TransientPairing::run(session->control);
+        session->pairingKeys = hyperfidel::airplay2::TransientPairing::run(session->control);
         notify(*session, AP2_STATE_NEGOTIATING, "Opening authenticated AirPlay 2 control channel.");
-        session->rtsp = std::make_unique<hyperfi::airplay2::EncryptedRtsp>(session->control,
+        session->rtsp = std::make_unique<hyperfidel::airplay2::EncryptedRtsp>(session->control,
             session->pairingKeys.controlWrite, session->pairingKeys.controlRead, createSenderId());
         const auto info = session->rtsp->request("GET", "/info");
         if (info.status < 200 || info.status >= 300)
@@ -309,7 +309,7 @@ ap2_result AP2_CALL ap2_session_start(ap2_session* session) {
         using namespace fxchain::airplay::bplist;
         const auto clockIdentity = createClockIdentity();
         const auto localAddress = session->control.localAddress();
-        session->ptp = std::make_unique<hyperfi::airplay2::PtpTimingGrandmaster>(
+        session->ptp = std::make_unique<hyperfidel::airplay2::PtpTimingGrandmaster>(
             session->host, localAddress, clockIdentity);
         session->buffered = false;
         const auto peerId = createUuid();
@@ -325,9 +325,9 @@ ap2_result AP2_CALL ap2_session_start(ap2_session* session) {
         setup.emplace_back("isMultiSelectAirPlay", Value::boolean(true));
         setup.emplace_back("groupContainsGroupLeader", Value::boolean(false));
         setup.emplace_back("macAddress", Value::str("02:00:00:00:00:01"));
-        setup.emplace_back("model", Value::str("HyperFi1,1"));
-        setup.emplace_back("name", Value::str("HyperFi"));
-        setup.emplace_back("osName", Value::str("HyperFi"));
+        setup.emplace_back("model", Value::str("HyperFidel1,1"));
+        setup.emplace_back("name", Value::str("HyperFidel"));
+        setup.emplace_back("osName", Value::str("HyperFidel"));
         setup.emplace_back("sourceVersion", Value::str("670.6.2"));
         setup.emplace_back("senderSupportsRelay", Value::boolean(false));
         setup.emplace_back("statsCollectionEnabled", Value::boolean(false));
@@ -349,16 +349,16 @@ ap2_result AP2_CALL ap2_session_start(ap2_session* session) {
             throw std::runtime_error("AirPlay session SETUP returned no event port.");
         notify(*session, AP2_STATE_NEGOTIATING, "Opening AirPlay 2 event channel.");
         session->events = Socket::connectTcp(session->host, session->eventPort, std::chrono::seconds(5));
-        session->eventChannel = std::make_unique<hyperfi::airplay2::EventChannel>(
+        session->eventChannel = std::make_unique<hyperfidel::airplay2::EventChannel>(
             session->events, session->pairingKeys.eventWrite, session->pairingKeys.eventRead,
-            [session](hyperfi::airplay2::MediaRemoteCommand command) {
+            [session](hyperfidel::airplay2::MediaRemoteCommand command) {
                 if (session->remoteCommandCallback == nullptr) return;
                 ap2_remote_command mapped = AP2_REMOTE_PLAY;
                 switch (command) {
-                    case hyperfi::airplay2::MediaRemoteCommand::Play: mapped = AP2_REMOTE_PLAY; break;
-                    case hyperfi::airplay2::MediaRemoteCommand::Pause: mapped = AP2_REMOTE_PAUSE; break;
-                    case hyperfi::airplay2::MediaRemoteCommand::Next: mapped = AP2_REMOTE_NEXT; break;
-                    case hyperfi::airplay2::MediaRemoteCommand::Previous: mapped = AP2_REMOTE_PREVIOUS; break;
+                    case hyperfidel::airplay2::MediaRemoteCommand::Play: mapped = AP2_REMOTE_PLAY; break;
+                    case hyperfidel::airplay2::MediaRemoteCommand::Pause: mapped = AP2_REMOTE_PAUSE; break;
+                    case hyperfidel::airplay2::MediaRemoteCommand::Next: mapped = AP2_REMOTE_NEXT; break;
+                    case hyperfidel::airplay2::MediaRemoteCommand::Previous: mapped = AP2_REMOTE_PREVIOUS; break;
                 }
                 session->remoteCommandCallback(session->userData, mapped);
             });
@@ -409,13 +409,13 @@ ap2_result AP2_CALL ap2_session_start(ap2_session* session) {
             throw std::runtime_error("AirPlay stream SETUP returned no audio data port.");
         if (session->controlPort == 0)
             throw std::runtime_error("AirPlay stream SETUP returned no RTP control port.");
-        session->packetizer = std::make_unique<hyperfi::airplay2::RealtimeAudioPacketizer>(
+        session->packetizer = std::make_unique<hyperfidel::airplay2::RealtimeAudioPacketizer>(
             session->sampleRate, session->pairingKeys.audioKey, 0,
             ReceiverLatencyFrames);
-        session->pacer = std::make_unique<hyperfi::airplay2::PacketPacer>(
+        session->pacer = std::make_unique<hyperfidel::airplay2::PacketPacer>(
             session->sampleRate,
-            static_cast<std::uint32_t>(hyperfi::airplay2::AlacEncoder::FramesPerPacket));
-        session->retransmit = std::make_unique<hyperfi::airplay2::RtpRetransmitResponder>(
+            static_cast<std::uint32_t>(hyperfidel::airplay2::AlacEncoder::FramesPerPacket));
+        session->retransmit = std::make_unique<hyperfidel::airplay2::RtpRetransmitResponder>(
             session->audioControl);
         session->pendingPcm.clear();
 
@@ -456,8 +456,8 @@ ap2_result AP2_CALL ap2_session_write_pcm(ap2_session* session, const void* samp
             session->pendingPcm.insert(session->pendingPcm.end(), input, input + byteCount);
         }
         const auto packetBytes = session->buffered
-            ? hyperfi::airplay2::BufferedAudioPacketizer::PcmBytesPerPacket
-            : hyperfi::airplay2::AlacEncoder::PcmBytesPerPacket;
+            ? hyperfidel::airplay2::BufferedAudioPacketizer::PcmBytesPerPacket
+            : hyperfidel::airplay2::AlacEncoder::PcmBytesPerPacket;
         std::size_t offset = 0;
         while (session->pendingPcm.size() - offset >= packetBytes) {
             const auto packetCount = session->buffered
@@ -465,16 +465,16 @@ ap2_result AP2_CALL ap2_session_write_pcm(ap2_session* session, const void* samp
                 : session->packetizer->packetCount();
             session->pacer->waitFor(packetCount);
             const auto framesSent =
-                packetCount * hyperfi::airplay2::AlacEncoder::FramesPerPacket;
+                packetCount * hyperfidel::airplay2::AlacEncoder::FramesPerPacket;
             const auto previousFramesSent = packetCount == 0
                 ? 0
-                : (packetCount - 1) * hyperfi::airplay2::AlacEncoder::FramesPerPacket;
+                : (packetCount - 1) * hyperfidel::airplay2::AlacEncoder::FramesPerPacket;
             if (!session->buffered &&
                 (packetCount == 0 || framesSent / SyncIntervalFrames !=
                                      previousFramesSent / SyncIntervalFrames)) {
-                const auto clockNow = hyperfi::airplay2::PtpTimingGrandmaster::nowNanoseconds();
+                const auto clockNow = hyperfidel::airplay2::PtpTimingGrandmaster::nowNanoseconds();
                 const auto nextTimestamp = session->packetizer->nextTimestamp();
-                const auto sync = hyperfi::airplay2::buildPtpRtpSyncPacket(
+                const auto sync = hyperfidel::airplay2::buildPtpRtpSyncPacket(
                     nextTimestamp - SenderBufferFrames, nextTimestamp, clockNow,
                     session->ptp->clockId(), packetCount == 0);
                 session->audioControl.sendTo(session->host, session->controlPort, sync);

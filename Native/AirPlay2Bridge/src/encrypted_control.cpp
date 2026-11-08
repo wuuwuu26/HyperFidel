@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <stdexcept>
 
-namespace hyperfi::airplay2 {
+namespace hyperfidel::airplay2 {
 namespace {
 constexpr std::size_t MaxFramePlaintext = 1024;
 constexpr std::size_t TagBytes = 16;
@@ -55,4 +55,4 @@ std::vector<std::uint8_t> EncryptedControl::decode(std::span<const std::uint8_t>
     return output;
 }
 
-} // namespace hyperfi::airplay2
+} // namespace hyperfidel::airplay2
