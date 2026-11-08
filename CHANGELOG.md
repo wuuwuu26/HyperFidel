@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Upgrading from HyperFi no longer resets the saved volume to 100 %. Settings
+  files that still use the `HyperFi` property prefix are now renamed, and a
+  failure while applying credentials or normalizing settings keeps the values
+  that were already read instead of discarding the whole file and starting from
+  defaults.
+
 ### Added
 
 - The desktop `hyperfidel` packages now replace and provide the previous

@@ -48,4 +48,41 @@ public sealed class LegacyJsonNamesTests
 
         Assert.Equal(json, LegacyJsonNames.RenameLegacyProperties(json));
     }
+
+    /// <summary>HyperFi-prefixed properties are renamed to their current names.</summary>
+    [Fact]
+    public void RenameLegacyProperties_RenamesHyperFiPrefix()
+    {
+        const string json = """{"HyperFiServers":[],"HyperFiServerFavorites":["a"]}""";
+
+        var renamed = LegacyJsonNames.RenameLegacyProperties(json);
+
+        Assert.Contains("\"HyperFidelServers\"", renamed);
+        Assert.Contains("\"HyperFidelServerFavorites\"", renamed);
+        Assert.DoesNotContain("\"HyperFiServers\"", renamed);
+        Assert.DoesNotContain("\"HyperFiServerFavorites\"", renamed);
+    }
+
+    /// <summary>A current name is never rewritten onto itself.</summary>
+    [Fact]
+    public void RenameLegacyProperties_DoesNotDoublePrefixCurrentNames()
+    {
+        const string json = """{"HyperFidelServers":[],"HyperFidelServerFavorites":[]}""";
+
+        var renamed = LegacyJsonNames.RenameLegacyProperties(json);
+
+        Assert.DoesNotContain("HyperFidelFidel", renamed);
+        Assert.Contains("\"HyperFidelServers\"", renamed);
+    }
+
+    /// <summary>A user-chosen volume is not product-prefixed and survives the rename.</summary>
+    [Fact]
+    public void RenameLegacyProperties_PreservesUnrelatedProperties()
+    {
+        const string json = """{"Volume":0.35,"HyperFiServers":[]}""";
+
+        var renamed = LegacyJsonNames.RenameLegacyProperties(json);
+
+        Assert.Contains("\"Volume\":0.35", renamed);
+    }
 }

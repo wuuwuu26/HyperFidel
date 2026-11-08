@@ -44,15 +44,36 @@ public sealed class SettingsStore
             return defaultSettings;
         }
 
+        AppSettings settings;
+        string json;
         try
         {
-            var json = File.ReadAllText(_filePath);
+            json = File.ReadAllText(_filePath);
             var normalizedJson = LegacyJsonNames.RenameLegacyProperties(json);
-            var renamedLegacyProperties = !string.Equals(normalizedJson, json, StringComparison.Ordinal);
-            var settings = JsonSerializer.Deserialize<AppSettings>(normalizedJson)
+            settings = JsonSerializer.Deserialize<AppSettings>(normalizedJson)
                 ?? new AppSettings();
+        }
+        catch
+        {
+            // Only an unreadable or malformed file falls back to defaults. Anything
+            // that fails after this point must not discard the saved volume and
+            // other working settings.
+            var defaultSettings = new AppSettings();
+            NormalizeEqualizerProfiles(defaultSettings);
+            NormalizeOutputProfiles(defaultSettings);
+            NormalizeInfiniteMix(defaultSettings);
+            NormalizeAppearance(defaultSettings);
+            NormalizeUserProfiles(defaultSettings);
+            return defaultSettings;
+        }
+
+        var renamedLegacyProperties =
+            !string.Equals(LegacyJsonNames.RenameLegacyProperties(json), json, StringComparison.Ordinal);
+        var migrated = false;
+        try
+        {
             var credentials = _credentialStore.Load();
-            var migrated = MergeLegacyCredentials(json, credentials);
+            migrated = MergeLegacyCredentials(json, credentials);
             ApplyCredentials(settings, credentials);
             NormalizeEqualizerProfiles(settings);
             NormalizeOutputProfiles(settings);
@@ -68,19 +89,14 @@ public sealed class SettingsStore
                 }
                 SaveSettingsJson(settings);
             }
-
-            return settings;
         }
         catch
         {
-            var defaultSettings = new AppSettings();
-            NormalizeEqualizerProfiles(defaultSettings);
-            NormalizeOutputProfiles(defaultSettings);
-            NormalizeInfiniteMix(defaultSettings);
-            NormalizeAppearance(defaultSettings);
-            NormalizeUserProfiles(defaultSettings);
-            return defaultSettings;
+            // Credential or normalization failure keeps the settings already parsed,
+            // so the persisted volume and other preferences survive the launch.
         }
+
+        return settings;
     }
 
     /// <summary>Serialises <paramref name="settings"/> and writes them to the settings file.</summary>
@@ -193,10 +209,15 @@ public sealed class SettingsStore
         settings.AiChat ??= new AI.AiChatSettings();
         settings.AiChat.ApiKey = credentials.AiChatApiKey;
         settings.HyperFidelServers ??= [];
-        foreach (var server in settings.HyperFidelServers)
+        var serverApiKeys = credentials.HyperFidelServerApiKeys;
+        if (serverApiKeys is not null)
         {
-            server.ApiKey = credentials.HyperFidelServerApiKeys.GetValueOrDefault(server.Id)
-                ?? string.Empty;
+            foreach (var server in settings.HyperFidelServers)
+            {
+                if (string.IsNullOrWhiteSpace(server.Id))
+                    continue;
+                server.ApiKey = serverApiKeys.GetValueOrDefault(server.Id) ?? string.Empty;
+            }
         }
     }
 
