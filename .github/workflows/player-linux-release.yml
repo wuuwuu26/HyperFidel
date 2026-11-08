@@ -135,6 +135,9 @@ jobs:
             --depends ffmpeg \
             --depends libasound2 \
             --depends libopenal1 \
+            --replaces hyperfi \
+            --conflicts hyperfi \
+            --provides hyperfi \
             --package "packages/hyperfidel_${VERSION}_${{ matrix.deb_arch }}.deb" \
             --chdir "stage/${{ matrix.rid }}" \
             .
@@ -156,6 +159,8 @@ jobs:
             --category "Applications/Multimedia" \
             --depends alsa-lib \
             --depends openal-soft \
+            --replaces hyperfi \
+            --provides hyperfi \
             --package "packages/hyperfidel-${VERSION}-1.${{ matrix.rpm_arch }}.rpm" \
             --chdir "stage/${{ matrix.rid }}" \
             .
@@ -182,6 +187,9 @@ jobs:
           depend = ffmpeg
           depend = alsa-lib
           depend = openal
+          replaces = hyperfi
+          provides = hyperfi
+          conflicts = hyperfi
           EOF
           tar --zstd --format=posix --numeric-owner --owner=0 --group=0 \
             -cf "${PACKAGE_PATH}" \

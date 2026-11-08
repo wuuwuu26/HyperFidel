@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- The desktop `hyperfidel` packages now replace and provide the previous
+  `hyperfi` package, so installing HyperFidel removes the HyperFi installation
+  instead of leaving both players installed side by side. The same applies to
+  the `hyperfidel-server` packages and `hyperfi-server`.
 - HyperFidel Server packages replace the previous `hyperfi-server` package, and
   an upgrade stops the old units, adopts `/etc/hyperfi-server`, moves the
   database, caches and artwork from `/var/lib/hyperfi-server`, and retires the
