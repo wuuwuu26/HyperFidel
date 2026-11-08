@@ -161,6 +161,9 @@ jobs:
             --before-remove .github/server-release/prerm.sh \
             --config-files /etc/hyperfidel-server/appsettings.json \
             --deb-recommends ffmpeg \
+            --replaces hyperfi-server \
+            --conflicts hyperfi-server \
+            --provides hyperfi-server \
             --package "packages/hyperfidel-server_${VERSION}_${{ matrix.deb_arch }}.deb" \
             --chdir "${STAGE}" \
             .
@@ -201,6 +204,8 @@ jobs:
             --before-remove .github/server-release/rpm-preun.sh \
             --config-files /etc/hyperfidel-server/appsettings.json \
             --rpm-summary "HyperFidel headless music server" \
+            --replaces hyperfi-server \
+            --provides hyperfi-server \
             --package "packages/hyperfidel-server-${VERSION}-1.${{ matrix.rpm_arch }}.rpm" \
             --chdir "${STAGE}" \
             .

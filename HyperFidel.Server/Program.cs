@@ -29,9 +29,10 @@ if (configuredMaxRequestBodySize.HasValue)
         options.Limits.MaxRequestBodySize = configuredMaxRequestBodySize.Value);
 }
 
-var settingsSection = builder.Configuration.GetSection("HyperFidel");
-if (!settingsSection.Exists())
-    settingsSection = builder.Configuration.GetSection("Orynivo");
+// Earlier releases stored their configuration under the HyperFi and Orynivo
+// roots. Fall back through both so an upgraded server keeps its ApiKey,
+// library paths and profiles instead of reverting to defaults.
+var settingsSection = ServerSettingsSection.Resolve(builder.Configuration);
 var settings = settingsSection.Get<ServerSettings>() ?? new ServerSettings();
 
 // Keep older configuration files valid and guarantee a stable migration target.
