@@ -29,3 +29,8 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
   expiry/download/failed state). 2/2 targeted pass, desktop builds.
 - NOTE: LyricsService.DownloadAsync/LRCLIB + remote provider still present;
   removed in Phase 2 (network purge).
+
+## Phase 2 — Stage A: delete HyperFidel.Server + Tests — DONE
+- Removed both projects via `dotnet sln remove`, deleted dirs. Solution now 7 projects.
+- Desktop build succeeds. (A dependency-closure analysis subagent is running to
+  plan the safe-delete set for the deeply woven network code.)
