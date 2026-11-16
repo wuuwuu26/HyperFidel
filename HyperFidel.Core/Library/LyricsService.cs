@@ -1,12 +1,13 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace HyperFidel.Library;
 
-/// <summary>Plain and synchronised lyrics downloaded from LRCLIB.</summary>
+/// <summary>Plain and synchronised lyrics loaded from a local source.</summary>
 /// <param name="PlainLyrics">Unsynced plain-text lyrics, or <see langword="null"/>.</param>
 /// <param name="SyncedLyrics">LRC-formatted synchronised lyrics, or <see langword="null"/>.</param>
 public sealed record LyricsDownloadResult(string? PlainLyrics, string? SyncedLyrics);
@@ -58,6 +59,101 @@ public static partial class LyricsService
     {
         PropertyNameCaseInsensitive = true
     };
+
+    static LyricsService()
+    {
+        // Register the code-page provider once so GB18030/GBK decoding is
+        // available on every platform. This assembly ships with the runtime.
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+    }
+
+    /// <summary>
+    /// Loads synchronised lyrics from a local LRC sidecar next to
+    /// <paramref name="trackPath"/>. The sidecar uses the track file name with an
+    /// <c>.lrc</c> extension (for example <c>song.lrc</c> for <c>song.flac</c>).
+    /// Encoding is sniffed from the byte-order mark, then validated as UTF-8, and
+    /// finally falls back to GB18030 so legacy Chinese <c>.lrc</c> files decode
+    /// without mojibake.
+    /// </summary>
+    /// <param name="trackPath">Absolute path of the audio track.</param>
+    /// <returns>
+    /// The decoded lyrics, or <see langword="null"/> when no sidecar exists, the
+    /// sidecar is empty, or it contains no timestamped lines.
+    /// </returns>
+    public static LyricsDownloadResult? TryLoadLocalLyrics(string trackPath)
+    {
+        if (string.IsNullOrWhiteSpace(trackPath))
+            return null;
+
+        string sidecar;
+        try
+        {
+            sidecar = Path.ChangeExtension(trackPath, ".lrc");
+            if (!File.Exists(sidecar))
+                return null;
+
+            var bytes = File.ReadAllBytes(sidecar);
+            if (bytes.Length == 0)
+                return null;
+
+            var text = DecodeLyricsBytes(bytes);
+            if (string.IsNullOrWhiteSpace(text))
+                return null;
+
+            // Only treat content with at least one LRC timestamp as synced
+            // lyrics. Plain sidecars are still returned as unsynced text.
+            return TimestampRegex().IsMatch(text)
+                ? new LyricsDownloadResult(null, text)
+                : new LyricsDownloadResult(text, null);
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Decodes raw lyrics bytes by inspecting the byte-order mark first, then
+    /// attempting strict UTF-8, and finally falling back to GB18030 for legacy
+    /// Chinese encodings (GBK/GB2312).
+    /// </summary>
+    /// <param name="bytes">Raw bytes read from an <c>.lrc</c> file.</param>
+    /// <returns>The decoded text without a preceding byte-order mark.</returns>
+    private static string DecodeLyricsBytes(byte[] bytes)
+    {
+        // UTF-8 BOM.
+        if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
+            return new UTF8Encoding(false, throwOnInvalidBytes: true)
+                .GetString(bytes, 3, bytes.Length - 3);
+
+        // UTF-16 LE / BE BOM.
+        if (bytes.Length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE)
+            return Encoding.Unicode.GetString(bytes, 2, bytes.Length - 2);
+        if (bytes.Length >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF)
+            return Encoding.BigEndianUnicode.GetString(bytes, 2, bytes.Length - 2);
+
+        // UTF-32 BOMs (rare, but cheap to support before UTF-8 validation).
+        if (bytes.Length >= 4 && bytes[0] == 0xFF && bytes[1] == 0xFE && bytes[2] == 0x00 && bytes[3] == 0x00)
+            return Encoding.UTF32.GetString(bytes, 4, bytes.Length - 4);
+        if (bytes.Length >= 4 && bytes[0] == 0x00 && bytes[1] == 0x00 && bytes[2] == 0xFE && bytes[3] == 0xFF)
+            return new UTF32Encoding(bigEndian: true, byteOrderMark: false)
+                .GetString(bytes, 4, bytes.Length - 4);
+
+        // Strict UTF-8: if every byte is valid, trust it. Otherwise the file is
+        // almost certainly a legacy single/double-byte Chinese encoding.
+        try
+        {
+            return new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(bytes);
+        }
+        catch (DecoderFallbackException)
+        {
+            return Encoding.GetEncoding(54936).GetString(bytes);
+        }
+    }
 
     /// <summary>
     /// Downloads plain and/or synchronised lyrics for <paramref name="track"/> from LRCLIB.
