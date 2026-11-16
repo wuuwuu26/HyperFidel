@@ -81,3 +81,18 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
 - Verified: desktop build 0 err/0 AXN warn; HyperFidel.Tests build 0 err.
 - Deferred: AI localization strings in Strings.cs + LocalizationManager.cs (7 langs)
   to be purged in the final localization pass.
+
+## Task: Last.fm Scrobbling removal — DONE
+- Deleted HyperFidel/Scrobbling/ (2 files) and HyperFidel.Core/Scrobbling/ (4 files).
+- Deleted tests: PendingScrobbleStoreTests, ScrobbleRulesTests,
+  LastFmSignatureTests, LastFmClientTests.
+- Removed _lastFmScrobbler field (MainWindow.xaml.cs), Configure/Flush
+  (MainWindow.Startup.cs), Configure in Settings save, authorization callbacks
+  passed to SettingsView, SetNowPlaying + BuildLastFmTrack + Complete in
+  MainWindow.PlaybackState.cs, and SetTrackLoved in MainWindow.Favorites.cs.
+- AppSettings LastFm*/FanartTvApiKey properties KEPT (shared with
+  ArtistProfileService, handled in the online-metadata slice).
+- SettingsView Last.fm UI + callbacks KEPT but now null-safe (callbacks not
+  passed) — to be removed in the online-metadata slice.
+- Verified: desktop build 0 err/0 AXN warn; HyperFidel.Tests 0 err;
+  Core.Tests 0 err. CHANGELOG Unreleased/Removed updated.

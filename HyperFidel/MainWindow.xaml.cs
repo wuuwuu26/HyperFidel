@@ -141,8 +141,6 @@ public partial class MainWindow : Window
     private DispatcherTimer? _statusToastTimer;
     private DispatcherTimer? _volumeSaveTimer;
     private double _appLogoGlowPhase;
-    private readonly Scrobbling.LastFmScrobblingService _lastFmScrobbler =
-        new(new Scrobbling.PendingScrobbleStore(AppPaths.GetDataPath("scrobbling", "pending.json")));
     private UserProfileManager? _profileManager;
     private UserProfile ActiveUserProfile => _profileManager?.ActiveProfile
         ?? throw new InvalidOperationException("The user profile context is not initialized.");

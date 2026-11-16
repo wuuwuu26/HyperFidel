@@ -137,6 +137,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Removed
 
+- HyperFidel is becoming a local-only offline player. The HyperFidel Server
+  backend, AI Chat, online lyrics lookup, and Last.fm scrobbling (now-playing,
+  track-love mirroring and the pending-scrobble queue) have been removed. Local
+  library, playback, queue, playlists, equalizer, MPRIS media keys and scheduled
+  local backup continue to work.
 - The Genre Cloud intro card with its title and explanatory hint is gone; the
   cloud surface now sits directly below the content header.
 - The separate karaoke window and the manual lyrics-search dialog and action are

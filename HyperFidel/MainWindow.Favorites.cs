@@ -89,8 +89,6 @@ public partial class MainWindow : Window
             UpdateNowPlayingFavoriteButton();
             RefreshHyperFidelFavoriteRows(favServer, favId, _currentTrackIsFavorite);
             _ = _hyperfidelClient.UpdateTrackFavoriteAsync(favServer, favId, _currentTrackIsFavorite);
-            if (BuildLastFmTrack() is { } remoteLastFmTrack)
-                _lastFmScrobbler.SetTrackLoved(remoteLastFmTrack, _currentTrackIsFavorite);
             return true;
         }
 
@@ -115,8 +113,6 @@ public partial class MainWindow : Window
                 row.IsFavorite = _currentTrackIsFavorite;
         }
 
-        if (BuildLastFmTrack() is { } lastFmTrack)
-            _lastFmScrobbler.SetTrackLoved(lastFmTrack, _currentTrackIsFavorite);
         return true;
     }
 

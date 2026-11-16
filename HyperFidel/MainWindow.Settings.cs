@@ -321,22 +321,6 @@ public partial class MainWindow : Window
         {
             if (_player is IEqualizerAudioPlayer equalizerPlayer)
                 equalizerPlayer.UpdateEqualizer(enabled, profile);
-        },
-        onLastFmBeginAuthorization: () => _lastFmScrobbler.BeginAuthorizationAsync(),
-        onLastFmCompleteAuthorization: async () =>
-        {
-            var session = await _lastFmScrobbler.CompleteAuthorizationAsync();
-            if (session is null)
-                return null;
-            _settings.LastFmSessionKey = session.SessionKey;
-            _settings.LastFmUsername = session.Username;
-            return session.Username;
-        },
-        onLastFmDisconnect: () =>
-        {
-            _lastFmScrobbler.Disconnect();
-            _settings.LastFmSessionKey = string.Empty;
-            _settings.LastFmUsername = string.Empty;
         });
         view.ArtistImageWriter = new MissingArtistImageWriter(_artistImageWriteQueue, AdmitArtistImageWrite);
         view.ArtistImagesChanged += InvalidateUnifiedLibraryViewCache;
@@ -991,12 +975,6 @@ public partial class MainWindow : Window
                 }
             }
             await Task.Run(() => _settingsStore.Save(_settings));
-            _lastFmScrobbler.Configure(
-                _settings.LastFmScrobblingEnabled,
-                _settings.LastFmApiKey,
-                _settings.LastFmApiSecret,
-                _settings.LastFmSessionKey,
-                _settings.LastFmUsername);
             ApplyCrossfeedSettings(_player);
             ApplyLoudnessNormalizationSettings(
                 _player,

@@ -184,30 +184,6 @@ public partial class MainWindow : Window
             _currentPlayHistoryId = null;
         }
 
-        if (BuildLastFmTrack() is { } lastFmTrack)
-            _lastFmScrobbler.SetNowPlaying(lastFmTrack, DateTimeOffset.Now);
-    }
-
-    /// <summary>
-    /// Builds the Last.fm metadata for the audible item. Last.fm requires a
-    /// non-empty artist and title, so an untagged item yields
-    /// <see langword="null"/> instead of a rejected request.
-    /// </summary>
-    /// <returns>The track metadata, or <see langword="null"/> without a title and artist.</returns>
-    private Scrobbling.LastFmTrack? BuildLastFmTrack()
-    {
-        var title = NowPlayingTitleBlock.Text;
-        var artist = NowPlayingArtistBlock.Text;
-        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(artist))
-            return null;
-
-        return new Scrobbling.LastFmTrack(
-            artist,
-            title,
-            _currentAlbumTitle,
-            _currentPlaybackDuration > TimeSpan.Zero
-                ? (int)_currentPlaybackDuration.TotalSeconds
-                : null);
     }
 
     private async void PreviousButton_OnClick(object? sender, RoutedEventArgs e) =>
@@ -404,10 +380,6 @@ public partial class MainWindow : Window
 
     private void RecordPlaybackEnd(bool completed, double? positionSeconds = null)
     {
-        _lastFmScrobbler.Complete(
-            TimeSpan.FromSeconds(positionSeconds ?? _player?.Position.TotalSeconds ?? 0),
-            _currentPlaybackDuration);
-
         if (_currentPlayHistoryId is not long historyId)
             return;
         try

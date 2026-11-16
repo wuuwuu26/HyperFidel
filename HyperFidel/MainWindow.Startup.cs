@@ -185,13 +185,6 @@ public partial class MainWindow : Window
         _settings = _settingsStore.Load();
         StartAppLogoGlow();
         DsdPlaybackOptions.PcmSampleRateHz = _settings.DsdPcmSampleRateHz;
-        _lastFmScrobbler.Configure(
-            _settings.LastFmScrobblingEnabled,
-            _settings.LastFmApiKey,
-            _settings.LastFmApiSecret,
-            _settings.LastFmSessionKey,
-            _settings.LastFmUsername);
-        _ = _lastFmScrobbler.FlushAsync();
         _profileManager = new UserProfileManager(_settings);
         AudioDatabase.SetActiveProfile(_profileManager.ActiveProfile.Id);
         ApplyServerProfileContext();
