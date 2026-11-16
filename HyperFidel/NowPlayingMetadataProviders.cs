@@ -63,19 +63,11 @@ internal sealed record NowPlayingArtistProfile(
 /// </summary>
 internal interface INowPlayingMetadataProvider
 {
-    /// <summary>Returns already-cached lyrics for the track without contacting LRCLIB.</summary>
+    /// <summary>Returns locally available lyrics for the track from embedded tags or a sidecar file.</summary>
     /// <param name="track">Currently playing track.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Cached lyrics, or <see langword="null"/> when none are stored.</returns>
+    /// <returns>Local lyrics, or <see langword="null"/> when none are available.</returns>
     Task<NowPlayingLyrics?> GetCachedLyricsAsync(
-        NowPlayingTrackContext track,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>Downloads lyrics from LRCLIB and stores them in the provider's cache.</summary>
-    /// <param name="track">Currently playing track.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The downloaded lyrics, or <see langword="null"/> when LRCLIB has none.</returns>
-    Task<NowPlayingLyrics?> DownloadLyricsAsync(
         NowPlayingTrackContext track,
         CancellationToken cancellationToken = default);
 
@@ -128,25 +120,6 @@ internal sealed class LocalNowPlayingMetadataProvider : INowPlayingMetadataProvi
         return Task.FromResult(sidecar is null
             ? null
             : new NowPlayingLyrics(sidecar.PlainLyrics, sidecar.SyncedLyrics, DateTimeOffset.UtcNow.ToUnixTimeSeconds()));
-    }
-
-    /// <inheritdoc/>
-    public async Task<NowPlayingLyrics?> DownloadLyricsAsync(
-        NowPlayingTrackContext track,
-        CancellationToken cancellationToken = default)
-    {
-        TrackRecord? record;
-        using (var db = AudioDatabase.OpenDefault())
-            record = db.GetByPath(track.PlaybackPath);
-        if (record is null)
-            return null;
-
-        var result = await LyricsService.DownloadAsync(record, cancellationToken);
-        using (var db = AudioDatabase.OpenDefault())
-            db.UpdateDownloadedLyrics(track.PlaybackPath, result?.PlainLyrics, result?.SyncedLyrics, "LRCLIB");
-        return result is null
-            ? null
-            : new NowPlayingLyrics(result.PlainLyrics, result.SyncedLyrics, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
     }
 
     /// <inheritdoc/>
@@ -231,21 +204,6 @@ internal sealed class HyperFidelServerNowPlayingMetadataProvider : INowPlayingMe
         return lyrics is null
             ? null
             : new NowPlayingLyrics(lyrics.PlainLyrics, lyrics.SyncedLyrics, lyrics.FetchedAt);
-    }
-
-    /// <inheritdoc/>
-    public async Task<NowPlayingLyrics?> DownloadLyricsAsync(
-        NowPlayingTrackContext track,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await LyricsService.DownloadAsync(
-            track.Title, track.Artist, track.Album, track.Duration, cancellationToken);
-        if (track.TrackId is long trackId)
-            await _client.UploadTrackLyricsAsync(
-                _server, trackId, result?.PlainLyrics, result?.SyncedLyrics, cancellationToken);
-        return result is null
-            ? null
-            : new NowPlayingLyrics(result.PlainLyrics, result.SyncedLyrics, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
     }
 
     /// <inheritdoc/>

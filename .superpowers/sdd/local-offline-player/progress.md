@@ -34,3 +34,24 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
 - Removed both projects via `dotnet sln remove`, deleted dirs. Solution now 7 projects.
 - Desktop build succeeds. (A dependency-closure analysis subagent is running to
   plan the safe-delete set for the deeply woven network code.)
+
+## Phase 2 — Dependency-closure analysis (subagent) findings
+- Core builds clean WITHOUT Core/{Streaming,Web,Updates,Scrobbling}; client does NOT.
+- Deleting all network folders at once => 534 compile errors in HyperFidel alone
+  (~50 files). Dominant missing types: HyperFidelServerSettings (284 refs),
+  PlexServerSettings (36), HyperFidelTrackLiteInfo (16), HyperFidelServerClient (16).
+- SAFE WHOLESALE (leaf): QobuzStreamingProvider, AirPlay2NativeSession,
+  CoverSearchDiagnostics, AI leaf files + Mcp (with their tests), Windows
+  streaming credential shim.
+- HIGHEST RISK: unified catalog/provider stack (ILibraryCatalogProvider,
+  ContentRow, LibraryCatalog*, LibraryViewCache) + MainWindow playback wiring.
+  Strategy: compile-driven staged removal; verify build+tests after each slice;
+  keep inert local-only skeleton/types where needed to compile (user approved).
+
+## Phase 2 — Slice B1: remove LRCLIB from Core + dead DownloadLyrics — DONE
+- LyricsService.cs: removed network usings, HttpClient, JsonSerializerOptions,
+  DownloadAsync x2, SearchAsync, Lrclib* records, CreateClient, NullIfWhiteSpace.
+  Kept TryLoadLocalLyrics + DecodeLyricsBytes + ParseLrc. Type is now 100% offline.
+- NowPlayingMetadataProviders.cs: removed INowPlayingMetadataProvider.DownloadLyricsAsync
+  and both provider implementations (dead after Task 3).
+- Verified: Core build 0 err; desktop build 0 err; Core lyrics tests 16/16.
