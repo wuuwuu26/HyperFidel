@@ -268,7 +268,6 @@ public partial class MainWindow : Window
     private static readonly object _webBrowsingLogLock = new();
     private static readonly object UiDiagnosticsLogLock = new();
     private static readonly Stopwatch UiDiagnosticsStopwatch = Stopwatch.StartNew();
-    private AI.AiChatView _aiChatView = null!;
     private DispatcherTimer? _uiDiagnosticsHeartbeatTimer;
     private bool _updatingVolumeFromSystem;
     private CancellationTokenSource _backgroundArtistLoadCts = new();
@@ -506,9 +505,6 @@ public partial class MainWindow : Window
             RequestLog = AppendWebBrowsingLog,
         };
         _mcpBridge.WebBrowsing = _webBrowsing;
-        _aiChatView = AiChatViewControl;
-        _aiChatView.SetBridge(_mcpBridge);
-        _aiChatView.GetSettings = () => _settings.AiChat;
         if (_settings.McpServerEnabled)
         {
             StartupTimingLog.Write("MainWindow starting MCP server");

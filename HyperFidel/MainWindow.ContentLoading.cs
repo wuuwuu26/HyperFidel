@@ -141,7 +141,6 @@ public partial class MainWindow : Window
             "GenreCloud" => LocalizationManager.Current.GenreExplorer,
             "Folders" => LocalizationManager.Current.FolderStructure,
             "Queue" => LocalizationManager.Current.UpNext,
-            "AiChat" => LocalizationManager.Current.AiChat,
             "InternetRadio" => LocalizationManager.Current.InternetRadio,
             "Podcasts" => LocalizationManager.Current.Podcasts,
             "RecentAlbumsAll" => LocalizationManager.Current.RecentAlbums,
@@ -178,7 +177,6 @@ public partial class MainWindow : Window
         GenreCloudSurface.IsVisible = false;
         ContentDataGrid.Margin = new Thickness(0);
         AlbumArtworkListBox.Margin = new Thickness(0);
-        AiChatViewControl.IsVisible = false;
         InternetRadioView.IsVisible = false;
         PodcastView.IsVisible = false;
         PodcastEpisodesView.IsVisible = false;
@@ -244,14 +242,6 @@ public partial class MainWindow : Window
                 ArtistArtworkListBox.IsVisible = false;
                 DashboardScrollViewer.IsVisible = true;
                 await BuildAllRecentlyPlayedViewAsync();
-            }
-            else if (tag == "AiChat")
-            {
-                ContentDataGrid.IsVisible = false;
-                FolderTreeView.IsVisible = false;
-                AlbumArtworkListBox.IsVisible = false;
-                ArtistArtworkListBox.IsVisible = false;
-                AiChatViewControl.IsVisible = true;
             }
             else if (tag == "InternetRadio")
             {

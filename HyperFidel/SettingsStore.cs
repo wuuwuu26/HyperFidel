@@ -206,8 +206,6 @@ public sealed class SettingsStore
         settings.MobileRemoteAccessToken = credentials.MobileRemoteAccessToken;
         settings.BackupTarget ??= new BackupTargetSettings();
         settings.BackupTarget.Password = credentials.BackupTargetPassword;
-        settings.AiChat ??= new AI.AiChatSettings();
-        settings.AiChat.ApiKey = credentials.AiChatApiKey;
         settings.HyperFidelServers ??= [];
         var serverApiKeys = credentials.HyperFidelServerApiKeys;
         if (serverApiKeys is not null)
@@ -234,7 +232,6 @@ public sealed class SettingsStore
         credentials.FanartTvApiKey = settings.FanartTvApiKey?.Trim() ?? string.Empty;
         credentials.MobileRemoteAccessToken = settings.MobileRemoteAccessToken?.Trim() ?? string.Empty;
         credentials.BackupTargetPassword = settings.BackupTarget?.Password?.Trim() ?? string.Empty;
-        credentials.AiChatApiKey = settings.AiChat?.ApiKey?.Trim() ?? string.Empty;
         credentials.HyperFidelServerApiKeys = (settings.HyperFidelServers ?? [])
             .Where(server =>
                 !string.IsNullOrWhiteSpace(server.Id) &&
@@ -266,12 +263,6 @@ public sealed class SettingsStore
             backupTarget.ValueKind == JsonValueKind.Object)
         {
             found |= ImportString(backupTarget, "Password", value => credentials.BackupTargetPassword = value);
-        }
-
-        if (TryGetProperty(root, "AiChat", out var aiChat) &&
-            aiChat.ValueKind == JsonValueKind.Object)
-        {
-            found |= ImportString(aiChat, "ApiKey", value => credentials.AiChatApiKey = value);
         }
 
         if (TryGetProperty(root, "HyperFidelServers", out var servers) &&

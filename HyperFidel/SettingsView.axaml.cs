@@ -20,7 +20,6 @@ using HyperFidel.Localization;
 using HyperFidel.Streaming;
 using HyperFidel.Web;
 using HyperFidel.Updates;
-using HyperFidel.AI;
 using System.Reflection;
 using System.Security.Cryptography;
 using AvaloniaApp = Avalonia.Application;
@@ -83,8 +82,6 @@ internal partial class SettingsView : UserControl
     private readonly EqualizerProfile? _originalEqualizerProfile;
     private readonly List<EqualizerProfile> _equalizerProfiles = [];
     private readonly List<OutputProfile> _outputProfiles = [];
-    private readonly List<string> _aiModels = [];
-    private readonly AiEndpointService _aiEndpointService = new();
     private EqualizerProfile? _equalizerProfile;
     private OutputProfile? _outputProfile;
     private int _equalizerPreviewVersion;
@@ -119,8 +116,6 @@ internal partial class SettingsView : UserControl
     private CancellationTokenSource? _missingArtistImagesCts;
     private CancellationTokenSource? _replayGainCalculationCts;
     private CancellationTokenSource? _audioFeatureAnalysisCts;
-    private CancellationTokenSource? _aiEndpointProbeCts;
-    private string? _aiModelsLoadedForSignature;
 
     /// <summary>
     /// Initializes a runtime-loader instance with default settings.
@@ -289,12 +284,6 @@ internal partial class SettingsView : UserControl
         MobileRemotePortNumericUpDown.ValueChanged += (_, _) => UpdateMobileRemoteStatus();
         InitializeMobileRemoteAddresses();
         UpdateMobileRemoteStatus();
-        AiChatEnabledCheckBox.IsChecked         = settings.AiChat.Enabled;
-        AiChatEndpointUrlTextBox.Text           = settings.AiChat.EndpointUrl;
-        AiChatApiKeyTextBox.Text                = settings.AiChat.ApiKey;
-        AiChatModelComboBox.ItemsSource         = _aiModels;
-        AiChatModelTextBox.Text                 = settings.AiChat.ModelName;
-        AiChatMaxTokensNumericUpDown.Value      = settings.AiChat.MaxTokens;
         WebBrowsingEnabledCheckBox.IsChecked    = settings.WebBrowsing.Enabled;
         SearxngUrlTextBox.Text                  = settings.WebBrowsing.SearxngUrl;
         WebBlockPrivateCheckBox.IsChecked       = settings.WebBrowsing.BlockPrivateNetworks;
@@ -304,7 +293,6 @@ internal partial class SettingsView : UserControl
         ShowInternetRadioItemCheckBox.IsChecked = settings.ShowInternetRadioItem;
         ShowPodcastsItemCheckBox.IsChecked      = settings.ShowPodcastsItem;
         ShowQueueItemCheckBox.IsChecked         = settings.ShowQueueItem;
-        ShowAiChatItemCheckBox.IsChecked        = settings.ShowAiChatItem;
         ReduceMotionCheckBox.IsChecked          = settings.ReduceMotion;
         CheckForUpdatesOnStartupCheckBox.IsChecked = settings.CheckForUpdatesOnStartup;
         StartMaximizedCheckBox.IsChecked             = settings.StartMaximized;
@@ -674,15 +662,6 @@ internal partial class SettingsView : UserControl
     }
     /// <summary>Gets the set of MCP tool names that should be disabled.</summary>
     public HashSet<string> DisabledMcpTools => ReadDisabledMcpTools();
-    /// <summary>Gets the current AI chat settings from the UI controls.</summary>
-    public AI.AiChatSettings AiChatSettingsValue => new()
-    {
-        Enabled      = AiChatEnabledCheckBox.IsChecked == true,
-        EndpointUrl  = AiChatEndpointUrlTextBox.Text?.Trim() ?? "http://localhost:1234/v1",
-        ApiKey       = AiChatApiKeyTextBox.Text?.Trim() ?? string.Empty,
-        ModelName    = AiChatModelTextBox.Text?.Trim() ?? string.Empty,
-        MaxTokens    = (int)(AiChatMaxTokensNumericUpDown.Value ?? 2048)
-    };
     /// <summary>Gets the web-browsing options from the UI, preserving the non-UI domain allowlist and redirect limit.</summary>
     public WebBrowsingOptions WebBrowsingValue => new()
     {
@@ -701,8 +680,6 @@ internal partial class SettingsView : UserControl
     public bool ShowPodcastsItem => ShowPodcastsItemCheckBox.IsChecked == true;
     /// <summary>Gets a value indicating whether the Up Next sidebar item should be visible.</summary>
     public bool ShowQueueItem => ShowQueueItemCheckBox.IsChecked == true;
-    /// <summary>Gets a value indicating whether the AI Chat sidebar item should be visible.</summary>
-    public bool ShowAiChatItem => ShowAiChatItemCheckBox.IsChecked == true;
 
     /// <summary>Gets a value indicating whether optional UI motion is disabled.</summary>
     public bool ReduceMotionValue => ReduceMotionCheckBox.IsChecked == true;
@@ -1429,8 +1406,6 @@ internal partial class SettingsView : UserControl
         _metadataAnalysisCts?.Cancel();
         _replayGainCalculationCts?.Cancel();
         _audioFeatureAnalysisCts?.Cancel();
-        _aiEndpointProbeCts?.Cancel();
-        _aiEndpointService.Dispose();
         Interlocked.Increment(ref _equalizerPreviewVersion);
         if (!_settingsAccepted)
         {
@@ -1465,7 +1440,6 @@ internal partial class SettingsView : UserControl
         ArtistInfoPanel.IsVisible              = tag == "ArtistInfo";
         McpPanel.IsVisible                     = tag == "Mcp";
         MobileRemotePanel.IsVisible            = tag == "MobileRemote";
-        AiChatPanel.IsVisible                  = tag == "AiChat";
         SettingsContentScrollViewer.Offset = new Vector(0, 0);
         AnimateSettingsSection(tag switch
         {
@@ -1479,14 +1453,8 @@ internal partial class SettingsView : UserControl
             "ArtistInfo" => ArtistInfoPanel,
             "Mcp" => McpPanel,
             "MobileRemote" => MobileRemotePanel,
-            "AiChat" => AiChatPanel,
             _ => null
         });
-        if (tag == "AiChat" && _aiModelsLoadedForSignature is null &&
-            !string.IsNullOrWhiteSpace(AiChatEndpointUrlTextBox.Text))
-        {
-            _ = RefreshAiModelsAsync(showConnectionSuccess: false);
-        }
         if (tag == "Metadata" && !_metadataAnalysisLoaded)
             _ = LoadMetadataProblemsAsync();
     }
@@ -1614,87 +1582,6 @@ internal partial class SettingsView : UserControl
             await AppMessageBox.ShowAsync(ex.Message, LocalizationManager.Current.UserProfiles, GetHostWindow());
         }
     }
-
-    private async void AiChatConnectionValue_OnLostFocus(object? sender, RoutedEventArgs e)
-    {
-        var signature = GetAiEndpointSignature();
-        if (AiChatPanel.IsVisible && signature != _aiModelsLoadedForSignature)
-            await RefreshAiModelsAsync(showConnectionSuccess: false);
-    }
-
-    private async void AiChatLoadModelsButton_OnClick(object? sender, RoutedEventArgs e) =>
-        await RefreshAiModelsAsync(showConnectionSuccess: false);
-
-    private async void AiChatTestConnectionButton_OnClick(object? sender, RoutedEventArgs e) =>
-        await RefreshAiModelsAsync(showConnectionSuccess: true);
-
-    private void AiChatModelComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
-    {
-        if (AiChatModelComboBox.SelectedItem is string model)
-            AiChatModelTextBox.Text = model;
-    }
-
-    /// <summary>Loads available models and optionally presents the request as an explicit connection test.</summary>
-    /// <param name="showConnectionSuccess">Whether a successful result should be phrased as a connection test.</param>
-    /// <returns>A task representing the endpoint request and UI update.</returns>
-    private async Task RefreshAiModelsAsync(bool showConnectionSuccess)
-    {
-        _aiEndpointProbeCts?.Cancel();
-        _aiEndpointProbeCts?.Dispose();
-        _aiEndpointProbeCts = new CancellationTokenSource();
-        var cancellationToken = _aiEndpointProbeCts.Token;
-        var endpoint = AiChatEndpointUrlTextBox.Text?.Trim() ?? string.Empty;
-        var apiKey = AiChatApiKeyTextBox.Text?.Trim() ?? string.Empty;
-        var selectedModel = AiChatModelTextBox.Text?.Trim() ?? string.Empty;
-
-        AiChatLoadModelsButton.IsEnabled = false;
-        AiChatTestConnectionButton.IsEnabled = false;
-        AiChatConnectionStatusTextBlock.Text = LocalizationManager.Current.AiChatConnectionTesting;
-        try
-        {
-            var models = await _aiEndpointService.GetModelsAsync(endpoint, apiKey, cancellationToken);
-            _aiModels.Clear();
-            _aiModels.AddRange(models);
-            AiChatModelComboBox.ItemsSource = null;
-            AiChatModelComboBox.ItemsSource = _aiModels;
-            var selectedIndex = _aiModels.FindIndex(model =>
-                string.Equals(model, selectedModel, StringComparison.OrdinalIgnoreCase));
-            if (selectedIndex >= 0)
-                AiChatModelComboBox.SelectedIndex = selectedIndex;
-            else if (string.IsNullOrWhiteSpace(selectedModel) && _aiModels.Count > 0)
-                AiChatModelComboBox.SelectedIndex = 0;
-
-            _aiModelsLoadedForSignature = GetAiEndpointSignature();
-            AiChatConnectionStatusTextBlock.Text = _aiModels.Count == 0
-                ? LocalizationManager.Current.AiChatNoModels
-                : string.Format(
-                    showConnectionSuccess
-                        ? LocalizationManager.Current.AiChatConnectionSucceeded
-                        : LocalizationManager.Current.AiChatModelsLoaded,
-                    _aiModels.Count);
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch
-        {
-            _aiModelsLoadedForSignature = null;
-            AiChatConnectionStatusTextBlock.Text = LocalizationManager.Current.AiChatConnectionFailed;
-        }
-        finally
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                AiChatLoadModelsButton.IsEnabled = true;
-                AiChatTestConnectionButton.IsEnabled = true;
-            }
-        }
-    }
-
-    private string GetAiEndpointSignature() => string.Concat(
-        AiChatEndpointUrlTextBox.Text?.Trim(),
-        "\n",
-        AiChatApiKeyTextBox.Text?.Trim());
 
     private async Task LoadMetadataProblemsAsync()
     {

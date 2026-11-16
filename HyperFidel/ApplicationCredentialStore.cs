@@ -380,9 +380,6 @@ internal sealed class ApplicationCredentialSnapshot
     /// <summary>Gets or sets the Fanart.tv API key.</summary>
     public string FanartTvApiKey { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the embedded AI-chat API key.</summary>
-    public string AiChatApiKey { get; set; } = string.Empty;
-
     /// <summary>Gets or sets HyperFidel Server API keys by server ID.</summary>
     public Dictionary<string, string> HyperFidelServerApiKeys { get; set; } =
         new(StringComparer.Ordinal);

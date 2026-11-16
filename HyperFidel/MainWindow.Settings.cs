@@ -853,7 +853,6 @@ public partial class MainWindow : Window
                 _settings.ShowInternetRadioItem != window.ShowInternetRadioItem ||
                 _settings.ShowPodcastsItem != window.ShowPodcastsItem ||
                 _settings.ShowQueueItem != window.ShowQueueItem ||
-                _settings.ShowAiChatItem != window.ShowAiChatItem ||
                 _settings.ShowLocalLibrarySection != window.ShowLocalLibrarySection ||
                 _settings.ShowOwnRadiosSection != window.ShowOwnRadiosSection ||
                 _settings.ShowMyPodcastsSection != window.ShowMyPodcastsSection ||
@@ -953,8 +952,6 @@ public partial class MainWindow : Window
             _settings.MobileRemoteAccessToken = window.MobileRemoteAccessToken;
             _settings.DisabledMcpTools        = window.DisabledMcpTools;
             _mcpBridge.DisabledTools          = _settings.DisabledMcpTools;
-            _settings.AiChat                  = window.AiChatSettingsValue;
-            _aiChatView.GetSettings           = () => _settings.AiChat;
             _settings.WebBrowsing             = window.WebBrowsingValue;
             if (_webBrowsing is not null)
                 _webBrowsing.Options          = _settings.WebBrowsing;
@@ -972,7 +969,6 @@ public partial class MainWindow : Window
             _settings.ShowInternetRadioItem   = window.ShowInternetRadioItem;
             _settings.ShowPodcastsItem        = window.ShowPodcastsItem;
             _settings.ShowQueueItem           = window.ShowQueueItem;
-            _settings.ShowAiChatItem          = window.ShowAiChatItem;
             _settings.ReduceMotion             = window.ReduceMotionValue;
             StartAppLogoGlow();
             _settings.CheckForUpdatesOnStartup = window.CheckForUpdatesOnStartup;

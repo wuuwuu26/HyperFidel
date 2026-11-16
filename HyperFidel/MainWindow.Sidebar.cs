@@ -385,7 +385,6 @@ public partial class MainWindow : Window
         SetSidebarItemVisibility(InternetRadioNavItem, _settings.ShowInternetRadioItem);
         SetSidebarItemVisibility(PodcastsNavItem, _settings.ShowPodcastsItem);
         SetSidebarItemVisibility(QueueNavItem, _settings.ShowQueueItem);
-        SetSidebarItemVisibility(AiChatNavItem, _settings.ShowAiChatItem);
         ApplyLibrarySectionVisibility();
         SetSidebarSectionVisibility(
             OwnRadiosHeaderItem,

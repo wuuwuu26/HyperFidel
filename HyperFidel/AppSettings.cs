@@ -1,4 +1,3 @@
-using HyperFidel.AI;
 using HyperFidel.Audio;
 using HyperFidel.Library;
 using HyperFidel.Streaming;
@@ -167,8 +166,6 @@ public sealed class AppSettings
     public bool ShowPodcastsItem { get; set; } = true;
     /// <summary>Gets or sets a value indicating whether the Up Next sidebar item is visible.</summary>
     public bool ShowQueueItem { get; set; } = true;
-    /// <summary>Gets or sets a value indicating whether the AI Chat sidebar item is visible.</summary>
-    public bool ShowAiChatItem { get; set; } = true;
     /// <summary>Gets or sets a value indicating whether HyperFidel checks for signed updates at startup.</summary>
     public bool CheckForUpdatesOnStartup { get; set; } = true;
     /// <summary>Gets or sets a value indicating whether the main window starts maximized.</summary>
@@ -211,8 +208,6 @@ public sealed class AppSettings
     public bool IsHyperFidelServerSectionExpanded { get; set; }
     /// <summary>Gets or sets a value indicating whether the Playlists section is expanded.</summary>
     public bool IsPlaylistsSectionExpanded { get; set; }
-    /// <summary>Gets or sets the embedded AI chat configuration.</summary>
-    public AiChatSettings AiChat { get; set; } = new();
     /// <summary>Gets or sets the web-browsing tool configuration (SearXNG endpoint and fetch safety limits).</summary>
     public WebBrowsingOptions WebBrowsing { get; set; } = new();
     /// <summary>

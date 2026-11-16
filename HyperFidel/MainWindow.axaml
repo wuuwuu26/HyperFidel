@@ -6,7 +6,6 @@
         xmlns:audio="using:HyperFidel.Audio"
         xmlns:controls="clr-namespace:HyperFidel.Controls"
         xmlns:conv="using:Avalonia.Data.Converters"
-        xmlns:ai="using:HyperFidel.AI"
         Title="HyperFidel" Icon="avares://HyperFidel/Assets/HyperFidel.ico"
         Height="760" Width="1100"
         MinHeight="600" MinWidth="800">
@@ -1291,13 +1290,6 @@
                     </StackPanel>
                 </ListBoxItem>
 
-                <ListBoxItem x:Name="AiChatNavItem" Tag="AiChat" Theme="{StaticResource NavItemTheme}">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Path Data="{DynamicResource IconAi}" Width="13" Height="13" Margin="0,0,7,0" Stretch="Uniform" StrokeThickness="1.6"/>
-                        <TextBlock Text="{DynamicResource L_AiChat}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </ListBoxItem>
-
                 <ListBoxItem x:Name="LocalLibraryHeaderItem"
                              Tag="Section:LocalLibrary"
                              FontSize="{DynamicResource FontSizeMeta}"
@@ -2086,17 +2078,6 @@
                           VerticalScrollBarVisibility="Auto">
                 <StackPanel x:Name="DashboardPanel" Margin="18,16,18,22" Spacing="14"/>
             </ScrollViewer>
-
-            <!-- AI Chat.
-                 Placed only in the star row (not spanning the Auto filter row):
-                 a *-height ScrollViewer that spans an Auto row is measured with an
-                 unbounded height, which lets the message list eat the input row's
-                 space so the input overlaps the newest messages. The filter row in
-                 row 1 is hidden for the AI chat, so the star row alone is correct. -->
-            <ai:AiChatView x:Name="AiChatViewControl"
-                           Grid.Row="3"
-                           IsVisible="False"
-                           ZIndex="15"/>
 
             <Grid x:Name="InternetRadioView"
                   Classes="viewSurface"

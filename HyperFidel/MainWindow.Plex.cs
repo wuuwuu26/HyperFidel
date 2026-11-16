@@ -328,7 +328,6 @@ public partial class MainWindow : Window
         ArtistArtworkListBox.IsVisible = false;
         SearchResultsScrollViewer.IsVisible = false;
         GenreCloudSurface.IsVisible = false;
-        AiChatViewControl.IsVisible = false;
         PodcastEpisodesView.IsVisible = false;
         DashboardScrollViewer.IsVisible = false;
         InternetRadioView.IsVisible = false;

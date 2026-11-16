@@ -394,15 +394,6 @@
                     <TextBlock Text="{DynamicResource L_MobileRemote}" VerticalAlignment="Center"/>
                 </StackPanel>
             </ListBoxItem>
-            <ListBoxItem Tag="AiChat"
-                         FontSize="{DynamicResource FontSizeBody}"
-                         Theme="{StaticResource SettingsNavItemTheme}">
-                <StackPanel Orientation="Horizontal" Spacing="10">
-                    <Path Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center"
-                          Data="M4,5 L20,5 L20,15 L11,15 L7,19 L7,15 L4,15 Z"/>
-                    <TextBlock Text="{DynamicResource L_AiChat}" VerticalAlignment="Center"/>
-                </StackPanel>
-            </ListBoxItem>
         </ListBox>
 
         <Rectangle Grid.Column="1"
@@ -1490,10 +1481,6 @@
                               Content="{DynamicResource L_UpNext}"
                               Theme="{StaticResource SettingsToggleTheme}"
                               Margin="0,4"/>
-                    <CheckBox x:Name="ShowAiChatItemCheckBox"
-                              Content="{DynamicResource L_AiChat}"
-                              Theme="{StaticResource SettingsToggleTheme}"
-                              Margin="0,4"/>
                     <CheckBox x:Name="ShowLocalLibrarySectionCheckBox"
                               Content="{DynamicResource L_LocalLibrary}"
                               Theme="{StaticResource SettingsToggleTheme}"
@@ -1834,96 +1821,6 @@
                     <TextBlock Text="{DynamicResource L_MobileRemoteQrHint}"
                                FontSize="{DynamicResource FontSizeCaption}" TextWrapping="Wrap"
                                Foreground="{DynamicResource AppSecondaryTextBrush}"/>
-                </StackPanel>
-
-                <StackPanel x:Name="AiChatPanel"
-                            IsVisible="False">
-                    <TextBlock Text="{DynamicResource L_AiChatSettings}"
-                               FontSize="{DynamicResource FontSizeBodyStrong}"
-                               FontWeight="SemiBold"
-                               Margin="0,0,0,20"/>
-                    <TextBlock Text="{DynamicResource L_AiChatHint}"
-                               FontSize="{DynamicResource FontSizeMeta}"
-                               Foreground="{DynamicResource AppMutedTextBrush}"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,14"/>
-                    <CheckBox x:Name="AiChatEnabledCheckBox"
-                              Content="{DynamicResource L_AiChatEnabled}"
-                              Theme="{StaticResource SettingsToggleTheme}"
-                              Margin="0,0,0,18"/>
-
-                    <TextBlock Text="{DynamicResource L_AiChatEndpointUrl}"
-                               FontSize="{DynamicResource FontSizeCaption}"
-                               FontWeight="SemiBold"
-                               Margin="0,0,0,6"/>
-                    <TextBox x:Name="AiChatEndpointUrlTextBox"
-                             Height="30"
-                             HorizontalAlignment="Stretch"
-                             LostFocus="AiChatConnectionValue_OnLostFocus"
-                             Margin="0,0,0,14"/>
-
-                    <TextBlock Text="{DynamicResource L_AiChatApiKey}"
-                               FontSize="{DynamicResource FontSizeCaption}"
-                               FontWeight="SemiBold"
-                               Margin="0,0,0,6"/>
-                    <TextBox x:Name="AiChatApiKeyTextBox"
-                             Height="30"
-                             PasswordChar="●"
-                             HorizontalAlignment="Stretch"
-                             LostFocus="AiChatConnectionValue_OnLostFocus"
-                             Margin="0,0,0,4"/>
-                    <TextBlock Text="{DynamicResource L_AiChatLocalNote}"
-                               FontSize="{DynamicResource FontSizeMeta}"
-                               Foreground="{DynamicResource AppMutedTextBrush}"
-                               Margin="0,0,0,14"/>
-
-                    <TextBlock Text="{DynamicResource L_AiChatModel}"
-                               FontSize="{DynamicResource FontSizeCaption}"
-                               FontWeight="SemiBold"
-                               Margin="0,0,0,6"/>
-                    <TextBox x:Name="AiChatModelTextBox"
-                             Height="30"
-                             HorizontalAlignment="Stretch"
-                             Margin="0,0,0,8"/>
-                    <ComboBox x:Name="AiChatModelComboBox"
-                              Height="30"
-                              PlaceholderText="{DynamicResource L_AiChatAvailableModels}"
-                              SelectionChanged="AiChatModelComboBox_OnSelectionChanged"
-                              HorizontalAlignment="Stretch"
-                              Margin="0,0,0,10"/>
-
-                    <StackPanel Orientation="Horizontal"
-                                Spacing="10"
-                                Margin="0,0,0,8">
-                        <Button x:Name="AiChatLoadModelsButton"
-                                Height="30"
-                                Theme="{StaticResource SettingsButtonTheme}"
-                                Click="AiChatLoadModelsButton_OnClick"
-                                Content="{DynamicResource L_AiChatLoadModels}"/>
-                        <Button x:Name="AiChatTestConnectionButton"
-                                Height="30"
-                                Theme="{StaticResource SettingsButtonTheme}"
-                                Click="AiChatTestConnectionButton_OnClick"
-                                Content="{DynamicResource L_AiChatTestConnection}"/>
-                    </StackPanel>
-                    <TextBlock x:Name="AiChatConnectionStatusTextBlock"
-                               FontSize="{DynamicResource FontSizeMeta}"
-                               Foreground="{DynamicResource AppMutedTextBrush}"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,14"/>
-
-                    <TextBlock Text="{DynamicResource L_AiChatMaxTokens}"
-                               FontSize="{DynamicResource FontSizeCaption}"
-                               FontWeight="SemiBold"
-                               Margin="0,0,0,6"/>
-                    <NumericUpDown x:Name="AiChatMaxTokensNumericUpDown"
-                                   Height="30"
-                                   Minimum="256"
-                                   Maximum="32768"
-                                   Increment="256"
-                                   FormatString="0"
-                                   ClipValueToMinMax="True"
-                                   HorizontalAlignment="Stretch"/>
                 </StackPanel>
 
             </Grid>

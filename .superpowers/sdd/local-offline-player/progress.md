@@ -55,3 +55,29 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
 - NowPlayingMetadataProviders.cs: removed INowPlayingMetadataProvider.DownloadLyricsAsync
   and both provider implementations (dead after Task 3).
 - Verified: Core build 0 err; desktop build 0 err; Core lyrics tests 16/16.
+
+## Ruling: direction change to "clean local player" (2026-11-16)
+- User explicitly chose "重构为干净本地播放器": physically delete ALL networking
+  code/UI, not runtime-disable. This supersedes the plan's dormant-skeleton
+  approach. Spec's goal (zero network I/O, no credentials, no server UI) still binds.
+- Ruling: abandoned the "delete whole client network chain at once" attempt —
+  it produced 608 compile errors because MainWindow.RemoteHyperFidel.cs (850 lines)
+  holds only 1 network call but 849 lines of local playback/catalog/favorite helpers
+  (GetServerSourceKey x32, IsHyperFidelFavorite x30, CreateHyperFidelCatalogProvider x26).
+  Reverted to clean baseline 0449a43 (0 errors). Cost: none (reverted).
+- Ruling: proceed domain-by-domain, deleting ONLY true network leaf modules first
+  (AI Chat, then MCP, Scrobbling, Radio/Podcast partials, browser audio, remote web,
+  server dialogs, and Core network dirs). For each, keep local-only shared helpers
+  by moving them out of the deleted partial into a retained partial. Verify build
+  and commit after each domain. Cost: more commits, but every commit compiles.
+
+## Task: AI Chat removal — DONE
+- Deleted HyperFidel/AI/ (10 files) + AiToolDefinitionsTests.cs.
+- Removed AI refs from: MainWindow.xaml/.xaml.cs, MainWindow.Settings.cs,
+  MainWindow.Sidebar.cs, MainWindow.ContentLoading.cs, MainWindow.Plex.cs,
+  SettingsView.axaml/.axaml.cs, AppSettings.cs, SettingsStore.cs,
+  ApplicationCredentialStore.cs.
+- Mcp untouched (verified it does not depend on AI).
+- Verified: desktop build 0 err/0 AXN warn; HyperFidel.Tests build 0 err.
+- Deferred: AI localization strings in Strings.cs + LocalizationManager.cs (7 langs)
+  to be purged in the final localization pass.
