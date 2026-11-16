@@ -4,9 +4,9 @@ using System.Text.RegularExpressions;
 namespace HyperFidel.Audio;
 
 /// <summary>
-/// Sets a card's ALSA playback mixer to unity before direct hardware output.
-/// Direct ALSA bypasses PipeWire/PulseAudio, so a hardware control left at a
-/// low value by the system mixer would otherwise cap HyperFidel's software volume.
+/// Controls a card's ALSA playback mixer for bit-perfect DSD/DoP output only.
+/// PCM paths never call this type: HyperFidel leaves the system and hardware
+/// volume untouched and applies the transport slider as in-app software gain.
 /// </summary>
 internal static partial class AlsaHardwareVolume
 {
@@ -52,32 +52,6 @@ internal static partial class AlsaHardwareVolume
 
     [DllImport(Library, EntryPoint = "snd_mixer_close", CallingConvention = CallingConvention.Cdecl)]
     private static extern int SndMixerClose(nint mixer);
-
-    /// <summary>Sets every playback volume control on the card to its maximum and unmutes it.</summary>
-    /// <param name="alsaDeviceId">Direct ALSA identifier such as <c>alsa:hw:CARD=Audio,DEV=0</c>.</param>
-    internal static void EnsureUnity(string alsaDeviceId)
-    {
-        if (!OperatingSystem.IsLinux())
-            return;
-        var cardId = ExtractCardId(alsaDeviceId);
-        if (cardId is null)
-            return;
-        var mixer = Open(cardId);
-        if (mixer == nint.Zero)
-            return;
-        try
-        {
-            SetPlaybackVolume(mixer, 1.0f);
-        }
-        catch
-        {
-            // A missing or restricted mixer must never prevent playback.
-        }
-        finally
-        {
-            SndMixerClose(mixer);
-        }
-    }
 
     /// <summary>Sets every playback volume control on the card to a linear fraction of its range.</summary>
     /// <param name="alsaDeviceId">Direct ALSA identifier such as <c>alsa:hw:CARD=Audio,DEV=0</c>.</param>

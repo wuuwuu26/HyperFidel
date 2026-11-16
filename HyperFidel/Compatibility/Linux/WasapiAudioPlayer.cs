@@ -151,7 +151,9 @@ public sealed class WasapiAudioPlayer : IGaplessAudioPlayer, IEqualizerAudioPlay
             // Release the matching card profile before opening the exclusive
             // hardware PCM, then restore it when this player is retired.
             var handoff = PipeWireExclusiveHandoff.TrySuspend(deviceId);
-            AlsaHardwareVolume.EnsureUnity(deviceId);
+            // The ALSA hardware mixer is deliberately left untouched for PCM
+            // output; HyperFidel never changes the system or hardware volume.
+            // The transport slider is applied only as in-app software gain.
             nint pcm;
             try
             {

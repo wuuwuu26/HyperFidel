@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using HyperFidel.Localization;
 
 namespace HyperFidel.Audio;
@@ -138,352 +137,37 @@ public static class WasapiDeviceProvider
     }
 }
 
-#if HYPERFIDEL_LINUX
 /// <summary>
-/// Mirrors the PipeWire/PulseAudio default sink volume while HyperFidel owns a
-/// direct ALSA device, so desktop volume keys and the on-screen display still
-/// control playback that bypasses the system mixer.
+/// Inert endpoint-volume synchronizer. HyperFidel never changes the system
+/// (PipeWire/PulseAudio) sink volume: the transport slider is applied only as
+/// in-app software gain, and bit-perfect DSD/DoP volume is handled by the
+/// hardware mixer through <see cref="AlsaHardwareVolume"/>. This type remains
+/// only so the shared window code compiles on every platform.
 /// </summary>
 internal sealed class WindowsEndpointVolumeSynchronizer : IDisposable
 {
-    private const string DefaultSink = "@DEFAULT_SINK@";
-    private readonly object _gate = new();
-    private readonly object _applyGate = new();
-    private readonly CancellationTokenSource _cancellation = new();
-    private Process? _subscription;
-    private int _pendingPercent = -1;
-    private int _lastAppliedPercent = -1;
-    private int _lastKnownPercent;
-    private int _lastKnownMuted;
-    private bool _applying;
-    private bool _disposed;
+    /// <summary>Creates an inert synchronizer that owns no system resource.</summary>
+    /// <param name="deviceId">Unused output device identifier.</param>
+    internal WindowsEndpointVolumeSynchronizer(string deviceId) { }
 
-    /// <summary>Starts mirroring the default sink volume for one direct ALSA device.</summary>
-    /// <param name="deviceId">Selected output device identifier.</param>
-    /// <exception cref="PlatformNotSupportedException">
-    /// Thrown when the device is not direct ALSA, <c>pactl</c> is unavailable,
-    /// or the current sink volume cannot be read.
-    /// </exception>
-    internal WindowsEndpointVolumeSynchronizer(string deviceId)
-    {
-        if (!SupportsEndpointVolume(deviceId) || !IsPactlAvailable())
-            throw new PlatformNotSupportedException();
-        var state = ReadState();
-        if (state is null)
-            throw new PlatformNotSupportedException();
-        _lastKnownPercent = state.Value.Percent;
-        _lastKnownMuted = state.Value.Muted ? 1 : 0;
-        _ = Task.Run(SubscribeAsync);
-    }
-
-    /// <summary>Gets whether a device identifier can be mirrored through the system sink.</summary>
-    /// <param name="deviceId">Selected output device identifier.</param>
-    /// <returns><see langword="true"/> for a Linux direct ALSA device.</returns>
-    internal static bool SupportsEndpointVolume(string deviceId) =>
-        OperatingSystem.IsLinux() &&
-        deviceId.StartsWith("alsa:", StringComparison.Ordinal);
-
-    /// <summary>Gets whether the endpoint volume is already part of the audio path.</summary>
-    /// <remarks>
-    /// Direct ALSA bypasses the system mixer, so the player still applies the
-    /// mirrored gain itself instead of relying on the endpoint.
-    /// </remarks>
-    internal bool AppliesToOutputPath => false;
-
-    /// <summary>Raised when the system default sink volume or mute state changes.</summary>
-    internal event EventHandler<float>? VolumeChanged;
-
-    /// <summary>Gets the last observed system volume from 0.0 to 1.0.</summary>
-    internal float Volume =>
-        Volatile.Read(ref _lastKnownMuted) != 0
-            ? 0.0f
-            : Volatile.Read(ref _lastKnownPercent) / 100.0f;
-
-    /// <summary>Sets the system default sink volume from 0.0 to 1.0.</summary>
-    /// <param name="volume">Linear volume.</param>
-    internal void SetVolume(float volume)
-    {
-        var percent = (int)Math.Round(Math.Clamp(volume, 0.0f, 1.0f) * 100.0);
-        lock (_applyGate)
-        {
-            _pendingPercent = percent;
-            if (_applying)
-                return;
-            _applying = true;
-        }
-        _ = Task.Run(ApplyPendingVolumeAsync);
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        lock (_gate)
-        {
-            if (_disposed)
-                return;
-            _disposed = true;
-        }
-        _cancellation.Cancel();
-        Process? subscription;
-        lock (_gate)
-        {
-            subscription = _subscription;
-            _subscription = null;
-        }
-        try
-        {
-            subscription?.Kill(entireProcessTree: true);
-        }
-        catch
-        {
-        }
-        subscription?.Dispose();
-    }
-
-    private async Task ApplyPendingVolumeAsync()
-    {
-        while (true)
-        {
-            int percent;
-            lock (_applyGate)
-            {
-                percent = _pendingPercent;
-                _pendingPercent = -1;
-                if (percent < 0)
-                {
-                    _applying = false;
-                    return;
-                }
-            }
-            ApplyVolume(percent);
-        }
-    }
-
-    private void ApplyVolume(int percent)
-    {
-        if (RunPactl("set-sink-volume", DefaultSink, $"{percent}%") is null)
-            return;
-        Volatile.Write(ref _lastAppliedPercent, percent);
-        if (percent > 0)
-            RunPactl("set-sink-mute", DefaultSink, "0");
-    }
-
-    private async Task SubscribeAsync()
-    {
-        while (!_cancellation.IsCancellationRequested)
-        {
-            try
-            {
-                using var process = StartSubscription();
-                if (process is null)
-                    return;
-                lock (_gate)
-                {
-                    if (_disposed)
-                        return;
-                    _subscription = process;
-                }
-                int? lastPercent = null;
-                bool? lastMuted = null;
-                while (!_cancellation.IsCancellationRequested)
-                {
-                    var line = await process.StandardOutput
-                        .ReadLineAsync(_cancellation.Token)
-                        .ConfigureAwait(false);
-                    if (line is null)
-                        break;
-                    if (!PactlVolumeOutput.IsSinkEvent(line))
-                        continue;
-                    var state = ReadState();
-                    if (state is null)
-                        continue;
-                    if (state.Value.Percent == lastPercent && state.Value.Muted == lastMuted)
-                        continue;
-                    lastPercent = state.Value.Percent;
-                    lastMuted = state.Value.Muted;
-                    Volatile.Write(ref _lastKnownPercent, state.Value.Percent);
-                    Volatile.Write(ref _lastKnownMuted, state.Value.Muted ? 1 : 0);
-                    if (!state.Value.Muted &&
-                        state.Value.Percent == Volatile.Read(ref _lastAppliedPercent))
-                    {
-                        continue;
-                    }
-                    VolumeChanged?.Invoke(
-                        this,
-                        state.Value.Muted ? 0.0f : state.Value.Percent / 100.0f);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-            catch
-            {
-            }
-            finally
-            {
-                lock (_gate)
-                {
-                    _subscription = null;
-                }
-            }
-            try
-            {
-                await Task.Delay(1000, _cancellation.Token).ConfigureAwait(false);
-            }
-            catch
-            {
-                return;
-            }
-        }
-    }
-
-    private static (int Percent, bool Muted)? ReadState()
-    {
-        var volumeOutput = RunPactl("get-sink-volume", DefaultSink);
-        var percent = PactlVolumeOutput.ParsePercent(volumeOutput);
-        if (percent is null)
-            return null;
-        var muted = PactlVolumeOutput.ParseMuted(
-            RunPactl("get-sink-mute", DefaultSink));
-        return (percent.Value, muted);
-    }
-
-    private static bool IsPactlAvailable() => HasExecutable("pactl");
-
-    private static bool HasExecutable(string name)
-    {
-        var path = Environment.GetEnvironmentVariable("PATH");
-        if (string.IsNullOrEmpty(path))
-            return false;
-        return path
-            .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
-            .Any(directory => File.Exists(Path.Combine(directory, name)));
-    }
-
-    /// <summary>
-    /// Starts <c>pactl subscribe</c> behind a parent-death watchdog so the
-    /// long-running subscription cannot outlive HyperFidel, even when the process
-    /// is terminated without running its normal shutdown path.
-    /// </summary>
-    /// <returns>The running watchdog shell, or <see langword="null"/> when it cannot be started.</returns>
-    private static Process? StartSubscription()
-    {
-        // pactl fully buffers its stdout when it is a pipe. Without line
-        // buffering the subscription would only deliver events when the buffer
-        // fills or the process exits, so the mirrored volume would appear stuck.
-        var subscribe = HasExecutable("stdbuf")
-            ? "stdbuf -oL pactl subscribe"
-            : "pactl subscribe";
-        var script =
-            $"{subscribe} 2>/dev/null & child=$!; " +
-            $"tail --pid={Environment.ProcessId} -f /dev/null; " +
-            "kill $child 2>/dev/null";
-        try
-        {
-            var startInfo = new ProcessStartInfo("/bin/sh")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            startInfo.ArgumentList.Add("-c");
-            startInfo.ArgumentList.Add(script);
-            startInfo.Environment["LC_ALL"] = "C";
-            startInfo.Environment["LANG"] = "C";
-            return Process.Start(startInfo);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private static Process? StartPactl(params string[] arguments)
-    {
-        try
-        {
-            var startInfo = new ProcessStartInfo("pactl")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            foreach (var argument in arguments)
-                startInfo.ArgumentList.Add(argument);
-            startInfo.Environment["LC_ALL"] = "C";
-            startInfo.Environment["LANG"] = "C";
-            return Process.Start(startInfo);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private static string? RunPactl(params string[] arguments)
-    {
-        try
-        {
-            using var process = StartPactl(arguments);
-            if (process is null)
-                return null;
-            var error = process.StandardError.ReadToEndAsync();
-            var output = process.StandardOutput.ReadToEnd();
-            _ = error.Wait(2000);
-            if (!process.WaitForExit(2000))
-            {
-                try
-                {
-                    process.Kill(entireProcessTree: true);
-                }
-                catch
-                {
-                }
-                return null;
-            }
-            return process.ExitCode == 0 ? output : null;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-}
-#else
-/// <summary>
-/// Placeholder for Windows endpoint-volume synchronization on platforms without
-/// a supported system mixer.
-/// </summary>
-internal sealed class WindowsEndpointVolumeSynchronizer : IDisposable
-{
-    /// <summary>Rejects creation because endpoint volume is unavailable.</summary>
-    /// <param name="deviceId">Unused device identifier.</param>
-    /// <exception cref="PlatformNotSupportedException">Always thrown.</exception>
-    internal WindowsEndpointVolumeSynchronizer(string deviceId) =>
-        throw new PlatformNotSupportedException();
-
-    /// <summary>Gets whether a device identifier can be mirrored through the system sink.</summary>
-    /// <param name="deviceId">Selected output device identifier.</param>
-    /// <returns>Always <see langword="false"/> on this platform.</returns>
+    /// <summary>Always reports that endpoint volume is unsupported.</summary>
+    /// <param name="deviceId">Unused output device identifier.</param>
+    /// <returns>Always <see langword="false"/>.</returns>
     internal static bool SupportsEndpointVolume(string deviceId) => false;
 
-    /// <summary>Gets whether the endpoint volume is already part of the audio path.</summary>
+    /// <summary>Gets that the endpoint is never part of the audio path.</summary>
     internal bool AppliesToOutputPath => false;
 
-    /// <summary>Would be raised when a platform endpoint changes volume.</summary>
+    /// <summary>Never raised, because the inert synchronizer owns no subscription.</summary>
     internal event EventHandler<float>? VolumeChanged;
 
-    /// <summary>Gets a neutral volume value.</summary>
+    /// <summary>Gets the neutral full-scale volume.</summary>
     internal float Volume => 1.0f;
 
-    /// <summary>Ignores a volume update.</summary>
-    /// <param name="volume">Requested linear volume.</param>
+    /// <summary>Ignores the requested volume; the system sink is never written.</summary>
+    /// <param name="volume">Unused linear volume.</param>
     internal void SetVolume(float volume) { }
 
     /// <inheritdoc/>
     public void Dispose() { }
 }
-#endif

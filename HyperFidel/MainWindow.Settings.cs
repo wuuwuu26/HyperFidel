@@ -50,20 +50,12 @@ public partial class MainWindow : Window
     {
         if (VolumeValueTextBlock is null) return;
         VolumeValueTextBlock.Text = $"{Math.Round(VolumeSlider.Value * 100):N0} %";
-        if (_settings.OutputBackend == OutputBackend.Wasapi &&
-            _endpointVolumeSynchronizer is not null)
-        {
-            if (!_updatingVolumeFromSystem)
-                _endpointVolumeSynchronizer.SetVolume((float)VolumeSlider.Value);
-            if (_player is not null)
-                _player.Volume = _endpointVolumeSynchronizer.AppliesToOutputPath
-                    ? 1.0f
-                    : (float)VolumeSlider.Value;
-        }
-        else if (_player is not null)
-        {
+
+        // The transport slider is applied only as in-app software gain. HyperFidel
+        // never writes the system sink or the ALSA hardware mixer for PCM output.
+        if (_player is not null)
             _player.Volume = (float)VolumeSlider.Value;
-        }
+
         _settings.Volume = VolumeSlider.Value;
         if (!_updatingVolumeFromSystem)
         {
@@ -97,59 +89,16 @@ public partial class MainWindow : Window
         _volumeSaveTimer.Start();
     }
 
+    /// <summary>
+    /// Endpoint-volume synchronization is intentionally disabled. HyperFidel
+    /// applies the transport slider only as in-app software gain and never
+    /// writes the system sink or the ALSA hardware mixer for PCM output. The
+    /// method is kept so callers in every build remain valid.
+    /// </summary>
     private async Task ConfigureEndpointVolumeSynchronizationAsync()
     {
-        var synchronizationVersion =
-            Interlocked.Increment(ref _endpointVolumeSynchronizationVersion);
-        var previous = DetachEndpointVolumeSynchronization();
-        if (previous is not null)
-            _ = Task.Run(() => DisposeEndpointSynchronizer(previous));
-        if (_browserAudioClientId is not null || _settings.OutputBackend != OutputBackend.Wasapi ||
-            string.IsNullOrWhiteSpace(_settings.SelectedWasapiDeviceId) ||
-            !WindowsEndpointVolumeSynchronizer.SupportsEndpointVolume(
-                _settings.SelectedWasapiDeviceId))
-        {
-            return;
-        }
-
-        try
-        {
-            var deviceId = _settings.SelectedWasapiDeviceId;
-            var synchronizer = await Task.Run(() => new WindowsEndpointVolumeSynchronizer(deviceId));
-            if (synchronizationVersion !=
-                    Volatile.Read(ref _endpointVolumeSynchronizationVersion) ||
-                _browserAudioClientId is not null || _settings.OutputBackend != OutputBackend.Wasapi ||
-                !string.Equals(
-                    _settings.SelectedWasapiDeviceId,
-                    deviceId,
-                    StringComparison.Ordinal))
-            {
-                _ = Task.Run(() => DisposeEndpointSynchronizer(synchronizer));
-                return;
-            }
-            synchronizer.VolumeChanged += EndpointVolumeSynchronizer_OnVolumeChanged;
-            _endpointVolumeSynchronizer = synchronizer;
-            if (synchronizer.AppliesToOutputPath)
-            {
-                // The endpoint owns the gain for this output path, so mirror it into
-                // the transport slider.
-                var volume = await Task.Run(() => synchronizer.Volume);
-                ApplySystemVolume(volume, pushToEndpoint: false);
-            }
-            else
-            {
-                // The output bypasses the system mixer (direct ALSA), so the player
-                // applies the saved volume itself. Copying the sink volume back would
-                // overwrite the user's choice every time the app starts. Publish the
-                // application volume to the system instead and keep it in sync from
-                // user changes only.
-                synchronizer.SetVolume((float)VolumeSlider.Value);
-            }
-        }
-        catch
-        {
-            DisposeEndpointVolumeSynchronizationInBackground();
-        }
+        DetachEndpointVolumeSynchronization();
+        await Task.CompletedTask;
     }
 
     private static async Task UpdateSearchIndexAfterArtistRenameAsync(long artistId)
@@ -207,17 +156,14 @@ public partial class MainWindow : Window
         Dispatcher.UIThread.Post(() => ApplySystemVolume(volume, pushToEndpoint: false));
     }
 
-    /// <summary>Applies a volume reported by MPRIS or the platform endpoint.</summary>
+    /// <summary>Applies a volume reported by MPRIS or the system media controls.</summary>
     /// <param name="volume">Linear volume from 0.0 to 1.0.</param>
     /// <param name="pushToEndpoint">
-    /// Whether the value should also be written to the synchronized endpoint. Endpoint
-    /// callbacks pass <see langword="false"/> so they do not echo back into the system mixer.
+    /// Retained for source compatibility; the system endpoint is never written.
     /// </param>
     private void ApplySystemVolume(float volume, bool pushToEndpoint = true)
     {
-        LogUiDiagnostics(
-            $"ApplySystemVolume {volume:0.###} (pushToEndpoint={pushToEndpoint}, " +
-            $"appliesToOutputPath={_endpointVolumeSynchronizer?.AppliesToOutputPath.ToString() ?? "none"})");
+        LogUiDiagnostics($"ApplySystemVolume {volume:0.###}");
         _updatingVolumeFromSystem = true;
         try
         {
@@ -230,11 +176,10 @@ public partial class MainWindow : Window
             _updatingVolumeFromSystem = false;
         }
 
-        if (pushToEndpoint && _endpointVolumeSynchronizer is not null)
-            _endpointVolumeSynchronizer.SetVolume(volume);
+        // Publish the value back to MPRIS media controls only. This never writes
+        // the system sink or the ALSA hardware mixer; the slider drives software
+        // gain exclusively.
         _windowsMediaTransport?.SetVolume(VolumeSlider.Value);
-        // A change requested from the desktop (media keys, panel slider) is a real
-        // user choice and must survive an unclean exit like a slider drag does.
         ScheduleVolumeSave();
     }
 
