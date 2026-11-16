@@ -110,12 +110,24 @@ internal sealed class LocalNowPlayingMetadataProvider : INowPlayingMetadataProvi
     {
         using var db = AudioDatabase.OpenDefault();
         var record = db.GetByPath(track.PlaybackPath);
-        if (record is null)
-            return Task.FromResult<NowPlayingLyrics?>(null);
-        return Task.FromResult<NowPlayingLyrics?>(new NowPlayingLyrics(
-            record.DownloadedLyrics ?? record.Lyrics,
-            record.SyncedLyrics,
-            record.LyricsFetchedAt));
+
+        // Embedded tag lyrics are already decoded by TagLib and take priority.
+        if (record is not null &&
+            (!string.IsNullOrWhiteSpace(record.DownloadedLyrics ?? record.Lyrics) ||
+             !string.IsNullOrWhiteSpace(record.SyncedLyrics)))
+        {
+            return Task.FromResult<NowPlayingLyrics?>(new NowPlayingLyrics(
+                record.DownloadedLyrics ?? record.Lyrics,
+                record.SyncedLyrics,
+                record.LyricsFetchedAt));
+        }
+
+        // No embedded lyrics: read a local sidecar .lrc next to the audio file,
+        // with BOM/UTF-8/GB18030 sniffing so Chinese files do not show mojibake.
+        var sidecar = LyricsService.TryLoadLocalLyrics(track.PlaybackPath);
+        return Task.FromResult(sidecar is null
+            ? null
+            : new NowPlayingLyrics(sidecar.PlainLyrics, sidecar.SyncedLyrics, DateTimeOffset.UtcNow.ToUnixTimeSeconds()));
     }
 
     /// <inheritdoc/>

@@ -451,48 +451,21 @@ public partial class MainWindow : Window
 
         try
         {
+            // Lyrics are strictly local: embedded tags plus a sidecar .lrc file
+            // next to the track. No network lookup or expiry is involved.
             var provider = _currentNowPlayingProvider ?? _localNowPlayingProvider;
             var context = BuildNowPlayingTrackContext(filePath);
 
-            var cached = await provider.GetCachedLyricsAsync(context, cts.Token);
-            cts.Token.ThrowIfCancellationRequested();
-            if (cached is null && provider is LocalNowPlayingMetadataProvider)
-            {
-                // A local track with no database row cannot be looked up at all.
-                ClearLyrics();
-                ShowLyricsStatus(LocalizationManager.Current.LyricsUnavailable);
-                return;
-            }
-
-            var hasLocalLyrics = cached is { HasLyrics: true }
-                && ApplyLyricsContent(cached.Plain, cached.Synced);
-            if (cached is null || !cached.HasLyrics)
-                ClearLyrics();
-
-            var fetchedAt = cached?.FetchedAt is long timestamp
-                ? DateTimeOffset.FromUnixTimeSeconds(timestamp)
-                : (DateTimeOffset?)null;
-            var lookupExpired = fetchedAt is null ||
-                fetchedAt < DateTimeOffset.UtcNow.AddDays(-30);
-            var shouldDownload = forceRefresh ||
-                (string.IsNullOrWhiteSpace(cached?.Synced) && lookupExpired);
-            if (!shouldDownload)
-            {
-                if (!hasLocalLyrics)
-                    ShowLyricsStatus(LocalizationManager.Current.LyricsNotFound);
-                return;
-            }
-
-            if (!hasLocalLyrics)
-                ShowLyricsStatus(LocalizationManager.Current.LyricsDownloading);
-
-            var result = await provider.DownloadLyricsAsync(context, cts.Token);
+            var lyrics = await provider.GetCachedLyricsAsync(context, cts.Token);
             cts.Token.ThrowIfCancellationRequested();
             if (!string.Equals(filePath, _currentFilePath, StringComparison.OrdinalIgnoreCase))
                 return;
 
-            if (result is not { HasLyrics: true } || !ApplyLyricsContent(result.Plain, result.Synced))
-                ShowLyricsStatus(LocalizationManager.Current.LyricsNotFound);
+            if (lyrics is { HasLyrics: true } && ApplyLyricsContent(lyrics.Plain, lyrics.Synced))
+                return;
+
+            ClearLyrics();
+            ShowLyricsStatus(LocalizationManager.Current.LyricsNotFound);
         }
         catch (OperationCanceledException)
         {
@@ -500,7 +473,7 @@ public partial class MainWindow : Window
         catch
         {
             if (_lyricLines.Count == 0)
-                ShowLyricsStatus(LocalizationManager.Current.LyricsDownloadFailed);
+                ShowLyricsStatus(LocalizationManager.Current.LyricsNotFound);
         }
         finally
         {

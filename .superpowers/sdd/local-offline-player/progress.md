@@ -20,3 +20,12 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
 - KNOWN PRE-EXISTING FAIL (confirmed at HEAD with changes stashed):
   YearInReviewPdfExporterTests.TryWrite_WritesAPdfDocument — SkiaSharp PDF
   is 901 bytes on this machine. Unrelated to this work.
+
+## Task 3: Rewire lyrics to offline local source (desktop) — DONE
+- RED: OfflineLyricsWiringTests 2/2 failed (no sidecar use, online download path).
+- GREEN: LocalNowPlayingMetadataProvider.GetCachedLyricsAsync now falls back to
+  LyricsService.TryLoadLocalLyrics sidecar when no embedded lyrics; embedded
+  tag lyrics still win. LoadLyricsForTrackAsync is now offline-only (no
+  expiry/download/failed state). 2/2 targeted pass, desktop builds.
+- NOTE: LyricsService.DownloadAsync/LRCLIB + remote provider still present;
+  removed in Phase 2 (network purge).
