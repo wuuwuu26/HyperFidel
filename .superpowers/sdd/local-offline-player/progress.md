@@ -169,3 +169,36 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
 - CHANGELOG Unreleased/Removed updated to describe the fully local-only player.
 - Verified: desktop 0 err/0 AXN; Tests 0 err (only known pre-existing
   YearInReviewPdfExporter failure); Core.Tests 0 err; Ui.Smoke 0 err.
+
+## Task: FFmpeg GitHub download removal — DONE
+- Ruling: this code-removal plan is verified by build + surviving tests + static
+  grep, not per-task TDD RED→GREEN (there is no new behavior to pin); ledgered
+  per executing-plans.
+- FfmpegLocator.cs: removed all HttpClient/api.github.com download/extract code
+  (WindowsReleaseApiUrl, MacReleaseApiUrl, Download*, Resolve*Url*, TryReadAsset,
+  ExtractBinaryEntry) and the `progress`/download branch. EnsureAvailableAsync()
+  now only checks local dirs/PATH and prepends; kept mac package-dir probing.
+- App.xaml.cs: simplified startup call to EnsureAvailableAsync() with no progress
+  callback; still shows offline-install message when absent (string reworded in
+  final localization pass).
+- Verified: desktop 0 err/0 AXN; no HttpClient/URL left in FfmpegLocator.
+
+## Task: WebDAV backup upload removal — DONE
+- Ruling: same build+tests+static-grep gate (no TDD RED/GREEN for removals).
+- Deleted Core: BackupUploader.cs, BackupTargets.cs + BackupTargetsTests.cs,
+  BackupUploaderTests.cs.
+- MainWindow.ScheduledBackup.cs: removed _backupUploader field, upload call after
+  local export, and the whole TryUploadBackupAsync method. Local scheduled
+  backup (export + retention pruning + status) preserved.
+- AppSettings.cs: removed BackupTarget property and BackupTargetSettings class.
+- ApplicationCredentialStore.cs: removed BackupTargetPassword.
+- SettingsStore.cs: removed apply/capture/legacy-import of BackupTarget password.
+- MainWindow.Settings.cs: removed 6 BackupTarget save lines.
+- SettingsView.axaml(.cs): removed the WebDAV panel (7 controls + hint), load
+  block, and 5 value properties.
+- Strings.cs + LocalizationManager.cs: removed 9 BackupTarget/BackupUpload
+  string props, resource-map keys, and all 7 language values.
+- Verified: desktop 0 err/0 AXN; Core tests build 0 err; Core tests 467 passed;
+  desktop tests 380 passed / 1 known pre-existing PDF fail; zero residual
+  BackupTarget/BackupUpload refs. Note: verify-localization.cjs is stale
+  (references deleted MobileRemote.json) — final-pass cleanup.

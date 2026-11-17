@@ -64,14 +64,7 @@ public partial class App : Application
 
             bool ffmpegAvailable;
             using (StartupTimingLog.Time("FfmpegLocator.EnsureAvailableAsync"))
-            {
-                ffmpegAvailable = await FfmpegLocator.EnsureAvailableAsync(
-                    new Progress<string>(status =>
-                    {
-                        StartupTimingLog.Write($"FFmpeg status: {status}");
-                        startup.Status = status;
-                    }));
-            }
+                ffmpegAvailable = await FfmpegLocator.EnsureAvailableAsync();
             if (!ffmpegAvailable)
                 await AppMessageBox.ShowAsync(LocalizationManager.Current.FfmpegDownloadFailed);
 

@@ -1477,15 +1477,6 @@ public sealed record LocalizedStrings(
     public string ReduceMotion { get; init; } = "";
     public string ReduceMotionHint { get; init; } = "";
     public string ReduceMotionEnabled { get; init; } = "";
-    public string BackupTarget { get; init; } = "";
-    public string BackupTargetHint { get; init; } = "";
-    public string BackupTargetEnabled { get; init; } = "";
-    public string BackupTargetUrl { get; init; } = "";
-    public string BackupTargetDirectory { get; init; } = "";
-    public string BackupTargetUserName { get; init; } = "";
-    public string BackupTargetPassword { get; init; } = "";
-    public string BackupUploadDone { get; init; } = "";
-    public string BackupUploadFailed { get; init; } = "";
     /// <summary>Gets the year-in-review feature and window label.</summary>
     public string YearInReview { get; init; } = "";
     /// <summary>Gets the year-in-review headline.</summary>

@@ -203,8 +203,6 @@ public sealed class SettingsStore
         settings.LastFmApiSecret = credentials.LastFmApiSecret;
         settings.LastFmSessionKey = credentials.LastFmSessionKey;
         settings.FanartTvApiKey = credentials.FanartTvApiKey;
-        settings.BackupTarget ??= new BackupTargetSettings();
-        settings.BackupTarget.Password = credentials.BackupTargetPassword;
         settings.HyperFidelServers ??= [];
         var serverApiKeys = credentials.HyperFidelServerApiKeys;
         if (serverApiKeys is not null)
@@ -229,7 +227,6 @@ public sealed class SettingsStore
         credentials.LastFmApiSecret = settings.LastFmApiSecret?.Trim() ?? string.Empty;
         credentials.LastFmSessionKey = settings.LastFmSessionKey?.Trim() ?? string.Empty;
         credentials.FanartTvApiKey = settings.FanartTvApiKey?.Trim() ?? string.Empty;
-        credentials.BackupTargetPassword = settings.BackupTarget?.Password?.Trim() ?? string.Empty;
         credentials.HyperFidelServerApiKeys = (settings.HyperFidelServers ?? [])
             .Where(server =>
                 !string.IsNullOrWhiteSpace(server.Id) &&
@@ -256,11 +253,6 @@ public sealed class SettingsStore
 
         found |= ImportString(root, "LastFmApiKey", value => credentials.LastFmApiKey = value);
         found |= ImportString(root, "FanartTvApiKey", value => credentials.FanartTvApiKey = value);
-        if (TryGetProperty(root, "BackupTarget", out var backupTarget) &&
-            backupTarget.ValueKind == JsonValueKind.Object)
-        {
-            found |= ImportString(backupTarget, "Password", value => credentials.BackupTargetPassword = value);
-        }
 
         if (TryGetProperty(root, "HyperFidelServers", out var servers) &&
             servers.ValueKind == JsonValueKind.Array)
