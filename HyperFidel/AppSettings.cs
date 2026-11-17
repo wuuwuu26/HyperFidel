@@ -142,23 +142,6 @@ public sealed class AppSettings
     public HashSet<string> HyperFidelServerFavorites { get; set; } = [];
     /// <summary>Gets or sets persisted Infinite Mix preferences and recommendation feedback.</summary>
     public InfiniteMixSettings InfiniteMix { get; set; } = new();
-    /// <summary>Gets or sets a value indicating whether the MCP server is enabled.</summary>
-    public bool McpServerEnabled { get; set; }
-    /// <summary>Gets or sets the TCP port the MCP server listens on.</summary>
-    public int McpServerPort { get; set; } = 49200;
-    /// <summary>Gets or sets a value indicating whether the MCP server accepts connections from the local network.</summary>
-    public bool McpNetworkAccessEnabled { get; set; }
-    /// <summary>Gets or sets the bearer token required when MCP network access is enabled.</summary>
-    public string McpAccessToken { get; set; } = string.Empty;
-    /// <summary>Gets or sets whether the mobile web remote is available on the local network.</summary>
-    public bool MobileRemoteEnabled { get; set; }
-    /// <summary>Gets or sets the TCP port used by the mobile web remote.</summary>
-    public int MobileRemotePort { get; set; } = 49201;
-    /// <summary>Gets or sets the mobile bearer token overlaid from the encrypted credential store.</summary>
-    [JsonIgnore]
-    public string MobileRemoteAccessToken { get; set; } = string.Empty;
-    /// <summary>Gets or sets the set of MCP tool names that are individually disabled.</summary>
-    public HashSet<string> DisabledMcpTools { get; set; } = [];
     /// <summary>Gets or sets a value indicating whether the Internet Radio sidebar item is visible.</summary>
     public bool ShowInternetRadioItem { get; set; } = true;
     /// <summary>Gets or sets a value indicating whether the Podcasts sidebar item is visible.</summary>

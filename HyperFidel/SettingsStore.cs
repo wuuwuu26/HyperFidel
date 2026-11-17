@@ -203,7 +203,6 @@ public sealed class SettingsStore
         settings.LastFmApiSecret = credentials.LastFmApiSecret;
         settings.LastFmSessionKey = credentials.LastFmSessionKey;
         settings.FanartTvApiKey = credentials.FanartTvApiKey;
-        settings.MobileRemoteAccessToken = credentials.MobileRemoteAccessToken;
         settings.BackupTarget ??= new BackupTargetSettings();
         settings.BackupTarget.Password = credentials.BackupTargetPassword;
         settings.HyperFidelServers ??= [];
@@ -230,7 +229,6 @@ public sealed class SettingsStore
         credentials.LastFmApiSecret = settings.LastFmApiSecret?.Trim() ?? string.Empty;
         credentials.LastFmSessionKey = settings.LastFmSessionKey?.Trim() ?? string.Empty;
         credentials.FanartTvApiKey = settings.FanartTvApiKey?.Trim() ?? string.Empty;
-        credentials.MobileRemoteAccessToken = settings.MobileRemoteAccessToken?.Trim() ?? string.Empty;
         credentials.BackupTargetPassword = settings.BackupTarget?.Password?.Trim() ?? string.Empty;
         credentials.HyperFidelServerApiKeys = (settings.HyperFidelServers ?? [])
             .Where(server =>
@@ -258,7 +256,6 @@ public sealed class SettingsStore
 
         found |= ImportString(root, "LastFmApiKey", value => credentials.LastFmApiKey = value);
         found |= ImportString(root, "FanartTvApiKey", value => credentials.FanartTvApiKey = value);
-        found |= ImportString(root, "MobileRemoteAccessToken", value => credentials.MobileRemoteAccessToken = value);
         if (TryGetProperty(root, "BackupTarget", out var backupTarget) &&
             backupTarget.ValueKind == JsonValueKind.Object)
         {

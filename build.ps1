@@ -17,8 +17,6 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-& (Join-Path $PSScriptRoot 'scripts\verify-mcp-tool-parity.ps1')
-
 if ($RequireAsio -and $SkipAsio) {
     throw '-RequireAsio and -SkipAsio cannot be used together.'
 }

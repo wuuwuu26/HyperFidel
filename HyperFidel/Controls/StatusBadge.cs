@@ -22,7 +22,7 @@ public enum StatusBadgeState
 /// <summary>
 /// A small pill-shaped status indicator showing a coloured dot and a short label,
 /// used in Settings to surface the availability of subsystems such as FFmpeg,
-/// Steinberg ASIO, cwASIO, and the MCP server.
+/// Steinberg ASIO, and cwASIO.
 /// </summary>
 public class StatusBadge : TemplatedControl
 {

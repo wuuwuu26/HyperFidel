@@ -591,6 +591,20 @@ public partial class MainWindow : Window
         OpenSettingsAt("AudioDevice", scrollToEqualizer: true);
     }
 
+    /// <summary>Populates the transport output picker from the saved output profiles.</summary>
+    private void RefreshOutputPickerSelection()
+    {
+        _outputPickerUpdating = true;
+        try
+        {
+            var profiles = (_settings.OutputProfiles ?? []).ToList();
+            OutputPickerComboBox.ItemsSource = profiles;
+            OutputPickerComboBox.SelectedItem = profiles.FirstOrDefault(p =>
+                string.Equals(p.Name, _settings.SelectedOutputProfileName, StringComparison.OrdinalIgnoreCase));
+        }
+        finally { _outputPickerUpdating = false; }
+    }
+
     private void OutputPickerButton_OnClick(object? sender, RoutedEventArgs e)
     {
         EqPickerPopup.IsOpen = false;
@@ -602,7 +616,6 @@ public partial class MainWindow : Window
     {
         if (_outputPickerUpdating) return;
         if (OutputPickerComboBox.SelectedItem is not OutputProfile profile) return;
-        if (ReferenceEquals(profile, _browserOutputPickerProfile)) return;
         await SelectOutputProfileAsync(profile);
     }
 
@@ -632,29 +645,25 @@ public partial class MainWindow : Window
         if (_playbackShuttingDown)
             return;
         var selectionVersion = ++_outputProfileSelectionVersion;
-        var browserWasSelected = _browserAudioClientId is not null;
-        if (!browserWasSelected && string.Equals(profile.Name, _settings.SelectedOutputProfileName, StringComparison.Ordinal)) return;
+        if (string.Equals(profile.Name, _settings.SelectedOutputProfileName, StringComparison.Ordinal)) return;
 
         var outputChanged =
-            browserWasSelected || _settings.OutputBackend != profile.Backend ||
+            _settings.OutputBackend != profile.Backend ||
             !string.Equals(_settings.SelectedDriverName, profile.SelectedDriverName, StringComparison.Ordinal) ||
             !string.Equals(_settings.SelectedWasapiDeviceId, profile.SelectedWasapiDeviceId, StringComparison.Ordinal) ||
             !string.Equals(_settings.SelectedAirPlayDeviceId, profile.SelectedAirPlayDeviceId, StringComparison.Ordinal);
 
         // Snapshot playback state before StopPlaybackCore clears station/podcast fields.
-        var resume = GetOutputResumeForSelection(browserWasSelected, outputChanged);
-        var resumePath     = resume?.Path ?? _currentFilePath;
-        var resumeStation  = resume?.Radio;
-        var resumePodcast  = resume?.Podcast;
-        var resumePosition = resume?.Position ?? TimeSpan.Zero;
-        var wasPaused      = resume?.WasPaused == true;
-        var shouldResume   = resume is not null && !string.IsNullOrEmpty(resumePath);
+        var resumePath     = _currentFilePath;
+        var resumeStation  = _currentRadioStation;
+        var resumePodcast  = _currentPodcastPlayback;
+        var resumePosition = _player?.Position ?? TimeSpan.Zero;
+        var wasPaused      = _player?.IsPaused == true;
+        var shouldResume   = outputChanged && _player is not null && !string.IsNullOrEmpty(resumePath);
 
         if (outputChanged)
         {
-            _browserAudioClientId = null;
-            _browserOutputResume = null;
-            var stopped = StopPlaybackAsync(waitForCompleteDisposal: browserWasSelected);
+            var stopped = StopPlaybackAsync(waitForCompleteDisposal: false);
             var stoppedIntent = _playbackStarts.Current;
             await stopped;
             if (_playbackShuttingDown || selectionVersion != _outputProfileSelectionVersion ||
@@ -787,11 +796,11 @@ public partial class MainWindow : Window
     {
         if (OutputDeviceLockButton is null || OutputDeviceLockIconPath is null)
             return;
-        var isHeld = _player is not null && _player is not BrowserAudioPlayer;
+        var isHeld = _player is not null;
         OutputDeviceLockIconPath.Data = FindResource<StreamGeometry>(
             isHeld ? "IconLockClosed" : "IconLockOpen");
-        OutputDeviceLockButton.IsEnabled = _browserAudioClientId is null && (isHeld ||
-            (_audioDeviceExplicitlyReleased && !string.IsNullOrWhiteSpace(_releasedOutputPath)));
+        OutputDeviceLockButton.IsEnabled = isHeld ||
+            (_audioDeviceExplicitlyReleased && !string.IsNullOrWhiteSpace(_releasedOutputPath));
         ToolTip.SetTip(
             OutputDeviceLockButton,
             isHeld
@@ -842,18 +851,6 @@ public partial class MainWindow : Window
                 _settings.ShowMyPodcastsSection != window.ShowMyPodcastsSection ||
                 _settings.ShowPlexSection != window.ShowPlexSection;
             var motionChanged = _settings.ReduceMotion != window.ReduceMotionValue;
-            var mcpChanged =
-                _settings.McpServerEnabled != window.McpServerEnabled ||
-                _settings.McpServerPort    != window.McpServerPort ||
-                _settings.McpNetworkAccessEnabled != window.McpNetworkAccessEnabled ||
-                !string.Equals(_settings.McpAccessToken, window.McpAccessToken, StringComparison.Ordinal);
-            var mobileRemoteChanged =
-                _settings.MobileRemoteEnabled != window.MobileRemoteEnabled ||
-                _settings.MobileRemotePort != window.MobileRemotePort ||
-                !string.Equals(
-                    _settings.MobileRemoteAccessToken,
-                    window.MobileRemoteAccessToken,
-                    StringComparison.Ordinal);
             var plexServersChanged = !PlexServerSettingsEqual(
                 _settings.PlexServers,
                 window.SelectedPlexServers);
@@ -927,15 +924,6 @@ public partial class MainWindow : Window
                 InvalidateCatalogConfiguration();
             if (!hadHyperFidelServers && _settings.HyperFidelServers.Count > 0)
                 _settings.IsLocalLibrarySectionExpanded = true;
-            _settings.McpServerEnabled        = window.McpServerEnabled;
-            _settings.McpServerPort           = window.McpServerPort;
-            _settings.McpNetworkAccessEnabled = window.McpNetworkAccessEnabled;
-            _settings.McpAccessToken          = window.McpAccessToken;
-            _settings.MobileRemoteEnabled     = window.MobileRemoteEnabled;
-            _settings.MobileRemotePort        = window.MobileRemotePort;
-            _settings.MobileRemoteAccessToken = window.MobileRemoteAccessToken;
-            _settings.DisabledMcpTools        = window.DisabledMcpTools;
-            _mcpBridge.DisabledTools          = _settings.DisabledMcpTools;
             _settings.ScheduledBackup.Enabled        = window.ScheduledBackupEnabledValue;
             _settings.ScheduledBackup.IntervalDays   = window.ScheduledBackupIntervalValue;
             _settings.ScheduledBackup.RetentionCount = window.ScheduledBackupRetentionValue;
@@ -975,27 +963,6 @@ public partial class MainWindow : Window
             ApplyLoudnessNormalizationSettings(
                 _player,
                 _currentRadioStation is not null || _currentPodcastPlayback is not null);
-            if (mcpChanged)
-            {
-                if (_settings.McpServerEnabled)
-                    await _mcpServer.StartAsync(
-                        _settings.McpServerPort,
-                        _mcpBridge,
-                        _settings.McpNetworkAccessEnabled,
-                        _settings.McpAccessToken);
-                else
-                    await _mcpServer.StopAsync();
-            }
-            if (mobileRemoteChanged)
-            {
-                if (_settings.MobileRemoteEnabled)
-                    await _mobileRemoteServer.StartAsync(
-                        _settings.MobileRemotePort,
-                        _settings.MobileRemoteAccessToken,
-                        _mcpBridge);
-                else
-                    await _mobileRemoteServer.StopAsync();
-            }
             if (themeChanged)
             {
                 ThemeManager.Apply(_settings.Theme);

@@ -259,9 +259,6 @@ public partial class MainWindow : Window
     private WindowsEndpointVolumeSynchronizer? _endpointVolumeSynchronizer;
     private int _endpointVolumeSynchronizationVersion;
     private WindowsMediaTransportService? _windowsMediaTransport;
-    private readonly Mcp.McpPlayerBridge _mcpBridge = new();
-    private readonly Mcp.McpServerService _mcpServer = new();
-    private readonly Remote.MobileRemoteServerService _mobileRemoteServer = new();
     private static readonly object UiDiagnosticsLogLock = new();
     private static readonly Stopwatch UiDiagnosticsStopwatch = Stopwatch.StartNew();
     private DispatcherTimer? _uiDiagnosticsHeartbeatTimer;
@@ -493,23 +490,6 @@ public partial class MainWindow : Window
         SizeChanged += (_, _) => CaptureNormalWindowPlacement();
         LogUiDiagnostics(
             $"MainWindow LoadSettings completed libraryPaths={_settings.LibraryPaths?.Count ?? 0} hyperfidelServers={_settings.HyperFidelServers?.Count ?? 0} lastView={_settings.LastMainView}");
-        using (StartupTimingLog.Time("MainWindow.InitMcpBridge"))
-            InitMcpBridge();
-        _mcpBridge.DisabledTools = _settings.DisabledMcpTools;
-        if (_settings.McpServerEnabled)
-        {
-            StartupTimingLog.Write("MainWindow starting MCP server");
-            _ = _mcpServer.StartAsync(
-                _settings.McpServerPort,
-                _mcpBridge,
-                _settings.McpNetworkAccessEnabled,
-                _settings.McpAccessToken);
-        }
-        if (_settings.MobileRemoteEnabled)
-            _ = _mobileRemoteServer.StartAsync(
-                _settings.MobileRemotePort,
-                _settings.MobileRemoteAccessToken,
-                _mcpBridge);
         using (StartupTimingLog.Time("MainWindow.RestorePlaybackQueueState"))
             RestorePlaybackQueueState();
         LogUiDiagnostics("MainWindow RestorePlaybackQueueState completed");
@@ -691,122 +671,15 @@ public partial class MainWindow : Window
         }
     }
 
-    private void InitMcpBridge()
-    {
-        using var db = Library.AudioDatabase.OpenDefault();
-        _mcpBridge.GetStateFunc = () =>
-        {
-            var status = _player is null ? "stopped"
-                : _player.IsPaused ? "paused"
-                : "playing";
-            var currentQueueItem = _queueIndex >= 0 && _queueIndex < _queue.Count
-                ? _queue[_queueIndex]
-                : null;
-            return new Mcp.PlayerState(
-                status,
-                NowPlayingTitleBlock.Text,
-                NowPlayingArtistBlock.Text,
-                currentQueueItem?.Album,
-                _player is not null ? currentQueueItem?.FilePath : null,
-                _player?.Position.TotalSeconds ?? 0,
-                _player?.Duration.TotalSeconds ?? 0,
-                VolumeSlider.Value,
-                _queueIndex,
-                _queue.Count);
-        };
-        _mcpBridge.GetQueueFunc = () =>
-            _queue.Select((item, i) => new Mcp.QueueEntry(
-                i, i == _queueIndex, item.FilePath, item.DisplayTitle)).ToList();
-        _mcpBridge.GetCurrentArtworkFunc = ResolveMobileRemoteArtworkAsync;
-        _mcpBridge.GetMobilePlaybackInfoFunc = GetMobilePlaybackInfo;
-        _mcpBridge.SelectBrowserOutputFunc = SelectBrowserOutputAsync;
-        _mcpBridge.ReleaseBrowserOutputFunc = ReleaseBrowserOutputAsync;
-        _mcpBridge.GetBrowserAudioStateFunc = GetBrowserAudioState;
-        _mcpBridge.OpenBrowserAudioStreamFunc = id =>
-            _player is Audio.BrowserAudioPlayer browser && browser.Snapshot().StreamId == id &&
-            browser.Snapshot().ClientId == _browserAudioClientId
-                ? (stream, ct) => browser.WriteAsync(id, stream, ct) : null;
-        _mcpBridge.ReportBrowserAudioFunc = report => report.ClientId == _browserAudioClientId &&
-            _player is Audio.BrowserAudioPlayer browser && browser.Report(report);
-        _mcpBridge.OpenBrowserAudioResponseFunc = id => _player is Audio.BrowserAudioPlayer browser &&
-            browser.Snapshot().StreamId == id && browser.Snapshot().ClientId == _browserAudioClientId
-                ? (context, ct) => browser.WriteResponseAsync(id, context, ct) : null;
-        _mcpBridge.PlayQueueIndexFunc = async index =>
-        {
-            if (index < 0 || index >= _queue.Count)
-                return false;
-            _queueIndex = index;
-            var player = await StartReadyPlaybackAsync(_queue[index].FilePath);
-            return player is not null && ReferenceEquals(_player, player);
-        };
-        _mcpBridge.SearchMobileTracksFunc = SearchMobileRemoteTracksAsync;
-        _mcpBridge.SetBrowserMusicFormatFunc = id => _browserMusicEncoding = Audio.BrowserAudioEncoding.Find(id)!;
-        _mcpBridge.QueueMobileTracksFunc = QueueMobileRemoteTracksAsync;
-        _mcpBridge.BrowseMobileAllAlbumsFunc = BrowseMobileRemoteAllAlbumsAsync;
-        _mcpBridge.GetMobileLibraryArtworkFunc = ResolveMobileLibraryArtworkAsync;
-        _mcpBridge.BrowseMobileRadioFunc = BrowseMobileRadioAsync;
-        _mcpBridge.BrowseMobilePodcastsFunc = BrowseMobilePodcastsAsync;
-        _mcpBridge.BrowseMobileEpisodesFunc = BrowseMobileEpisodesAsync;
-        _mcpBridge.PlayMobileMediaFunc = PlayMobileMediaAsync;
-        _mcpBridge.BrowseMobileArtistsFunc = BrowseMobileRemoteArtistsAsync;
-        _mcpBridge.BrowseMobileAlbumsFunc = BrowseMobileRemoteAlbumsAsync;
-        _mcpBridge.BrowseMobileAlbumTracksFunc = BrowseMobileRemoteAlbumTracksAsync;
-        _mcpBridge.BrowseMobilePlaylistsFunc = BrowseMobileRemotePlaylistsAsync;
-        _mcpBridge.BrowseMobilePlaylistTracksFunc = BrowseMobileRemotePlaylistTracksAsync;
-        _mcpBridge.QueueMobilePlaylistFunc = (id, action) => QueueMobileRemotePlaylistAsync(id, action);
-        _mcpBridge.PlayMobilePlaylistFromTrackFunc = (id, index, identity) => QueueMobileRemotePlaylistAsync(id, "play", index, identity);
-        _mcpBridge.QueueMobileTrackFunc = QueueMobileRemoteTrackAsync;
-        _mcpBridge.GetCurrentFavoriteFunc = () =>
-            _currentTrackId.HasValue || CurrentHyperFidelFavoriteTarget is not null
-                ? _currentTrackIsFavorite
-                : null;
-        _mcpBridge.EditMobileQueueFunc = EditMobileRemoteQueueAsync;
-        _mcpBridge.PlayFileFunc    = path => StartCommandPlaybackAsync(path);
-        _mcpBridge.TogglePauseFunc = TogglePlaybackAsync;
-        _mcpBridge.SkipNextFunc    = PlayNextAsync;
-        _mcpBridge.SkipPreviousFunc = PlayPreviousAsync;
-        _mcpBridge.StopFunc        = StopPlayback;
-        _mcpBridge.SeekFunc        = SeekFromRemoteAsync;
-        _mcpBridge.SetVolumeFunc   = v => VolumeSlider.Value = Math.Clamp(v, 0, 1);
-        _mcpBridge.AppendToQueueFunc = path => InsertPlaybackQueueAsync(path, playNext: false);
-        _mcpBridge.PlayNextFunc = path => InsertPlaybackQueueAsync(path, playNext: true);
-        _mcpBridge.ClearQueueFunc = ClearPlaybackQueueAsync;
-        _mcpBridge.ReplaceQueueFunc = ReplacePlaybackQueueAsync;
-        _mcpBridge.RefreshPlaylistsFunc = LoadNavPlaylists;
-        _mcpBridge.GetHyperFidelServersFunc = () => _settings.HyperFidelServers ?? [];
-        _mcpBridge.ResolveRemoteTrackFunc = ResolveRemoteMcpTrackAsync;
-        _mcpBridge.SetCurrentFavoriteFunc = SetCurrentTrackFavorite;
-        _mcpBridge.SetTracksFavoriteFunc = SetTracksFavoriteByPathsAsync;
-        _mcpBridge.SetTracksRatingFunc = SetTracksRatingByPathsAsync;
-        _mcpBridge.CreateSimilarPlaylistFunc = CreateSimilarPlaylistByPathAsync;
-        _mcpBridge.ControlInfiniteMixFunc = ControlInfiniteMixAsync;
-        _mcpBridge.GetOutputProfilesFunc = () => (_settings.OutputProfiles ?? [])
-            .Select(profile => string.Equals(profile.Name, _settings.SelectedOutputProfileName, StringComparison.OrdinalIgnoreCase)
-                ? $"{profile.Name} (selected)"
-                : profile.Name)
-            .ToList();
-        _mcpBridge.SelectOutputProfileFunc = SelectOutputProfileByNameAsync;
-        _mcpBridge.GetEqualizerProfilesFunc = () => new Mcp.EqualizerProfileState(
-            (_settings.EqualizerProfiles ?? []).Select(profile => profile.Name).ToList(),
-            _settings.SelectedEqualizerProfileName,
-            _settings.EqualizerEnabled);
-        _mcpBridge.ConfigureEqualizerFunc = ConfigureEqualizerAsync;
-        _mcpBridge.GetCurrentLyricsFunc = GetCurrentCachedLyricsForToolAsync;
-        _mcpBridge.GetHyperFidelServerNamesFunc = () => (_settings.HyperFidelServers ?? [])
-            .Select(server => server.Name)
-            .ToList();
-        _mcpBridge.TriggerHyperFidelServerScanFunc = TriggerHyperFidelServerScanByNameAsync;
-    }
-
     /// <summary>
-    /// Resolves a path supplied by an MCP/AI tool into a playable path. A remote HyperFidel
-    /// Server reference (<c>hyperfidel://serverId/track/trackId</c>) is resolved to the real
-    /// authenticated stream URL, and the track's metadata is registered in
+    /// Resolves a persisted playlist or queue reference into a playable path. A remote
+    /// HyperFidel Server reference (<c>hyperfidel://serverId/track/trackId</c>) is resolved to
+    /// the real authenticated stream URL, and the track's metadata is registered in
     /// <see cref="_hyperfidelTracksByUrl"/> so the transport, history, lyrics, and favorite
     /// button work exactly like a track opened from the UI. Any other path is returned
     /// unchanged so local files and already-real URLs pass straight through.
     /// </summary>
-    /// <param name="path">The tool-supplied path or remote reference.</param>
+    /// <param name="path">The persisted reference or playable path.</param>
     /// <returns>The playable path, or <see langword="null"/> when a remote reference cannot be resolved.</returns>
     private async Task<string?> ResolveRemoteMcpTrackAsync(string path)
         => await ResolveRemoteMcpTrackForPlaybackAsync(path, () => true);
@@ -943,8 +816,6 @@ public partial class MainWindow : Window
         _appLogoGlowTimer?.Stop();
         _appLogoGlowTimer = null;
         CloseEmbeddedSettings();
-        _ = _mcpServer.StopAsync();
-        _ = _mobileRemoteServer.StopAsync();
         ContentDataGrid.VerticalScroll -= ContentDataGrid_OnVerticalScroll;
         _libraryWatcher?.Dispose();
         _libraryWatcher = null;

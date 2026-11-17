@@ -21,10 +21,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Verify MCP tool parity
-        shell: pwsh
-        run: ./scripts/verify-mcp-tool-parity.ps1
-
       - name: Verify localization parity
         shell: pwsh
         run: ./scripts/verify-localization-parity.ps1

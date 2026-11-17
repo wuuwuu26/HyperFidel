@@ -114,11 +114,6 @@ if (-not $SkipTests -and $IsWindows) {
     })
 }
 $steps.Add(@{
-    Name       = 'Verify MCP tool parity'
-    Executable = 'pwsh'
-    Arguments  = @('-NoProfile', '-File', 'scripts/verify-mcp-tool-parity.ps1')
-})
-$steps.Add(@{
     Name       = 'Verify localization parity'
     Executable = 'pwsh'
     Arguments  = @('-NoProfile', '-File', 'scripts/verify-localization-parity.ps1')

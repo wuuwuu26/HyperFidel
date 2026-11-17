@@ -129,3 +129,43 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
 - Verified: desktop 0 err/0 AXN; Tests 0 err; Core.Tests 0 err.
 - NOTE: scripts/verify-mcp-tool-parity.ps1 is now stale (references deleted
   HyperFidel/AI/); will be removed with the MCP slice.
+
+## Task: MCP/MobileRemote/BrowserAudio removal — IN PROGRESS
+- Goal: delete HyperFidel/Mcp/, HyperFidel/Remote/, HyperFidel/Audio/BrowserAudio*,
+  MainWindow.MobileRemote*.cs atomically (mutually coupled). Keep local
+  release-output-device feature (_releasedOutput* fields) and the local
+  ResolveRemoteMcpTrack* helpers used by Queue.cs/Playback.cs.
+- Radio/Podcast/Plex/CrossDeviceResume/MusicBrainz/AirPlay kept for later slices
+  (verified they do not reference this chain).
+
+## Task: MCP/MobileRemote/BrowserAudio removal — DONE
+- Deleted HyperFidel/Mcp/, HyperFidel/Remote/, HyperFidel/Audio/BrowserAudio*.cs,
+  MainWindow.MobileRemote*.cs, SettingsView.MobileRemote.cs.
+- MainWindow.xaml.cs: removed 3 bridge fields, startup server starts, InitMcpBridge(),
+  OnClosed server stops; kept local ResolveRemoteMcpTrack* helpers (used by Queue/
+  Playback) and updated their XML doc to say persisted playlist/queue reference.
+- MainWindow.Settings.cs: removed browser output state from SelectOutputProfileAsync
+  and UpdateOutputDeviceLockButton; kept a browser-free RefreshOutputPickerSelection
+  that populates from saved profiles; removed MCP/mobile change detection, save
+  lines and server start/stop blocks. Local release-output-device preserved.
+- MainWindow.Playback.cs / PlaybackState.cs / Transport.cs: removed browser player
+  branches, format display and _browserOutputResume resets.
+- AppSettings: removed MCP/mobile props; SettingsStore + ApplicationCredentialStore:
+  removed MobileRemoteAccessToken overlay/snapshot/legacy import.
+- SettingsView.axaml(.cs): removed Integration nav group, MCP + MobileRemote panels,
+  token generators, status badges, tool checkbox parity list, properties/load/save.
+- csproj: removed QRCoder + both ModelContextProtocol packages, embedded
+  MobileRemote.* resources, BrowserAudioSmoke InternalsVisibleTo. Zeroconf kept
+  (AirPlay discovery, later slice).
+- Deleted dead scripts/BrowserAudioSmoke, scripts/RemoteSmoke, verify-mcp-tool-parity;
+  removed their CI/verify-all/build.ps1 refs. Removed stale settings keys from
+  prepare-first-playback-check.ps1.
+- AboutWindow.axaml removed QRCoder + MCP SDK license lines; THIRD_PARTY_NOTICES
+  removed QRCoder + MCP SDK; deleted licenses/QRCoder-MIT.txt and orphaned
+  Localization/MobileRemote.json; StatusBadge doc updated.
+- Deleted chain tests (7) + Ui.Smoke BrowserOutputReclaimWorkflows (and its Program.cs
+  call).
+- KEPT Radio/Podcast/Plex/CrossDeviceResume/MusicBrainz/AirPlay for later slices.
+- CHANGELOG Unreleased/Removed updated to describe the fully local-only player.
+- Verified: desktop 0 err/0 AXN; Tests 0 err (only known pre-existing
+  YearInReviewPdfExporter failure); Core.Tests 0 err; Ui.Smoke 0 err.

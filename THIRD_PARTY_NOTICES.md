@@ -22,9 +22,6 @@ packages.
   Microsoft.Data.Sqlite.Core.
 - [NAudio 2.3.0](https://github.com/naudio/NAudio), including NAudio.Core,
   NAudio.Asio, NAudio.Wasapi, NAudio.WinMM, NAudio.Midi, and NAudio.WinForms.
-- [QRCoder 1.7.0](https://github.com/Shane32/QRCoder), used for offline mobile
-  remote QR codes. Its original copyright and license are included in
-  `licenses/QRCoder-MIT.txt`. Only the cross-platform PNG byte renderer is used.
 - [.NET runtime libraries](https://github.com/dotnet/runtime), including
   System.Security.Cryptography.ProtectedData, System.IO.Pipelines,
   System.Memory, and Microsoft.Extensions support libraries.
@@ -39,10 +36,6 @@ packages.
 
 The complete Apache License 2.0 text is the repository's `LICENSE` file.
 
-- [ModelContextProtocol C# SDK 1.4.0](https://github.com/modelcontextprotocol/csharp-sdk)
-  (`ModelContextProtocol`, `ModelContextProtocol.Core`,
-  `ModelContextProtocol.AspNetCore`), copyright © Model Context Protocol a
-  Series of LF Projects, LLC.
 - [Apache Lucene.NET 4.8.0-beta00017](https://lucenenet.apache.org/), copyright
   2006-2024 The Apache Software Foundation. This product includes software
   developed at The Apache Software Foundation. Its package NOTICE is copied to

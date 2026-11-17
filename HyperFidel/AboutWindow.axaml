@@ -97,10 +97,8 @@
                                Text="The HyperFidel name, wordmark, logo, and application icon are not granted as trademarks by the Apache License."/>
                     <TextBlock Classes="license" Text="cwASIO — MIT License"/>
                     <TextBlock Classes="license" Text="Avalonia 12.1.4 — MIT License"/>
-                    <TextBlock Classes="license" Text="QRCoder 1.8.1 — MIT License"/>
                     <TextBlock Classes="license" Text="SkiaSharp 3.119.4 — MIT License"/>
                     <TextBlock Classes="license" Text="Lucene.NET 4.8.0-beta00018 — Apache License 2.0"/>
-                    <TextBlock Classes="license" Text="ModelContextProtocol C# SDK 2.2.0 — Apache License 2.0"/>
                     <TextBlock Classes="license" Text="Microsoft.Data.Sqlite 10.0.13 — MIT License"/>
                     <TextBlock Classes="license" Text="NAudio 2.3.0 — MIT License"/>
                     <TextBlock Classes="license" Text="TagLibSharp 2.3.0 — LGPL-2.1-only"/>

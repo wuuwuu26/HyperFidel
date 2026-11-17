@@ -307,7 +307,6 @@ public partial class MainWindow : Window
         if (!_playbackStarts.IsCurrent(intent))
             return;
         _currentFilePath = filePath;
-        _browserOutputResume = null;
         _currentRadioStation = radioStation;
         _currentPodcastPlayback = podcastPlayback;
         _podcastResumePrepared = false;
@@ -357,9 +356,7 @@ public partial class MainWindow : Window
 #else
         const bool usesDop = false;
 #endif
-        FileInfoTextBlock.Text = player is BrowserAudioPlayer browserOutput
-            ? browserOutput.OutputFormat
-            : FormatFileInfo(info, usesDop, usesNativeDsd);
+        FileInfoTextBlock.Text = FormatFileInfo(info, usesDop, usesNativeDsd);
         if (radioStation is null && podcastPlayback is null)
         {
             _currentNowPlayingProvider = _localNowPlayingProvider;
@@ -727,12 +724,6 @@ public partial class MainWindow : Window
         string filePath, bool allowQueuedTracks, CancellationToken cancellationToken)
     {
         var playbackTrack = ResolveGaplessPlaybackItem(filePath);
-        if (_browserAudioClientId is { } browserClient)
-        {
-            if (_currentPodcastPlayback?.Episode.FeedDuration is { } feedDuration && playbackTrack.KnownDuration is null)
-                playbackTrack = playbackTrack with { KnownDuration = feedDuration };
-            return await CreateBrowserAudioPlayerAsync(playbackTrack, browserClient, _currentRadioStation, _currentPodcastPlayback, cancellationToken);
-        }
         var ext = Path.GetExtension(playbackTrack.PlaybackPath);
         IAudioPlayer player;
         AudioFileInfo info;

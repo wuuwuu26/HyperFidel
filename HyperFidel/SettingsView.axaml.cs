@@ -18,7 +18,6 @@ using HyperFidel.Controls;
 using HyperFidel.Library;
 using HyperFidel.Localization;
 using HyperFidel.Streaming;
-using System.Security.Cryptography;
 using AvaloniaApp = Avalonia.Application;
 using UiLanguage = HyperFidel.Localization.Language;
 
@@ -254,33 +253,7 @@ internal partial class SettingsView : UserControl
         StreamingLoudnessNormalizationCheckBox.IsChecked = settings.StreamingLoudnessNormalizationEnabled;
         RefreshEqualizerProfileText();
         RebuildEqualizerEditor();
-        McpServerEnabledCheckBox.IsChecked        = settings.McpServerEnabled;
-        McpServerPortNumericUpDown.Value          = settings.McpServerPort;
-        McpNetworkAccessCheckBox.IsChecked        = settings.McpNetworkAccessEnabled;
-        McpAccessTokenTextBox.Text                = settings.McpAccessToken;
-        MobileRemoteEnabledCheckBox.IsChecked     = settings.MobileRemoteEnabled;
-        MobileRemotePortNumericUpDown.Value       = settings.MobileRemotePort;
-        MobileRemoteAccessTokenTextBox.Text       = settings.MobileRemoteAccessToken;
-        InitMcpToolCheckBoxes(settings.DisabledMcpTools);
         UpdateSubsystemStatusBadges();
-        McpServerEnabledCheckBox.IsCheckedChanged += (_, _) => UpdateMcpStatusBadge();
-        McpNetworkAccessCheckBox.IsCheckedChanged += (_, _) =>
-        {
-            if (McpNetworkAccessCheckBox.IsChecked == true && string.IsNullOrWhiteSpace(McpAccessTokenTextBox.Text))
-                McpAccessTokenTextBox.Text = GenerateMcpAccessToken();
-        };
-        MobileRemoteEnabledCheckBox.IsCheckedChanged += (_, _) =>
-        {
-            if (MobileRemoteEnabledCheckBox.IsChecked == true &&
-                string.IsNullOrWhiteSpace(MobileRemoteAccessTokenTextBox.Text))
-            {
-                MobileRemoteAccessTokenTextBox.Text = GenerateMcpAccessToken();
-            }
-            UpdateMobileRemoteStatus();
-        };
-        MobileRemotePortNumericUpDown.ValueChanged += (_, _) => UpdateMobileRemoteStatus();
-        InitializeMobileRemoteAddresses();
-        UpdateMobileRemoteStatus();
         ShowInternetRadioItemCheckBox.IsChecked = settings.ShowInternetRadioItem;
         ShowPodcastsItemCheckBox.IsChecked      = settings.ShowPodcastsItem;
         ShowQueueItemCheckBox.IsChecked         = settings.ShowQueueItem;
@@ -344,10 +317,7 @@ internal partial class SettingsView : UserControl
         AsioStatusPanel.IsVisible = showAsio;
         CwAsioStatusPanel.IsVisible = showAsio;
         if (!showAsio)
-        {
-            UpdateMcpStatusBadge();
             return;
-        }
 
         bool asio = SteinbergAsioStream.IsAvailable;
         AsioStatusBadge.State = asio ? StatusBadgeState.Ok : StatusBadgeState.Off;
@@ -356,47 +326,7 @@ internal partial class SettingsView : UserControl
         bool cwAsio = SteinbergAsioStream.IsCwAsioAvailable;
         CwAsioStatusBadge.State = cwAsio ? StatusBadgeState.Ok : StatusBadgeState.Off;
         CwAsioStatusBadge.Text = cwAsio ? loc.StatusAvailable : loc.StatusUnavailable;
-
-        UpdateMcpStatusBadge();
     }
-
-    /// <summary>Updates the MCP server badge to reflect the current enable toggle state.</summary>
-    private void UpdateMcpStatusBadge()
-    {
-        var loc = LocalizationManager.Current;
-        bool enabled = McpServerEnabledCheckBox.IsChecked == true;
-        McpStatusBadge.State = enabled ? StatusBadgeState.Ok : StatusBadgeState.Off;
-        McpStatusBadge.Text = enabled ? loc.StatusEnabled : loc.StatusDisabled;
-    }
-
-    /// <summary>Updates the separate mobile-remote status and browser address.</summary>
-    private void UpdateMobileRemoteStatus()
-    {
-        var enabled = MobileRemoteEnabledCheckBox.IsChecked == true;
-        MobileRemoteStatusBadge.State = enabled ? StatusBadgeState.Ok : StatusBadgeState.Off;
-        MobileRemoteStatusBadge.Text = enabled
-            ? LocalizationManager.Current.StatusEnabled
-            : LocalizationManager.Current.StatusDisabled;
-        var port = (int)(MobileRemotePortNumericUpDown.Value ?? 49201);
-        UpdateMobileRemoteQr(port, enabled);
-    }
-
-    /// <summary>Replaces the MCP network-access token with a cryptographically random value.</summary>
-    private void GenerateMcpAccessToken_Click(object? sender, RoutedEventArgs e) =>
-        McpAccessTokenTextBox.Text = GenerateMcpAccessToken();
-
-    /// <summary>Replaces the mobile remote token with a cryptographically random value.</summary>
-    /// <param name="sender">Event sender.</param>
-    /// <param name="e">Click event arguments.</param>
-    private void GenerateMobileRemoteAccessToken_Click(object? sender, RoutedEventArgs e) =>
-        MobileRemoteAccessTokenTextBox.Text = GenerateMcpAccessToken();
-
-    /// <summary>Creates a URL-safe 256-bit bearer token.</summary>
-    private static string GenerateMcpAccessToken() =>
-        Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
-            .TrimEnd('=')
-            .Replace('+', '-')
-            .Replace('/', '_');
 
     /// <summary>Raised when the embedded settings view requests save or cancel.</summary>
     internal event EventHandler<bool>? CompletionRequested;
@@ -610,48 +540,6 @@ internal partial class SettingsView : UserControl
     /// <summary>Gets independent copies of all configured HyperFidel Server connections.</summary>
     public IReadOnlyList<HyperFidelServerSettings> SelectedHyperFidelServers =>
         _hyperfidelServers.Select(CloneHyperFidelServer).ToList().AsReadOnly();
-    /// <summary>Gets a value indicating whether the MCP server should be enabled.</summary>
-    public bool McpServerEnabled => McpServerEnabledCheckBox.IsChecked == true;
-    /// <summary>Gets the TCP port configured for the MCP server.</summary>
-    public int McpServerPort => (int)(McpServerPortNumericUpDown.Value ?? 49200);
-
-    /// <summary>Gets whether MCP connections from the local network are enabled.</summary>
-    public bool McpNetworkAccessEnabled => McpNetworkAccessCheckBox.IsChecked == true;
-
-    /// <summary>Gets the bearer token used to authenticate network MCP requests.</summary>
-    public string McpAccessToken
-    {
-        get
-        {
-            var token = McpAccessTokenTextBox.Text?.Trim() ?? string.Empty;
-            if (McpNetworkAccessEnabled && string.IsNullOrEmpty(token))
-            {
-                token = GenerateMcpAccessToken();
-                McpAccessTokenTextBox.Text = token;
-            }
-            return token;
-        }
-    }
-    /// <summary>Gets whether LAN access to the mobile web remote is enabled.</summary>
-    public bool MobileRemoteEnabled => MobileRemoteEnabledCheckBox.IsChecked == true;
-    /// <summary>Gets the mobile web remote TCP port.</summary>
-    public int MobileRemotePort => (int)(MobileRemotePortNumericUpDown.Value ?? 49201);
-    /// <summary>Gets the dedicated mobile web remote bearer token, generating one when required.</summary>
-    public string MobileRemoteAccessToken
-    {
-        get
-        {
-            var token = MobileRemoteAccessTokenTextBox.Text?.Trim() ?? string.Empty;
-            if (MobileRemoteEnabled && string.IsNullOrEmpty(token))
-            {
-                token = GenerateMcpAccessToken();
-                MobileRemoteAccessTokenTextBox.Text = token;
-            }
-            return token;
-        }
-    }
-    /// <summary>Gets the set of MCP tool names that should be disabled.</summary>
-    public HashSet<string> DisabledMcpTools => ReadDisabledMcpTools();
     /// <summary>Gets a value indicating whether the Internet Radio sidebar item should be visible.</summary>
     public bool ShowInternetRadioItem => ShowInternetRadioItemCheckBox.IsChecked == true;
     /// <summary>Gets a value indicating whether the Podcasts sidebar item should be visible.</summary>
@@ -1311,10 +1199,6 @@ internal partial class SettingsView : UserControl
     internal void Deactivate()
     {
         _metadataDeactivated = true;
-        _mobileRemoteClosed = true;
-        MobileRemoteQrImage.Source = null;
-        _mobileRemoteQr?.Dispose();
-        _mobileRemoteQr = null;
         foreach (var cts in _activeScans.Values)
             cts.Cancel();
         _hyperfidelStatusCts?.Cancel();
@@ -1355,8 +1239,6 @@ internal partial class SettingsView : UserControl
         AppearancePanel.IsVisible              = tag == "Appearance";
         UserProfilesPanel.IsVisible            = tag == "UserProfiles";
         ArtistInfoPanel.IsVisible              = tag == "ArtistInfo";
-        McpPanel.IsVisible                     = tag == "Mcp";
-        MobileRemotePanel.IsVisible            = tag == "MobileRemote";
         SettingsContentScrollViewer.Offset = new Vector(0, 0);
         AnimateSettingsSection(tag switch
         {
@@ -1368,8 +1250,6 @@ internal partial class SettingsView : UserControl
             "Appearance" => AppearancePanel,
             "UserProfiles" => UserProfilesPanel,
             "ArtistInfo" => ArtistInfoPanel,
-            "Mcp" => McpPanel,
-            "MobileRemote" => MobileRemotePanel,
             _ => null
         });
         if (tag == "Metadata" && !_metadataAnalysisLoaded)
@@ -3316,125 +3196,7 @@ internal partial class SettingsView : UserControl
     private void CancelButton_OnClick(object? sender, RoutedEventArgs e) =>
         CompletionRequested?.Invoke(this, false);
 
-    private static readonly (string ToolName, string PropName)[] McpToolDefs =
-    [
-        ("get_now_playing",       nameof(McpToolGetNowPlaying)),
-        ("get_queue",             nameof(McpToolGetQueue)),
-        ("get_current_time",      nameof(McpToolGetCurrentTime)),
-        ("play",                  nameof(McpToolPlay)),
-        ("pause_resume",          nameof(McpToolPauseResume)),
-        ("next_track",            nameof(McpToolNextTrack)),
-        ("previous_track",        nameof(McpToolPreviousTrack)),
-        ("stop",                  nameof(McpToolStop)),
-        ("seek",                  nameof(McpToolSeek)),
-        ("set_volume",            nameof(McpToolSetVolume)),
-        ("queue_append",          nameof(McpToolQueueAppend)),
-        ("queue_play_next",       nameof(McpToolQueuePlayNext)),
-        ("search_library",        nameof(McpToolSearchLibrary)),
-        ("list_playlists",        nameof(McpToolListPlaylists)),
-        ("get_playlist_tracks",   nameof(McpToolGetPlaylistTracks)),
-        ("create_playlist",       nameof(McpToolCreatePlaylist)),
-        ("create_smart_playlist", nameof(McpToolCreateSmartPlaylist)),
-        ("get_play_history",      nameof(McpToolGetPlayHistory)),
-        ("clear_queue",           nameof(McpToolClearQueue)),
-        ("replace_queue",         nameof(McpToolReplaceQueue)),
-        ("set_current_favorite", nameof(McpToolSetCurrentFavorite)),
-        ("control_infinite_mix", nameof(McpToolControlInfiniteMix)),
-        ("list_output_profiles", nameof(McpToolListOutputProfiles)),
-        ("select_output_profile", nameof(McpToolSelectOutputProfile)),
-        ("list_equalizer_profiles", nameof(McpToolListEqualizerProfiles)),
-        ("configure_equalizer", nameof(McpToolConfigureEqualizer)),
-        ("get_current_lyrics", nameof(McpToolGetCurrentLyrics)),
-        ("list_hyperfidel_servers", nameof(McpToolListHyperFidelServers)),
-        ("scan_hyperfidel_server", nameof(McpToolScanHyperFidelServer)),
-        ("get_year_in_review",    nameof(McpToolGetYearInReview)),
-        ("get_track_key",         nameof(McpToolGetTrackKey)),
-        ("set_tracks_favorite",   nameof(McpToolSetTracksFavorite)),
-        ("set_tracks_rating",     nameof(McpToolSetTracksRating)),
-        ("create_similar_playlist", nameof(McpToolCreateSimilarPlaylist)),
-    ];
 
-    /// <summary>Initialises each tool checkbox from the persisted disabled-tool set.</summary>
-    /// <param name="disabled">The set of currently disabled tool names.</param>
-    private void InitMcpToolCheckBoxes(HashSet<string> disabled)
-    {
-        McpToolGetNowPlaying.IsChecked       = !disabled.Contains("get_now_playing");
-        McpToolGetQueue.IsChecked            = !disabled.Contains("get_queue");
-        McpToolGetCurrentTime.IsChecked      = !disabled.Contains("get_current_time");
-        McpToolPlay.IsChecked                = !disabled.Contains("play");
-        McpToolPauseResume.IsChecked         = !disabled.Contains("pause_resume");
-        McpToolNextTrack.IsChecked           = !disabled.Contains("next_track");
-        McpToolPreviousTrack.IsChecked       = !disabled.Contains("previous_track");
-        McpToolStop.IsChecked                = !disabled.Contains("stop");
-        McpToolSeek.IsChecked                = !disabled.Contains("seek");
-        McpToolSetVolume.IsChecked           = !disabled.Contains("set_volume");
-        McpToolQueueAppend.IsChecked         = !disabled.Contains("queue_append");
-        McpToolQueuePlayNext.IsChecked       = !disabled.Contains("queue_play_next");
-        McpToolSearchLibrary.IsChecked       = !disabled.Contains("search_library");
-        McpToolListPlaylists.IsChecked       = !disabled.Contains("list_playlists");
-        McpToolGetPlaylistTracks.IsChecked   = !disabled.Contains("get_playlist_tracks");
-        McpToolCreatePlaylist.IsChecked      = !disabled.Contains("create_playlist");
-        McpToolCreateSmartPlaylist.IsChecked = !disabled.Contains("create_smart_playlist");
-        McpToolGetPlayHistory.IsChecked      = !disabled.Contains("get_play_history");
-        McpToolClearQueue.IsChecked          = !disabled.Contains("clear_queue");
-        McpToolReplaceQueue.IsChecked        = !disabled.Contains("replace_queue");
-        McpToolSetCurrentFavorite.IsChecked  = !disabled.Contains("set_current_favorite");
-        McpToolControlInfiniteMix.IsChecked  = !disabled.Contains("control_infinite_mix");
-        McpToolListOutputProfiles.IsChecked  = !disabled.Contains("list_output_profiles");
-        McpToolSelectOutputProfile.IsChecked = !disabled.Contains("select_output_profile");
-        McpToolListEqualizerProfiles.IsChecked = !disabled.Contains("list_equalizer_profiles");
-        McpToolConfigureEqualizer.IsChecked  = !disabled.Contains("configure_equalizer");
-        McpToolGetCurrentLyrics.IsChecked    = !disabled.Contains("get_current_lyrics");
-        McpToolListHyperFidelServers.IsChecked  = !disabled.Contains("list_hyperfidel_servers");
-        McpToolScanHyperFidelServer.IsChecked   = !disabled.Contains("scan_hyperfidel_server");
-        McpToolGetYearInReview.IsChecked     = !disabled.Contains("get_year_in_review");
-        McpToolGetTrackKey.IsChecked         = !disabled.Contains("get_track_key");
-        McpToolSetTracksFavorite.IsChecked   = !disabled.Contains("set_tracks_favorite");
-        McpToolSetTracksRating.IsChecked     = !disabled.Contains("set_tracks_rating");
-        McpToolCreateSimilarPlaylist.IsChecked = !disabled.Contains("create_similar_playlist");
-    }
-
-    /// <summary>Reads the checkbox states and returns the set of tool names that are disabled.</summary>
-    /// <returns>A <see cref="HashSet{T}"/> of disabled MCP tool names.</returns>
-    private HashSet<string> ReadDisabledMcpTools()
-    {
-        var disabled = new HashSet<string>();
-        if (McpToolGetNowPlaying.IsChecked       != true) disabled.Add("get_now_playing");
-        if (McpToolGetQueue.IsChecked            != true) disabled.Add("get_queue");
-        if (McpToolGetCurrentTime.IsChecked      != true) disabled.Add("get_current_time");
-        if (McpToolPlay.IsChecked                != true) disabled.Add("play");
-        if (McpToolPauseResume.IsChecked         != true) disabled.Add("pause_resume");
-        if (McpToolNextTrack.IsChecked           != true) disabled.Add("next_track");
-        if (McpToolPreviousTrack.IsChecked       != true) disabled.Add("previous_track");
-        if (McpToolStop.IsChecked                != true) disabled.Add("stop");
-        if (McpToolSeek.IsChecked                != true) disabled.Add("seek");
-        if (McpToolSetVolume.IsChecked           != true) disabled.Add("set_volume");
-        if (McpToolQueueAppend.IsChecked         != true) disabled.Add("queue_append");
-        if (McpToolQueuePlayNext.IsChecked       != true) disabled.Add("queue_play_next");
-        if (McpToolSearchLibrary.IsChecked       != true) disabled.Add("search_library");
-        if (McpToolListPlaylists.IsChecked       != true) disabled.Add("list_playlists");
-        if (McpToolGetPlaylistTracks.IsChecked   != true) disabled.Add("get_playlist_tracks");
-        if (McpToolCreatePlaylist.IsChecked      != true) disabled.Add("create_playlist");
-        if (McpToolCreateSmartPlaylist.IsChecked != true) disabled.Add("create_smart_playlist");
-        if (McpToolGetPlayHistory.IsChecked      != true) disabled.Add("get_play_history");
-        if (McpToolClearQueue.IsChecked          != true) disabled.Add("clear_queue");
-        if (McpToolReplaceQueue.IsChecked        != true) disabled.Add("replace_queue");
-        if (McpToolSetCurrentFavorite.IsChecked  != true) disabled.Add("set_current_favorite");
-        if (McpToolControlInfiniteMix.IsChecked  != true) disabled.Add("control_infinite_mix");
-        if (McpToolListOutputProfiles.IsChecked  != true) disabled.Add("list_output_profiles");
-        if (McpToolSelectOutputProfile.IsChecked != true) disabled.Add("select_output_profile");
-        if (McpToolListEqualizerProfiles.IsChecked != true) disabled.Add("list_equalizer_profiles");
-        if (McpToolConfigureEqualizer.IsChecked  != true) disabled.Add("configure_equalizer");
-        if (McpToolGetCurrentLyrics.IsChecked    != true) disabled.Add("get_current_lyrics");
-        if (McpToolListHyperFidelServers.IsChecked  != true) disabled.Add("list_hyperfidel_servers");
-        if (McpToolScanHyperFidelServer.IsChecked   != true) disabled.Add("scan_hyperfidel_server");
-        if (McpToolGetYearInReview.IsChecked     != true) disabled.Add("get_year_in_review");
-        if (McpToolGetTrackKey.IsChecked         != true) disabled.Add("get_track_key");
-        if (McpToolSetTracksFavorite.IsChecked   != true) disabled.Add("set_tracks_favorite");
-        if (McpToolSetTracksRating.IsChecked     != true) disabled.Add("set_tracks_rating");
-        if (McpToolCreateSimilarPlaylist.IsChecked != true) disabled.Add("create_similar_playlist");
-        return disabled;
-    }
 }
 
 /// <summary>
