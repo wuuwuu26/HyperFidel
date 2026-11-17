@@ -955,7 +955,6 @@ public partial class MainWindow : Window
             _settings.ShowQueueItem           = window.ShowQueueItem;
             _settings.ReduceMotion             = window.ReduceMotionValue;
             StartAppLogoGlow();
-            _settings.CheckForUpdatesOnStartup = window.CheckForUpdatesOnStartup;
             _settings.StartMaximized           = window.StartMaximized;
             _settings.ShowLocalLibrarySection = window.ShowLocalLibrarySection;
             _settings.ShowOwnRadiosSection    = window.ShowOwnRadiosSection;

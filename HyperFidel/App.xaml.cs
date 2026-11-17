@@ -5,9 +5,6 @@ using Avalonia.Threading;
 using HyperFidel.Audio;
 using HyperFidel.Library;
 using HyperFidel.Localization;
-using HyperFidel.Streaming;
-using HyperFidel.Updates;
-using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace HyperFidel;
@@ -95,8 +92,6 @@ public partial class App : Application
                 main.Show();
 
                 _ = EnsureSearchIndexAsync(main);
-                if (settings.CheckForUpdatesOnStartup)
-                    _ = CheckForUpdatesOnStartupAsync(main, settings.HyperFidelServers);
             }
         }
         catch (Exception ex)
@@ -106,48 +101,6 @@ public partial class App : Application
         finally
         {
             startup.Close();
-        }
-    }
-
-    /// <summary>Checks the latest signed release manifest and notifies the user when a newer desktop build exists.</summary>
-    /// <param name="owner">Main window that owns the optional update notification.</param>
-    /// <param name="servers">Configured HyperFidel Servers eligible for the matching signed update.</param>
-    /// <returns>A task representing the asynchronous update check.</returns>
-    private static async Task CheckForUpdatesOnStartupAsync(
-        Window owner,
-        IReadOnlyList<HyperFidelServerSettings> servers)
-    {
-        try
-        {
-            var assembly = typeof(App).Assembly;
-            var currentVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                ?.InformationalVersion ?? assembly.GetName().Version?.ToString(3) ?? "0.0.0";
-            var publicKey = assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
-                .FirstOrDefault(attribute => attribute.Key == "HyperFidelUpdatePublicKey")?.Value ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(publicKey))
-                return;
-
-            using var updates = new ReleaseUpdateService(publicKey);
-            var manifest = await updates.GetLatestManifestAsync();
-            var installer = DesktopUpdatePlatform.SelectInstaller(manifest.Assets);
-            if (installer is not null && ReleaseUpdateService.IsNewer(currentVersion, manifest.Version))
-            {
-                var install = await AppMessageBox.ConfirmAsync(
-                    string.Format(LocalizationManager.Current.UpdateAvailable, manifest.Version),
-                    LocalizationManager.Current.Updates,
-                    owner,
-                    LocalizationManager.Current.DownloadAndInstall);
-                if (install)
-                {
-                    var about = new AboutWindow(servers);
-                    about.Show(owner);
-                    await about.StartUpdateAsync(installer);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            CrashLogger.Log(ex, "Startup update check");
         }
     }
 

@@ -96,3 +96,20 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
   passed) — to be removed in the online-metadata slice.
 - Verified: desktop build 0 err/0 AXN warn; HyperFidel.Tests 0 err;
   Core.Tests 0 err. CHANGELOG Unreleased/Removed updated.
+
+## Task: Desktop update flow removal — DONE
+- Deleted HyperFidel/DesktopUpdatePlatform.cs.
+- AboutWindow: rewritten to version/build/links/licenses only; removed update
+  buttons/status and servers ctor param. AboutWindow.axaml update StackPanel removed.
+- App.xaml.cs: removed startup update check method + call + unused usings
+  (Streaming, Updates, Reflection; kept InteropServices for DllImport).
+- SettingsView.axaml: removed CheckForUpdatesOnStartup checkbox/Updates heading.
+- SettingsView.axaml.cs: removed load line, CheckForUpdatesOnStartup property,
+  per-server Update button + column + UpdateHyperFidelServerButton_OnClick handler,
+  unused usings (Updates, Reflection).
+- AppSettings.CheckForUpdatesOnStartup removed; MainWindow.Settings save line removed.
+- MainWindow.AppShell AboutWindow ctor now parameterless.
+- KEPT HyperFidel.Core/Updates/ReleaseUpdateService.cs for now: the server client's
+  UploadUpdateAsync(VerifiedReleaseManifest) still needs it until the server slice.
+- Localization strings (CheckForUpdates/Updates/etc.) deferred to final pass.
+- Verified: desktop 0 err/0 AXN warn; HyperFidel.Tests 0 err; Core.Tests 0 err.

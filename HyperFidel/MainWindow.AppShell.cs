@@ -79,6 +79,6 @@ public partial class MainWindow : Window
     private async void AboutButton_OnClick(object? sender, RoutedEventArgs e)
     {
         CloseEmbeddedSettings();
-        await new AboutWindow(_settings.HyperFidelServers ?? []).ShowDialog<object?>(this);
+        await new AboutWindow().ShowDialog<object?>(this);
     }
 }

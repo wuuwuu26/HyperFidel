@@ -19,8 +19,6 @@ using HyperFidel.Library;
 using HyperFidel.Localization;
 using HyperFidel.Streaming;
 using HyperFidel.Web;
-using HyperFidel.Updates;
-using System.Reflection;
 using System.Security.Cryptography;
 using AvaloniaApp = Avalonia.Application;
 using UiLanguage = HyperFidel.Localization.Language;
@@ -294,7 +292,6 @@ internal partial class SettingsView : UserControl
         ShowPodcastsItemCheckBox.IsChecked      = settings.ShowPodcastsItem;
         ShowQueueItemCheckBox.IsChecked         = settings.ShowQueueItem;
         ReduceMotionCheckBox.IsChecked          = settings.ReduceMotion;
-        CheckForUpdatesOnStartupCheckBox.IsChecked = settings.CheckForUpdatesOnStartup;
         StartMaximizedCheckBox.IsChecked             = settings.StartMaximized;
         ShowLocalLibrarySectionCheckBox.IsChecked = settings.ShowLocalLibrarySection;
         ShowOwnRadiosSectionCheckBox.IsChecked = settings.ShowOwnRadiosSection;
@@ -683,8 +680,6 @@ internal partial class SettingsView : UserControl
 
     /// <summary>Gets a value indicating whether optional UI motion is disabled.</summary>
     public bool ReduceMotionValue => ReduceMotionCheckBox.IsChecked == true;
-    /// <summary>Gets a value indicating whether signed updates should be checked at application startup.</summary>
-    public bool CheckForUpdatesOnStartup => CheckForUpdatesOnStartupCheckBox.IsChecked == true;
     /// <summary>Gets a value indicating whether the main window should start maximized.</summary>
     public bool StartMaximized => StartMaximizedCheckBox.IsChecked == true;
     /// <summary>Gets a value indicating whether the Library sidebar section should be visible.</summary>
@@ -996,7 +991,6 @@ internal partial class SettingsView : UserControl
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             var description = new StackPanel();
             description.Children.Add(new TextBlock
@@ -1062,16 +1056,10 @@ internal partial class SettingsView : UserControl
             Grid.SetColumn(cacheButton, 6);
             row.Children.Add(cacheButton);
 
-            var updateButton = CreateStyledButton(LocalizationManager.Current.UpdateServer, double.NaN, 28, new Thickness(8, 0, 0, 0));
-            updateButton.Tag = server;
-            updateButton.Click += UpdateHyperFidelServerButton_OnClick;
-            Grid.SetColumn(updateButton, 7);
-            row.Children.Add(updateButton);
-
             var removeButton = CreateStyledButton(LocalizationManager.Current.HyperFidelRemoveServer, 80, 28, new Thickness(8, 0, 0, 0));
             removeButton.Tag    = server.Id;
             removeButton.Click += RemoveHyperFidelServerButton_OnClick;
-            Grid.SetColumn(removeButton, 8);
+            Grid.SetColumn(removeButton, 7);
             row.Children.Add(removeButton);
 
             HyperFidelServersPanel.Children.Add(row);
@@ -1221,58 +1209,6 @@ internal partial class SettingsView : UserControl
         return string.Format(
             localization.ReplayGainCalculated,
             status.LastResult?.Updated ?? 0);
-    }
-
-    /// <summary>Downloads, verifies, relays, and starts a supported HyperFidel Server package update.</summary>
-    private async void UpdateHyperFidelServerButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Button { Tag: HyperFidelServerSettings server } button)
-            return;
-        button.IsEnabled = false;
-        button.Content = LocalizationManager.Current.UpdatingServer;
-        string? packagePath = null;
-        try
-        {
-            using var serverClient = new HyperFidelServerClient();
-            var info = await serverClient.TestConnectionAsync(server);
-            var status = await serverClient.GetUpdateStatusAsync(server);
-            if (info is null || status is not { Enabled: true, Supported: true })
-                throw new InvalidOperationException();
-            var key = typeof(SettingsView).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
-                .FirstOrDefault(attribute => attribute.Key == "HyperFidelUpdatePublicKey")?.Value ?? string.Empty;
-            using var releases = new ReleaseUpdateService(key);
-            var verified = await releases.GetLatestManifestBundleAsync();
-            if (!ReleaseUpdateService.IsNewer(info.Version, verified.Manifest.Version))
-                throw new InvalidOperationException();
-            var asset = verified.Manifest.Assets.FirstOrDefault(candidate =>
-                candidate.Component == "server" && candidate.OperatingSystem == "linux" &&
-                candidate.Architecture == status.Architecture && candidate.Type == status.InstallType)
-                ?? throw new InvalidOperationException();
-            packagePath = await releases.DownloadAssetAsync(asset);
-            if (!await serverClient.UploadUpdateAsync(server, verified, packagePath, asset.File) ||
-                !await serverClient.ApplyUpdateAsync(server))
-                throw new InvalidOperationException();
-            button.Content = LocalizationManager.Current.ServerUpdateQueued;
-        }
-        catch (HttpRequestException exception) when (exception.StatusCode.HasValue)
-        {
-            CrashLogger.Log(exception, $"Server update rejected ({server.Name})");
-            button.Content = string.Format(
-                LocalizationManager.Current.ServerUpdateRejected,
-                (int)exception.StatusCode.Value);
-            button.IsEnabled = true;
-        }
-        catch (Exception exception)
-        {
-            CrashLogger.Log(exception, $"Server update failed ({server.Name})");
-            button.Content = LocalizationManager.Current.ServerUpdateFailed;
-            button.IsEnabled = true;
-        }
-        finally
-        {
-            if (packagePath is not null)
-                File.Delete(packagePath);
-        }
     }
 
     /// <summary>
