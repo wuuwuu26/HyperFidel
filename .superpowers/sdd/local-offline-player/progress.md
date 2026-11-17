@@ -202,3 +202,15 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
   desktop tests 380 passed / 1 known pre-existing PDF fail; zero residual
   BackupTarget/BackupUpload refs. Note: verify-localization.cjs is stale
   (references deleted MobileRemote.json) — final-pass cleanup.
+
+## Task: Cross-device resume removal — DONE
+- Deleted MainWindow.CrossDeviceResume.cs, Core/Library/CrossDeviceResume.cs,
+  Core.Tests/CrossDeviceResumeTests.cs.
+- MainWindow.Playback.cs: removed OfferRemoteResumeAsync call + remoteResumeRow
+  pattern, and ClearRemoteResumePrompt in GaplessPlayer_OnTrackChanged.
+- MainWindow.PlaybackState.cs / Transport.cs: removed ClearRemoteResumePrompt /
+  PublishRemoteTrackPosition calls.
+- MainWindow.axaml: removed ResumePositionButton transport control.
+- Strings.cs + LocalizationManager.cs: removed 4 ResumeOnThisDevice props,
+  resource keys and all 7 language values (28 lines).
+- Verified: desktop 0 err/0 AXN; Core tests build 0 err; zero residual refs.

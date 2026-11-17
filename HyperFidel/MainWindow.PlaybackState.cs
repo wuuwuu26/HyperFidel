@@ -304,7 +304,6 @@ public partial class MainWindow : Window
         RecordPlaybackEnd(completed: false);
         SavePodcastProgress(completed: false);
         _podcastResumePrepared = false;
-        ClearRemoteResumePrompt();
         if (!_playbackStarts.IsCurrent(stopIntent)) return null;
         _currentHyperFidelTrackRow = null;
         if (invalidateStart)

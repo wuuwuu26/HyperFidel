@@ -147,7 +147,6 @@ public partial class MainWindow : Window
             SavePodcastProgress(completed: false);
         }
         UpdateActiveLyric(_player.Position);
-        PublishRemoteTrackPosition(_player.Position);
         EnsureInfiniteMixQueue();
         MaybeStartNonGaplessFadeTransition(visiblePosition);
     }

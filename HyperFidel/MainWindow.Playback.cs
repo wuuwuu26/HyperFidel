@@ -492,8 +492,6 @@ public partial class MainWindow : Window
         }
         UpdateNowPlayingFavoriteButton();
         UpdateReplayGainBadge(usesNativeDsd);
-        if (podcastPlayback is null && _currentHyperFidelTrackRow is { } remoteResumeRow)
-            _ = OfferRemoteResumeAsync(remoteResumeRow, initialPosition.TotalSeconds);
         RefreshWindowsMediaMetadata();
         _windowsMediaTransport?.SetPlaybackStatus(MediaPlaybackStatus.Playing);
         _windowsMediaTransport?.UpdateTimeline(
@@ -1239,7 +1237,6 @@ public partial class MainWindow : Window
             if (!ReferenceEquals(sender, _player))
                 return;
 
-            ClearRemoteResumePrompt();
             RecordPlaybackEnd(completed: true, _currentPlaybackDuration.TotalSeconds);
             _currentFilePath = e.FilePath;
             _currentPlaybackDuration = e.Info.Duration;
