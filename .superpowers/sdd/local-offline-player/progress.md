@@ -113,3 +113,19 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) â
   UploadUpdateAsync(VerifiedReleaseManifest) still needs it until the server slice.
 - Localization strings (CheckForUpdates/Updates/etc.) deferred to final pass.
 - Verified: desktop 0 err/0 AXN warn; HyperFidel.Tests 0 err; Core.Tests 0 err.
+
+## Task: Web browsing (SearXNG) removal â€” DONE
+- Deleted HyperFidel.Core/Web/ (4 files) + Core.Tests PrivateNetworkPolicyTests,
+  HtmlContentExtractorTests.
+- Removed 3 MCP web tools (search_web/fetch_page/fetch_page_as_markdown) from
+  McpTools.cs and the WebBrowsing property from McpPlayerBridge.
+- MainWindow.xaml.cs: removed _webBrowsing field/lock, startup construction,
+  AppendWebBrowsingLog.
+- SettingsView: removed web panel XAML, 3 tool checkboxes, load lines,
+  WebBrowsingValue property and tool-checklist entries; removed using.
+- MainWindow.Settings.cs: removed WebBrowsing save lines.
+- AppSettings.WebBrowsing + using removed.
+- Localization strings deferred to final pass.
+- Verified: desktop 0 err/0 AXN; Tests 0 err; Core.Tests 0 err.
+- NOTE: scripts/verify-mcp-tool-parity.ps1 is now stale (references deleted
+  HyperFidel/AI/); will be removed with the MCP slice.

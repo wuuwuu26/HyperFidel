@@ -18,7 +18,6 @@ using HyperFidel.Controls;
 using HyperFidel.Library;
 using HyperFidel.Localization;
 using HyperFidel.Streaming;
-using HyperFidel.Web;
 using System.Security.Cryptography;
 using AvaloniaApp = Avalonia.Application;
 using UiLanguage = HyperFidel.Localization.Language;
@@ -282,12 +281,6 @@ internal partial class SettingsView : UserControl
         MobileRemotePortNumericUpDown.ValueChanged += (_, _) => UpdateMobileRemoteStatus();
         InitializeMobileRemoteAddresses();
         UpdateMobileRemoteStatus();
-        WebBrowsingEnabledCheckBox.IsChecked    = settings.WebBrowsing.Enabled;
-        SearxngUrlTextBox.Text                  = settings.WebBrowsing.SearxngUrl;
-        WebBlockPrivateCheckBox.IsChecked       = settings.WebBrowsing.BlockPrivateNetworks;
-        WebMaxResultsNumericUpDown.Value        = settings.WebBrowsing.MaxResults;
-        WebTimeoutNumericUpDown.Value           = settings.WebBrowsing.TimeoutSeconds;
-        WebMaxResponseKbNumericUpDown.Value     = settings.WebBrowsing.MaxResponseKilobytes;
         ShowInternetRadioItemCheckBox.IsChecked = settings.ShowInternetRadioItem;
         ShowPodcastsItemCheckBox.IsChecked      = settings.ShowPodcastsItem;
         ShowQueueItemCheckBox.IsChecked         = settings.ShowQueueItem;
@@ -659,18 +652,6 @@ internal partial class SettingsView : UserControl
     }
     /// <summary>Gets the set of MCP tool names that should be disabled.</summary>
     public HashSet<string> DisabledMcpTools => ReadDisabledMcpTools();
-    /// <summary>Gets the web-browsing options from the UI, preserving the non-UI domain allowlist and redirect limit.</summary>
-    public WebBrowsingOptions WebBrowsingValue => new()
-    {
-        Enabled              = WebBrowsingEnabledCheckBox.IsChecked == true,
-        SearxngUrl           = SearxngUrlTextBox.Text?.Trim() ?? string.Empty,
-        BlockPrivateNetworks = WebBlockPrivateCheckBox.IsChecked == true,
-        MaxResults           = (int)(WebMaxResultsNumericUpDown.Value ?? 5),
-        TimeoutSeconds       = (int)(WebTimeoutNumericUpDown.Value ?? 15),
-        MaxResponseKilobytes = (int)(WebMaxResponseKbNumericUpDown.Value ?? 2048),
-        MaxRedirects         = _settings.WebBrowsing.MaxRedirects,
-        DomainAllowlist      = _settings.WebBrowsing.DomainAllowlist,
-    };
     /// <summary>Gets a value indicating whether the Internet Radio sidebar item should be visible.</summary>
     public bool ShowInternetRadioItem => ShowInternetRadioItemCheckBox.IsChecked == true;
     /// <summary>Gets a value indicating whether the Podcasts sidebar item should be visible.</summary>
@@ -3357,9 +3338,6 @@ internal partial class SettingsView : UserControl
         ("get_play_history",      nameof(McpToolGetPlayHistory)),
         ("clear_queue",           nameof(McpToolClearQueue)),
         ("replace_queue",         nameof(McpToolReplaceQueue)),
-        ("search_web",            nameof(McpToolSearchWeb)),
-        ("fetch_page",            nameof(McpToolFetchPage)),
-        ("fetch_page_as_markdown", nameof(McpToolFetchPageMarkdown)),
         ("set_current_favorite", nameof(McpToolSetCurrentFavorite)),
         ("control_infinite_mix", nameof(McpToolControlInfiniteMix)),
         ("list_output_profiles", nameof(McpToolListOutputProfiles)),
@@ -3400,9 +3378,6 @@ internal partial class SettingsView : UserControl
         McpToolGetPlayHistory.IsChecked      = !disabled.Contains("get_play_history");
         McpToolClearQueue.IsChecked          = !disabled.Contains("clear_queue");
         McpToolReplaceQueue.IsChecked        = !disabled.Contains("replace_queue");
-        McpToolSearchWeb.IsChecked           = !disabled.Contains("search_web");
-        McpToolFetchPage.IsChecked           = !disabled.Contains("fetch_page");
-        McpToolFetchPageMarkdown.IsChecked   = !disabled.Contains("fetch_page_as_markdown");
         McpToolSetCurrentFavorite.IsChecked  = !disabled.Contains("set_current_favorite");
         McpToolControlInfiniteMix.IsChecked  = !disabled.Contains("control_infinite_mix");
         McpToolListOutputProfiles.IsChecked  = !disabled.Contains("list_output_profiles");
@@ -3444,9 +3419,6 @@ internal partial class SettingsView : UserControl
         if (McpToolGetPlayHistory.IsChecked      != true) disabled.Add("get_play_history");
         if (McpToolClearQueue.IsChecked          != true) disabled.Add("clear_queue");
         if (McpToolReplaceQueue.IsChecked        != true) disabled.Add("replace_queue");
-        if (McpToolSearchWeb.IsChecked           != true) disabled.Add("search_web");
-        if (McpToolFetchPage.IsChecked           != true) disabled.Add("fetch_page");
-        if (McpToolFetchPageMarkdown.IsChecked   != true) disabled.Add("fetch_page_as_markdown");
         if (McpToolSetCurrentFavorite.IsChecked  != true) disabled.Add("set_current_favorite");
         if (McpToolControlInfiniteMix.IsChecked  != true) disabled.Add("control_infinite_mix");
         if (McpToolListOutputProfiles.IsChecked  != true) disabled.Add("list_output_profiles");

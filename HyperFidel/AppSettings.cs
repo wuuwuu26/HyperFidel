@@ -1,7 +1,6 @@
 using HyperFidel.Audio;
 using HyperFidel.Library;
 using HyperFidel.Streaming;
-using HyperFidel.Web;
 using System.Text.Json.Serialization;
 
 namespace HyperFidel;
@@ -206,8 +205,6 @@ public sealed class AppSettings
     public bool IsHyperFidelServerSectionExpanded { get; set; }
     /// <summary>Gets or sets a value indicating whether the Playlists section is expanded.</summary>
     public bool IsPlaylistsSectionExpanded { get; set; }
-    /// <summary>Gets or sets the web-browsing tool configuration (SearXNG endpoint and fetch safety limits).</summary>
-    public WebBrowsingOptions WebBrowsing { get; set; } = new();
     /// <summary>
     /// Gets or sets the maximum size of the local podcast download cache in
     /// megabytes; zero or less keeps every downloaded episode.

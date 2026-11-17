@@ -936,9 +936,6 @@ public partial class MainWindow : Window
             _settings.MobileRemoteAccessToken = window.MobileRemoteAccessToken;
             _settings.DisabledMcpTools        = window.DisabledMcpTools;
             _mcpBridge.DisabledTools          = _settings.DisabledMcpTools;
-            _settings.WebBrowsing             = window.WebBrowsingValue;
-            if (_webBrowsing is not null)
-                _webBrowsing.Options          = _settings.WebBrowsing;
             _settings.ScheduledBackup.Enabled        = window.ScheduledBackupEnabledValue;
             _settings.ScheduledBackup.IntervalDays   = window.ScheduledBackupIntervalValue;
             _settings.ScheduledBackup.RetentionCount = window.ScheduledBackupRetentionValue;

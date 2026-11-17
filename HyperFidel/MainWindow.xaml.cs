@@ -262,8 +262,6 @@ public partial class MainWindow : Window
     private readonly Mcp.McpPlayerBridge _mcpBridge = new();
     private readonly Mcp.McpServerService _mcpServer = new();
     private readonly Remote.MobileRemoteServerService _mobileRemoteServer = new();
-    private HyperFidel.Web.WebBrowsingService? _webBrowsing;
-    private static readonly object _webBrowsingLogLock = new();
     private static readonly object UiDiagnosticsLogLock = new();
     private static readonly Stopwatch UiDiagnosticsStopwatch = Stopwatch.StartNew();
     private DispatcherTimer? _uiDiagnosticsHeartbeatTimer;
@@ -498,11 +496,6 @@ public partial class MainWindow : Window
         using (StartupTimingLog.Time("MainWindow.InitMcpBridge"))
             InitMcpBridge();
         _mcpBridge.DisabledTools = _settings.DisabledMcpTools;
-        _webBrowsing = new HyperFidel.Web.WebBrowsingService(_settings.WebBrowsing)
-        {
-            RequestLog = AppendWebBrowsingLog,
-        };
-        _mcpBridge.WebBrowsing = _webBrowsing;
         if (_settings.McpServerEnabled)
         {
             StartupTimingLog.Write("MainWindow starting MCP server");
@@ -853,25 +846,6 @@ public partial class MainWindow : Window
         catch
         {
             return null;
-        }
-    }
-
-    /// <summary>Appends one audit line to the web-browsing request log.</summary>
-    /// <param name="line">The already-formatted log line.</param>
-    private void AppendWebBrowsingLog(string line)
-    {
-        try
-        {
-            var path = AppPaths.GetDataPath("logs", "web-browsing.log");
-            lock (_webBrowsingLogLock)
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-                File.AppendAllText(path, line + Environment.NewLine);
-            }
-        }
-        catch
-        {
-            // Logging failures must never affect tool execution.
         }
     }
 
