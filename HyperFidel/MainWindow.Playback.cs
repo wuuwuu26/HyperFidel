@@ -328,7 +328,6 @@ public partial class MainWindow : Window
         DurationTextBlock.Text = FormatTime(player.Duration);
         _ = LoadTransportWaveformAsync(filePath, player.Duration);
         _transportTimer.Start();
-        StartMusicBrainzBackgroundEnrichment();
 
         // Now-playing anzeigen
         var queueMetadata = GetPlaylistMetadata(filePath);

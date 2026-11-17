@@ -66,15 +66,6 @@ public partial class MainWindow : Window
     private INowPlayingMetadataProvider? _currentNowPlayingProvider;
     private ContentRow? _currentHyperFidelTrackRow;
     private readonly HyperFidelServerClient _hyperfidelClient = new();
-    private static readonly HttpClient MusicBrainzRatingHttpClient = new()
-    {
-        Timeout = TimeSpan.FromSeconds(15)
-    };
-    private static readonly TimeSpan MusicBrainzRatingCacheLifetime = TimeSpan.FromDays(30);
-    private CancellationTokenSource? _albumMusicBrainzRatingCts;
-    private readonly CancellationTokenSource _musicBrainzBackgroundCts = new();
-    private int _musicBrainzBackgroundStarted;
-    private int _musicBrainzForegroundRequests;
     private HyperFidelServerSettings? _activeHyperFidelServer;
     private string _activeHyperFidelView = "Artists";
     private int _hyperfidelNavigationLoadVersion;
@@ -832,7 +823,6 @@ public partial class MainWindow : Window
         CancelPlexViewLoad();
         CancelLibrarySearch();
         CancelAndDispose(ref _unifiedLibraryAppendCts);
-        _musicBrainzBackgroundCts.Cancel();
         CancelAudioFeatureWarmup();
         _windowsMediaTransport?.Dispose();
         _windowsMediaTransport = null;

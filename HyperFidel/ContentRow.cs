@@ -200,7 +200,6 @@ internal sealed class ContentRow : INotifyPropertyChanged
                 return;
             _musicBrainzRating = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MusicBrainzRating)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MusicBrainzRatingDisplay)));
         }
     }
 
@@ -216,7 +215,6 @@ internal sealed class ContentRow : INotifyPropertyChanged
                 return;
             _musicBrainzRatingVotes = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MusicBrainzRatingVotes)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MusicBrainzRatingDisplay)));
         }
     }
 
@@ -233,54 +231,10 @@ internal sealed class ContentRow : INotifyPropertyChanged
                 return;
             _musicBrainzRatingFetchedAt = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MusicBrainzRatingFetchedAt)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MusicBrainzRatingDisplay)));
         }
     }
 
     private long? _musicBrainzRatingFetchedAt;
-    private bool _isMusicBrainzRatingLoading;
-    private bool _musicBrainzRatingTemporaryFailure;
-
-    /// <summary>Gets or sets whether a MusicBrainz lookup is currently running for this row.</summary>
-    public bool IsMusicBrainzRatingLoading
-    {
-        get => _isMusicBrainzRatingLoading;
-        set
-        {
-            if (_isMusicBrainzRatingLoading == value) return;
-            _isMusicBrainzRatingLoading = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsMusicBrainzRatingLoading)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MusicBrainzRatingDisplay)));
-        }
-    }
-
-    /// <summary>Gets or sets whether the latest MusicBrainz request failed temporarily.</summary>
-    public bool MusicBrainzRatingTemporaryFailure
-    {
-        get => _musicBrainzRatingTemporaryFailure;
-        set
-        {
-            if (_musicBrainzRatingTemporaryFailure == value) return;
-            _musicBrainzRatingTemporaryFailure = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MusicBrainzRatingTemporaryFailure)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MusicBrainzRatingDisplay)));
-        }
-    }
-
-    /// <summary>
-    /// Gets the localized MusicBrainz rating cell text, covering the loading, retry,
-    /// not-rated, and not-yet-loaded states.
-    /// </summary>
-    public string MusicBrainzRatingDisplay => MusicBrainzRating is double rating
-        ? $"★ {rating:0.0} ({MusicBrainzRatingVotes.GetValueOrDefault():N0})"
-        : IsMusicBrainzRatingLoading
-            ? LocalizationManager.Current.MusicBrainzLoadingRating
-        : MusicBrainzRatingTemporaryFailure
-            ? LocalizationManager.Current.MusicBrainzRetryRating
-        : MusicBrainzRatingFetchedAt.HasValue
-            ? LocalizationManager.Current.MusicBrainzNoRating
-            : LocalizationManager.Current.MusicBrainzLoadRating;
-
     /// <summary>Gets the display folder path.</summary>
     public string? Folder { get; init; }
 

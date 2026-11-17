@@ -500,16 +500,6 @@ public sealed record LocalizedStrings(
     public string ReplayGainAlbumColumn { get; init; } = "";
     /// <summary>Gets the personal track-rating label.</summary>
     public string PersonalRating { get; init; } = "";
-    /// <summary>Gets the MusicBrainz community-rating label.</summary>
-    public string MusicBrainzRating { get; init; } = "";
-    /// <summary>Gets the action label for an unresolved MusicBrainz rating.</summary>
-    public string MusicBrainzLoadRating { get; init; } = "";
-    /// <summary>Gets the state shown while a MusicBrainz rating request is running.</summary>
-    public string MusicBrainzLoadingRating { get; init; } = "";
-    /// <summary>Gets the state shown after a temporary MusicBrainz lookup failure.</summary>
-    public string MusicBrainzRetryRating { get; init; } = "";
-    /// <summary>Gets the confirmed state for a recording without a community rating.</summary>
-    public string MusicBrainzNoRating { get; init; } = "";
     /// <summary>Gets the tooltip for editing a personal rating.</summary>
     public string RatingSetHint { get; init; } = "";
     /// <summary>Gets the message shown when a rating cannot be persisted.</summary>

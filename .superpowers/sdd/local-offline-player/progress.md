@@ -214,3 +214,32 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) â
 - Strings.cs + LocalizationManager.cs: removed 4 ResumeOnThisDevice props,
   resource keys and all 7 language values (28 lines).
 - Verified: desktop 0 err/0 AXN; Core tests build 0 err; zero residual refs.
+
+## Task: MusicBrainz rating/enrichment removal â€” DONE
+- Extracted retained offline helper MusicBrainzGenreMetadata into its own Core
+  file (Combine/Serialize only, no network) before deleting the service. It is
+  still used by AudioDatabase, TrackSearchIndex and local rating tests.
+- Deleted HyperFidel.Core/Library/MusicBrainzRatingService.cs (network client),
+  MusicBrainzTrackRating record and the local helper duplicate.
+- Deleted MainWindow.MusicBrainz.cs (background enrichment worker) and
+  MainWindow.RatingColumns.cs (interactive rating column).
+- Deleted MusicBrainzRatingGrouping.cs + its test (only used by the removed
+  album-detail refresh path).
+- MainWindow.AlbumDetail.cs: removed the entire cancellable rating refresh,
+  lookup/grouping/persist methods and their 3 call sites.
+- MainWindow.Playback.cs: removed StartMusicBrainzBackgroundEnrichment call.
+- MainWindow.xaml.cs: removed MusicBrainzRatingHttpClient, cache lifetime,
+  _albumMusicBrainzRatingCts/_musicBrainzBackgroundCts/started/foreground fields
+  and the OnClosed cancel.
+- ContentRow.cs: removed transient loading/failure/display members; kept the
+  dormant local data props (rating, votes, MBID, fetched-at) used by Core,
+  TrackRecord, search, similarity, ViewPreviews and queue.
+- TableRendering.cs: removed the track-info rating entry and the hidden rating
+  column.
+- TrackRatingTests.cs: removed the 3 network-service tests and JsonHandler;
+  kept the 2 dormant local-persistence tests.
+- Strings.cs + LocalizationManager.cs: removed 5 rating strings x 7 languages
+  (35 assignments) and their schema properties. No JSON resource files exist.
+- Verified: desktop 0 CS/0 AXN; Core tests 0; desktop tests 0 build errors;
+  Core tests 443 passed; desktop 376 passed / 1 known pre-existing
+  YearInReviewPdfExporter failure; zero residual refs to removed symbols.
