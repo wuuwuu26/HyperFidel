@@ -68,7 +68,7 @@ function Invoke-Check {
 
 $steps = [System.Collections.Generic.List[object]]::new()
 if (-not $SkipBuild) {
-    foreach ($project in 'HyperFidel.Core', 'HyperFidel.Server', 'HyperFidel') {
+    foreach ($project in 'HyperFidel.Core', 'HyperFidel') {
         $steps.Add(@{
             Name       = "Build $project ($Configuration)"
             Executable = 'dotnet'
@@ -98,7 +98,7 @@ if (-not $SkipBuild) {
     })
 }
 if (-not $SkipTests) {
-    foreach ($project in 'HyperFidel.Core.Tests', 'HyperFidel.Tests', 'HyperFidel.Server.Tests') {
+    foreach ($project in 'HyperFidel.Core.Tests', 'HyperFidel.Tests') {
         $steps.Add(@{
             Name       = "Test $project"
             Executable = 'dotnet'

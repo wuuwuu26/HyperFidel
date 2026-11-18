@@ -148,7 +148,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   no shipped code creates an `HttpClient`, socket or network request. Local
   library, playback (including local DSD/DoP), queue, playlists, equalizer,
   MPRIS media keys and scheduled local backup continue to work. PCM playback
-  never changes the system or hardware mixer volume.
+  never changes the system or hardware mixer volume. The obsolete server
+  release workflow and its packaging assets were removed, and the signed
+  update manifest no longer requires the retired server packages.
 - The Genre Cloud intro card with its title and explanatory hint is gone; the
   cloud surface now sits directly below the content header.
 - The separate karaoke window and the manual lyrics-search dialog and action are

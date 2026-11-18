@@ -43,11 +43,7 @@ jobs:
               && compgen -G 'assets/hyperfidel_*_arm64.deb' > /dev/null \
               && compgen -G 'assets/hyperfidel-[0-9]*-1.x86_64.rpm' > /dev/null \
               && compgen -G 'assets/hyperfidel-[0-9]*-1.aarch64.rpm' > /dev/null \
-              && compgen -G 'assets/hyperfidel-[0-9]*-1-x86_64.pkg.tar.zst' > /dev/null \
-              && compgen -G 'assets/hyperfidel-server_*_amd64.deb' > /dev/null \
-              && compgen -G 'assets/hyperfidel-server_*_arm64.deb' > /dev/null \
-              && compgen -G 'assets/hyperfidel-server-*-1.x86_64.rpm' > /dev/null \
-              && compgen -G 'assets/hyperfidel-server-*-1.aarch64.rpm' > /dev/null; then
+              && compgen -G 'assets/hyperfidel-[0-9]*-1-x86_64.pkg.tar.zst' > /dev/null; then
               exit 0
             fi
             echo "Release assets are incomplete (attempt ${ATTEMPT}/60); waiting 20 seconds."
@@ -80,10 +76,6 @@ jobs:
               hyperfidel-[0-9]*-1.x86_64.rpm) COMPONENT=desktop; OS=linux; ARCH=x64; TYPE=rpm ;;
               hyperfidel-[0-9]*-1.aarch64.rpm) COMPONENT=desktop; OS=linux; ARCH=arm64; TYPE=rpm ;;
               hyperfidel-[0-9]*-1-x86_64.pkg.tar.zst) COMPONENT=desktop; OS=linux; ARCH=x64; TYPE=arch ;;
-              hyperfidel-server_*_amd64.deb) COMPONENT=server; OS=linux; ARCH=x64; TYPE=deb ;;
-              hyperfidel-server_*_arm64.deb) COMPONENT=server; OS=linux; ARCH=arm64; TYPE=deb ;;
-              hyperfidel-server-*-1.x86_64.rpm) COMPONENT=server; OS=linux; ARCH=x64; TYPE=rpm ;;
-              hyperfidel-server-*-1.aarch64.rpm) COMPONENT=server; OS=linux; ARCH=arm64; TYPE=rpm ;;
               *) continue ;;
             esac
             HASH="$(sha256sum "$PATHNAME" | cut -d' ' -f1)"

@@ -80,8 +80,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet test HyperFidel.Tests/HyperFidel.Tests.csproj --configuration ${{ matrix.configuration }}
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet test HyperFidel.Server.Tests/HyperFidel.Server.Tests.csproj --configuration ${{ matrix.configuration }}
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Run Windows headless UI workflows
         run: >
