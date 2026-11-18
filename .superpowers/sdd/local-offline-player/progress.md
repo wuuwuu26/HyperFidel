@@ -297,3 +297,21 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
 - Verified: all 5 projects build 0 CS/0 AXN; zero residual AirPlay/Raop/
   Zeroconf source refs; Core tests 431 passed; desktop 376 passed / 1 known
   pre-existing YearInReviewPdfExporter failure.
+
+## Task: HyperFidel Server / Plex network clients → offline shims — DONE (checkpoint)
+- Core/Streaming/HyperFidelServerClient.cs and PlexServerClient.cs replaced with
+  offline stand-ins: identical public signatures, zero HttpClient/network I/O;
+  all reads return empty/default. Static artwork/stream URL builders return
+  empty string (no credential URLs emitted).
+- StreamingModels.cs data contracts moved to DormantDataContracts.cs (network-
+  free) so legacy local settings/data still deserialize. Updates/ReleaseUpdateService
+  reduced to its data records only (no signature verification/network).
+- Deleted 7 Core.Tests network-client test files and 2 desktop tests
+  (MissingArtistImageWriterTests, NowPlayingArtistWriteTests) that exercised
+  removed remote upload/provider paths.
+- Verified: all projects build 0 CS/0 AXN; Core tests 392 passed; desktop 357
+  passed / 1 known pre-existing YearInReviewPdfExporter failure.
+- NOTE: genuine network services remain in Core/Library (ArtistProfileService,
+  FanartTvArtistImageService, ArtistImageSearchService, MusicBrainzCoverSearch,
+  LibraryMetadataRepairService, LibraryScanner) and the remote HTTP DSD players.
+  These are the next slices before the final zero-HttpClient gate.
