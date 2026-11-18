@@ -3,6 +3,17 @@
 This file applies to the Windows, Linux, and macOS Avalonia desktop client under
 `HyperFidel/` and supplements the repository-wide `../AGENTS.md`.
 
+> **Offline player.** HyperFidel is now a local-only offline player. All
+> networking was removed: there is no HyperFidel Server, Plex, MCP, AI Chat,
+> mobile web remote, browser audio, radio, podcasts, AirPlay, scrobbling,
+> online cover/artist metadata, cross-device resume or WebDAV upload. The
+> `HyperFidelServerClient`/`PlexServerClient` types that still appear below are
+> offline, network-free data stand-ins kept only so legacy local settings still
+> load. Any invariant below that mentions a remote source, server, upload,
+> network request, token, API key or provider is historical and no longer
+> applies. Preserve the local library, playback, queue, playlists, equalizer,
+> MPRIS media keys and scheduled local backup; never reintroduce network I/O.
+
 ## Completion
 
 - Follow the root mandatory completion checklist. In particular, feature and UI
@@ -15,26 +26,12 @@ This file applies to the Windows, Linux, and macOS Avalonia desktop client under
   French, Spanish, Russian, Simplified Chinese, and Hindi.
 - `ApplicationCredentialStore` is the only persistent client credential
   container. It uses current-user DPAPI on Windows and AES-GCM plus a
-  current-user-only random key file on Linux/macOS. Last.fm, Fanart.tv, AI Chat,
-  HyperFidel Server, Plex, and generic streaming secrets must remain `[JsonIgnore]`
-  in JSON settings models and must not appear in caches, logs, server payloads,
-  diagnostics, documentation examples, or model context.
-- Fanart.tv artist artwork uses the encrypted Settings value or the
-  `FANART_TV_API_KEY` environment variable. The environment variable remains an
-  optional runtime override and is never copied into persistent settings.
-- The Artist information Settings action for missing artist images combines the
-  local library and every configured HyperFidel Server, runs strictly sequentially,
-  skips every manually selected image, tries Fanart.tv first only when a key is
-  available, then falls back to Wikimedia Commons, and remains cancellable. When
-  an API key is configured, the preview may enable automatic acceptance for
-  Fanart.tv results for the current run only. This must never automatically
-  accept Wikimedia results. Other candidates stay in memory until the user
-  accepts or rejects their preview, and cancelling the preview cancels the
-  complete run; accepted remote images are uploaded only to their owning server.
-  Progress in Settings and the preview includes a remaining-time estimate based
-  only on completed provider-search durations. Manual artist-image searches use
-  an editable query, try Fanart.tv first when a key exists, and use Wikimedia
-  Commons only as the fallback.
+  current-user-only random key file on Linux/macOS. Any remaining credential
+  field must stay `[JsonIgnore]` in JSON settings models and must never appear in
+  caches, logs, diagnostics, documentation examples, or model context.
+- Artist information comes only from the local library cache. Online biography
+  and image providers were removed; no `FANART_TV_API_KEY` or other provider key
+  is read or copied into settings.
 - Add or update English XML documentation for affected public/internal members.
 
 ## Client Invariants

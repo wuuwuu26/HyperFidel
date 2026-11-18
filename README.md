@@ -5,13 +5,11 @@
 
 # HyperFidel
 
-**A local-first Hi-Fi player, library, and optional home server for Windows,
-Linux, and macOS.**
+**A local-only Hi-Fi player and library for Windows, Linux, and macOS.**
 
 HyperFidel is for people who keep their music as files. It plays that library
-through your own DAC, keeps the interface out of the way, and can share the same
-collection with other devices through a small self-hosted server. There is no
-account, no subscription, and no telemetry.
+through your own DAC and keeps the interface out of the way. It is completely
+offline: no account, no subscription, no network requests, and no telemetry.
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/wuuwuu26/HyperFidel)](https://github.com/wuuwuu26/HyperFidel/releases/latest)
@@ -30,25 +28,16 @@ account, no subscription, and no telemetry.
 - **DSD without conversion when the hardware supports it.** Linux opens
   `DSD_U32_BE` directly and falls back to DoP; Windows uses cwASIO or ASIO.
   WASAPI can convert DSF/DFF to PCM in real time when native DSD is unavailable.
-- **One library across devices.** The desktop client merges local files with
-  any connected HyperFidel Server into unified Artists, Albums, Tracks, and Folder
-  views. CUE sheets, MKA chapters, smart playlists, full-text search, bulk
-  favorite/rating/genre edits, and cross-device resume are built in.
+- **A complete local library.** Artists, Albums, Tracks, and Folder views, plus
+  CUE sheets, MKA chapters, smart playlists, full-text search, and bulk
+  favorite/rating/genre edits. All data stays on this machine.
 - **A warm, gold interface.** Translucent surfaces over a soft gradient, a
   focused Dashboard, artwork-led browsing, and a lyrics view that scrolls
   smoothly and highlights enhanced-LRC words as they become audible.
 - **Discovery that uses your own collection.** A hierarchical Genre Cloud,
-  Infinite Mix, internet radio, podcasts, similar-track queues, and listening
-  statistics.
-- **AirPlay to a real Hi-Fi.** RAOP receiver discovery on every platform plus a
-  bundled native AirPlay 2 bridge, verified with clean playback on a Sonos
-  stereo pair.
-- **AI and automation that stay local.** Embedded AI Chat for LM Studio, Ollama,
-  or any OpenAI-compatible endpoint; an MCP server with individually toggleable
-  tools; and an opt-in mobile web remote for the same LAN.
-- **Private by default.** No account and no telemetry. API keys, tokens, and
-  server passwords live in an encrypted per-user credential store. The complete
-  interface is available in English, German, French, Spanish, Russian,
+  Infinite Mix, similar-track queues, and listening statistics.
+- **Private by default.** No account, no telemetry, and no network access. The
+  complete interface is available in English, German, French, Spanish, Russian,
   Simplified Chinese, and Hindi.
 
 ## Screenshot
@@ -65,17 +54,15 @@ platform from the [latest release](https://github.com/wuuwuu26/HyperFidel/releas
 | Windows player | `Setup.exe`, portable ZIP (Windows 10/11 x64)                  |
 | Linux player   | DEB, RPM, Arch `.pkg.tar.zst`, portable tar.gz (x64 and ARM64) |
 | macOS player   | PKG and portable app ZIP (Apple Silicon and Intel)             |
-| HyperFidel Server | DEB and RPM (Linux x64 / ARM64, including Raspberry Pi)        |
 
-The in-app updater verifies a signed release manifest, checks each download
-digest, and installs through the native package manager on Linux.
+Desktop updates are handled outside the app; the offline player itself never
+contacts a release server.
 
 ## Supported formats
 
 `DSF`, `DFF`, `FLAC`, `MP3`, `WAV`, `AIFF`, `M4A`, `MKA` (with chapters), `AAC`,
 `OGG`, `Opus`, `WMA`, and CUE sheets that reference PCM sources. PCM decoding
-uses FFmpeg. Windows and macOS locate or download FFmpeg automatically; Linux
-requires `ffmpeg` and `ffprobe` on `PATH`.
+uses FFmpeg, discovered from the system installation on every platform.
 
 ## Requirements
 
@@ -88,7 +75,7 @@ about 36 MB to the download.
 
 - Windows 10 or Windows 11, x64
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) for building
-- FFmpeg, downloaded automatically on first start when it is not already present
+- FFmpeg and FFprobe available on `PATH`
 - For cwASIO: Visual Studio 2022 with the **Desktop development with C++**
   workload and an installed ASIO driver
 - Optional Steinberg ASIO SDK 2.3
@@ -103,8 +90,6 @@ repository.
 - FFmpeg and FFprobe available on `PATH`
 - ALSA runtime (`libasound.so.2`) for direct PCM, native DSD, and DoP output
 - OpenAL runtime (`libopenal.so.1`) for the system-routed output profile
-- `pactl` from PulseAudio or PipeWire tools for volume-key mirroring with direct
-  ALSA
 - A DAC/ALSA endpoint advertising `DSD_U32_BE` for native DSD, or a DoP-capable
   DAC for fallback playback
 
@@ -114,21 +99,12 @@ uncompressed DFF output is sent directly through ALSA.
 ### macOS player
 
 - macOS 10.15 or newer on Apple Silicon (`arm64`) or Intel (`x64`)
-- FFmpeg and FFprobe from `PATH`, common package-manager locations, or HyperFidel's
-  automatic per-user download
+- FFmpeg and FFprobe from `PATH` or common package-manager locations
 - The system OpenAL framework for PCM output
 - No ASIO, cwASIO, ALSA, or native DSD support
 
 Release builds provide self-contained PKG installers and portable app bundles.
 Development builds require the .NET 10 SDK.
-
-### HyperFidel Server
-
-- Linux, macOS, or Windows on x64 or ARM64
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) for building;
-  release packages are self-contained
-- FFmpeg recommended for CUE-sheet track transcoding
-- No ASIO drivers or Windows audio dependencies
 
 ## Build from source
 
@@ -162,40 +138,17 @@ Run the managed tests:
 ```bash
 dotnet test HyperFidel.Core.Tests/HyperFidel.Core.Tests.csproj
 dotnet test HyperFidel.Tests/HyperFidel.Tests.csproj
-dotnet test HyperFidel.Server.Tests/HyperFidel.Server.Tests.csproj
 ```
-
-Build the server as a self-contained Linux binary:
-
-```bash
-dotnet publish HyperFidel.Server/HyperFidel.Server.csproj --configuration Release \
-  --runtime linux-x64 --self-contained true \
-  --output artifacts/HyperFidel.Server-linux-x64
-```
-
-## HyperFidel Server
-
-`HyperFidel.Server` scans the same library directories as the desktop client and
-serves them over the local network. It exposes artists, albums, tracks,
-playlists, artwork, waveforms, and lyrics through a REST API, and streams audio
-with authenticated URLs that work in FFmpeg and browsers. It runs as a plain
-binary or a systemd service; release packages are available as DEB and RPM.
-
-The server is optional. The desktop client works entirely offline with local
-files and only connects to servers you explicitly add. See
-[HyperFidel Server reference](docs/FULL-FEATURE-REFERENCE.md#hyperfidel-server) and
-[HTTPS and reverse proxies](docs/SERVER-REVERSE-PROXY.md) for setup details.
 
 ## Data and privacy
 
 HyperFidel stores player data under `%LOCALAPPDATA%\HyperFidel\` on Windows and the
 operating system's local application-data directory (normally
 `$HOME/.local/share/HyperFidel/`) on Linux and macOS. Set `HYPERFIDEL_DATA_DIR` to use
-a different root; packaged Linux servers use `/var/lib/hyperfidel-server`.
+a different root.
 
-- `settings.json` contains non-secret preferences.
-- `credentials.dat` and, on Linux/macOS, `credentials.key` hold the encrypted
-  Last.fm, Fanart.tv, AI Chat, HyperFidel Server, Plex, and streaming credentials.
+- `settings.json` contains non-secret preferences and may retain dormant entries
+  from earlier remote features; no credentials are written to it.
 - `library.db`, `artworks/`, `search-index/`, `waveforms/`, and the other cache
   folders hold the managed library, artwork, search data, and playback state.
 
@@ -209,8 +162,6 @@ files. There is no telemetry, and credentials are never written to
 - [GitHub Wiki](https://github.com/wuuwuu26/HyperFidel/wiki) — end-user guides
 - [Full feature and technical reference](docs/FULL-FEATURE-REFERENCE.md) — every
   feature, output profile, format behavior, and build detail
-- [HTTPS and reverse proxies](docs/SERVER-REVERSE-PROXY.md) — Caddy and nginx
-  examples for HyperFidel Server and authenticated MCP access
 - [CHANGELOG.md](CHANGELOG.md) — shipped changes and current work
 - [ROADMAP.md](ROADMAP.md) — historical implementation milestones
 - [docs/WORKFLOW-TEST-COVERAGE.md](docs/WORKFLOW-TEST-COVERAGE.md) — automated
@@ -228,8 +179,6 @@ files. There is no telemetry, and credentials are never written to
   native DSD output.
 - Windows Kernel Streaming is selectable but not implemented as a playback
   backend.
-- Release packages for HyperFidel Server target Linux. Windows and macOS servers
-  can be built from source but are not published as installers.
 
 ## License and attribution
 

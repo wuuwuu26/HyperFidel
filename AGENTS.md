@@ -34,13 +34,18 @@ The closest `AGENTS.md` applies in addition to this repository-wide file:
 - `scripts/CatalogBench/AGENTS.md` — opt-in synthetic catalog measurements.
 - `HyperFidel.Ui.Smoke/AGENTS.md` — isolated Windows headless workflow checks and
   their CI/local verification contracts.
-- `HyperFidel/AGENTS.md` — Avalonia UI, navigation, playback, Dashboard, remote
-  library integration, localization, and Windows-specific behavior.
+- `HyperFidel/AGENTS.md` — Avalonia UI, navigation, playback, Dashboard,
+  localization, and Windows-specific behavior.
 - `HyperFidel.Core/AGENTS.md` — cross-platform library, database, scanning, search,
-  web, audio-processing primitives, and streaming contracts/clients.
-- `HyperFidel.Server/AGENTS.md` — ASP.NET endpoints, authentication, configuration,
-  packaging, service operation, and server-side caches.
+  and audio-processing primitives.
 - `Native/AGENTS.md` — Steinberg ASIO/cwASIO bridge code and native builds.
+
+HyperFidel is a local-only offline player. There is no server project and no
+networking layer: do not reintroduce `HttpClient`, sockets, remote libraries,
+streaming clients, MCP, AI chat, or other network-facing code. Local database
+columns and data contracts from earlier remote features are retained only as
+dormant data so existing local libraries and settings still load; they must
+never perform I/O.
 
 Read the applicable nested file before editing files in that subtree. The
 detailed [project reference](docs/PROJECT-REFERENCE.md) is cumulative: read the

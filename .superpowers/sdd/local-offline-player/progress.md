@@ -342,3 +342,23 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
   在 shipped 源码中 0 命中；http:// 字符串仅剩输入路径判断与文档/本地缓存键。
 - 验证：5 项目全部 build 0 CS/0 AXN；Core 测试 392 通过；桌面 357 通过 /
   1 已知预先存在的 YearInReviewPdfExporter 失败。
+
+## Task: 文档与本地化验证收尾 — DONE
+- CHANGELOG.md：扩展 Unreleased/Removed 条目，明确列出所有已移除的网络功能
+  （Server/Plex/AI/MCP/移动远程/广播音频/电台/播客/AirPlay/跨设备续播/
+  MusicBrainz 评分与在线封面/搜索/SearXNG/在线歌词/Last.fm/WebDAV/自动更新/
+  FFmpeg 下载），说明残余客户端只是离线数据 stand-in，并记录 PCM 路径不碰系统音量。
+- README.md：重写为 local-only 离线播放器文档（Highlights/下载表/格式/
+  Requirements/Build/Data privacy/Documentation/Known limitations），删除所有
+  Server/Plex/AirPlay/电台/播客/AI/MCP/网络/凭据/自动下载描述。
+- AGENTS.md（根）：更新 routing，删除 HyperFidel.Server 路由与 web/streaming
+  描述，加入离线播放器不变量声明。
+- HyperFidel.Core/AGENTS.md：重写为本地版 invariants，删除全部网络/服务器/
+  远程/更新相关条目，保留音频/数据库/扫描/搜索/相似度等本地规则。
+- HyperFidel/AGENTS.md：顶部加入醒目离线声明（下方远程/网络 invariants 均失效），
+  精简 Completion 中的凭据描述。
+- scripts/verify-localization.cjs：移除对已删除 MobileRemote.json 和
+  ArtistProfileService 语言代码行的检查；node 运行通过：7 语言 x 914 键 +
+  占位符 + 网站 selector/metadata/gallery parity。
+- 最终验证：5 项目 build 0 CS/0 AXN；Core 测试 392 通过；桌面 357 通过 /
+  1 已知预存 YearInReviewPdfExporter 失败；HttpClient/Socket 等网络原语 0 命中。

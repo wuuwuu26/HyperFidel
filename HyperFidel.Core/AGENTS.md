@@ -2,6 +2,11 @@
 
 This file applies to `HyperFidel.Core/` and supplements `../AGENTS.md`.
 
+HyperFidel is a local-only offline player. Core contains no network clients,
+HTTP clients, sockets, remote-library code or web-fetching services. Dormant
+data contracts and database columns retained from earlier remote features hold
+inert local data only and must never perform I/O. Do not reintroduce networking.
+
 ## Completion
 
 - Follow the root mandatory completion checklist.
@@ -11,39 +16,16 @@ This file applies to `HyperFidel.Core/` and supplements `../AGENTS.md`.
 
 ## Core Invariants
 
-- Equalizer APO imports must reject malformed recognized equalizer directives
-  and non-finite values instead of returning a partial profile. Explicit neutral
-  profiles are valid. Preserve the four-MiB file and 512-active-filter limits;
-  unsupported bandwidth syntax must never silently fall back to a default Q.
-
-- Genre taxonomy ancestor and phrase caches derive only from the immutable
-  embedded graph. Raw genre-value memoization stays snapshot-scoped; retain
-  multi-parent ancestry, unknown genres, candidate ordering and individual
-  state.
-
-- Selected album queries preserve active-profile favorites, artwork paths and
-  artist IDs while omitting missing/trackless albums. Facet joins preserve
-  explicit false/zero profile overrides and current-version audio features.
-  Album batch transport is bounded to 100 IDs; unsupported older routes use four
-  detail workers, never a complete catalog or silent transport failure.
-
-- Manual cover searches fetch only bounded CAA `front-250` previews, with three
-  concurrent workers, a 35-second search budget and one retry for transient
-  failures. Keep successes when another candidate fails. Fetch `front` originals
-  only after explicit selection; never silently save a preview as the original.
-  Preserve punctuation-aware query fallbacks. The transport regression harness
-  is `scripts/CoverSearchSmoke` (offline by default; `--live` is opt-in).
-
 - Keep the project cross-platform `net10.0`; do not introduce Avalonia, Windows,
   DPAPI, WASAPI, ASIO, or other platform-specific dependencies.
-- Put shared library scanning, SQLite persistence, search, streaming models and
-  clients, FFmpeg primitives, and web-fetching behavior here.
+- Put shared library scanning, SQLite persistence, search, and FFmpeg primitives
+  here. This project performs no network I/O.
 - Preserve SQLite migrations, stable IDs, WAL behavior, CUE virtual-path
   identity, user favorites, artwork caches, ReplayGain data, and `added_at`.
 - `LibraryBackupService` supports both the process data root and an explicit
-  server data root. Backups remain versioned, exclude audio and credentials, use
-  a consistent SQLite snapshot, validate staged imports, and roll back partial
-  replacements before rebuilding the search index.
+  alternate data root. Backups remain versioned, exclude audio and credentials,
+  use a consistent SQLite snapshot, validate staged imports, and roll back
+  partial replacements before rebuilding the search index.
 - Chaptered MKA containers use FFprobe-derived stable `mka://chapter/` virtual
   paths and the existing segment columns; unchaptered MKA files remain ordinary
   tracks. Each probe uses bounded analysis and a 30-second timeout.
@@ -58,9 +40,6 @@ This file applies to `HyperFidel.Core/` and supplements `../AGENTS.md`.
   the source media.
 - Scanner, watcher, and reconciliation writes must keep SQLite and Lucene in
   sync and use the shared scanner gate.
-- `LibraryScanner.ConfigureReplayGainThrottling` controls FFmpeg threads and a
-  cancellable inter-track delay for server maintenance. Defaults remain inert
-  for desktop callers; the server configures conservative values at startup.
 - Explicit ReplayGain maintenance must retain only missing album IDs across the
   track pass and update Lucene in bounded batches. Never accumulate complete
   `TrackRecord` instances or one library-wide update list for this workflow.
@@ -89,230 +68,115 @@ This file applies to `HyperFidel.Core/` and supplements `../AGENTS.md`.
   records to list/facet/folder queries.
 - Free-text Lucene queries are term-centric across their supplied fields: every
   analysed term is required, but different terms may match different fields.
-  Preserve this behavior so combined artist/title searches work identically in
-  the desktop and HyperFidel Server indexes.
+  Preserve this behavior so combined artist/title searches work identically.
 - `LibrarySearchFilter` owns structured release-year and library-added timestamp
-  filtering plus deterministic relevance/title/year/addition ordering shared by
-  desktop and server searches. Date ranges are half-open Unix ranges after the
-  client converts inclusive calendar dates. `SmartPlaylistTrackInfo.AlbumId`
-  supports bounded album grouping and must remain compact.
+  filtering plus deterministic relevance/title/year/addition ordering. Date
+  ranges are half-open Unix ranges after the client converts inclusive calendar
+  dates. `SmartPlaylistTrackInfo.AlbumId` supports bounded album grouping and
+  must remain compact.
 - `QueuePathPolicy.CanPersist` is the single decision for whether a queue or
-  playback path may be persisted without credentials. It keeps local, `cue://`,
-  and `hyperfidel://` paths persistable and rejects HTTP/HTTPS URLs that embed user
-  information or known credential query parameters (`X-Plex-Token`, `token=`,
-  `key=`). Desktop and server consumers must not duplicate this URL policy; it
-  is covered by `HyperFidel.Core.Tests/QueuePathPolicyTests.cs`.
-- Track scans preserve personal ratings, cached MusicBrainz rating/vote data,
-  and a client-resolved recording MBID when the media tag has no recording ID.
-  `MusicBrainzRatingService` prefers a valid recording MBID and permits fallback
-  matching only for one exact artist/title candidate compatible with duration.
-  Community ratings use MusicBrainz's zero-to-five scale and remain separate
-  from the personal zero-to-five integer rating. Compact track list/streaming
-  DTOs carry the rating fetch timestamp so clients can enforce cache freshness.
-  Metadata fallback returns a resolved MBID and follows it with a direct
-  recording lookup. Do not cache community ratings from batch/search responses:
-  MusicBrainz does not reliably populate their rating field even when
-  `inc=ratings` is supplied. Direct lookups request `ratings+genres+tags`; keep
-  genres with positive counts, tags with at least two positive votes, and
-  persist both as separate bounded JSON arrays.
-  `MusicBrainzGenreMetadata.Combine` is the shared effective-genre composition
-  used by facets and indexing without altering embedded metadata. A completed
-  conservative lookup that cannot resolve one recording is persisted through
-  `SetTrackMusicBrainzLookupAttempt`; scanner upserts must preserve that
-  timestamp so clients can apply a longer retry cooldown.
+  playback path may be persisted. It keeps local and `cue://` paths persistable
+  and rejects HTTP/HTTPS URLs that embed user information or credential query
+  parameters. A pure helper with no network behavior; covered by
+  `HyperFidel.Core.Tests/QueuePathPolicyTests.cs`.
 - Album catalog queries, recent-album queries, detail lookup, and Dashboard
   album totals expose only albums referenced by at least one indexed track.
   Artist catalog rows and artist totals likewise require a track-backed album;
   never surface orphaned normalization rows as usable library entities.
 - `LibraryMetadataRepairService` groups tracks by their immediate physical
-  directory, detects inconsistent album metadata, and uses the MusicBrainz fuzzy
-  CD-TOC endpoint only when every candidate track has a duration. Confirmed
+  directory and detects inconsistent album metadata from local tags. Confirmed
   corrections are persisted in `track_metadata_overrides` and reapplied by every
-  `AudioDatabase.Upsert`; never write them into media files implicitly.
-  MusicBrainz matching accepts optional user-edited release and artist queries;
-  text-search results must still be fetched with their recording lists and
-  scored against available track durations plus title similarity before they are
-  offered. Text search must remain usable when local or MusicBrainz durations
-  are missing, and fuzzy TOC lookup includes all medium formats. Its Library
-  Doctor analysis also reports missing track ReplayGain and MusicBrainz
-  recording IDs even when basic album metadata is consistent. Duplicate
-  candidates require the same non-empty AcoustID fingerprint on distinct
-  physical source paths. Equal file sizes are hashed sequentially and become
-  exact duplicates only when complete SHA-256 content matches; an unavailable
-  hash remains “likely,” while differing size or content means an
-  alternate-file/edition candidate. No class may trigger automatic deletion or
-  metadata merging. `LibraryMetadataRepairService.FindDuplicateGroups` exposes
-  the same evidence as `LibraryDuplicateGroup` records (`Exact`/`Likely`) for a
-  user-confirmed review; it is read-only and must never remove, move, or merge
-  anything. Any removal stays explicit and user-confirmed and goes through
-  `LibraryScanner.RemoveTracksByPaths`, which keeps SQLite, Lucene, and the
-  waveform cache in sync, removes virtual CUE/MKA tracks that share a removed
-  physical source, and only deletes files from disk when the caller asks for it.
-  Artist spelling variants use the shared conservative comparison key and are
-  guided-review findings only; name similarity must never merge artist records
-  automatically. Remote Library Doctor requests use a separate bounded
-  maintenance timeout; do not increase the normal catalog/streaming client
-  timeout for long-running server-side file checks.
-  `Analyze(inspectFiles: false)` performs index-only analysis without physical
-  source/image existence checks or duplicate hashes. Default callers retain full
-  checks. Optional progress reports phase counters, never private paths.
-  `OrderTracks` is shared by search, display and persistence (disc, track,
-  source, stable ID). Corrections must reject mismatched track counts.
-- Remote dashboard totals use `HyperFidelServerClient.GetLibrarySummaryAsync` and
-  the server's aggregate `/api/library/summary` response; do not replace this
-  fast path with complete track or album payloads.
+  `AudioDatabase.Upsert`; never write them into media files implicitly. Its
+  duplicate detection uses local evidence only: equal non-empty AcoustID
+  fingerprints on distinct physical paths, sequential hashing of equal-size
+  files into exact SHA-256 matches, and “likely” when a hash is unavailable.
+  `FindDuplicateGroups` is read-only and must never remove, move, or merge
+  anything. `LibraryScanner.RemoveTracksByPaths` keeps SQLite, Lucene, and the
+  waveform cache in sync, removes virtual CUE/MKA tracks sharing a removed source,
+  and only deletes files when the caller asks. Artist spelling variants are
+  guided-review findings only. `Analyze(inspectFiles: false)` is index-only;
+  default callers retain full checks. `OrderTracks` is shared by search, display
+  and persistence (disc, track, source, stable ID).
 - Dashboard recommendations use compact album-level genre/BPM candidates from
-  `AudioDatabase.GetRecommendationAlbums` and the matching server endpoint. Keep
-  this payload free of track rows, artwork bytes, and playback credentials.
-  Local recent-album and recommendation queries must aggregate the `tracks`
-  table before joining album, artist, and artwork metadata; joining those tables
-  per track caused Dashboard load time to grow with the complete library.
-  Preserve the covering `(album_id, added_at DESC)` index used by the recent
-  album aggregation.
+  `AudioDatabase.GetRecommendationAlbums`. Keep this payload free of track rows
+  and artwork bytes. Local recent-album and recommendation queries must aggregate
+  the `tracks` table before joining album, artist, and artwork metadata.
+  Preserve the covering `(album_id, added_at DESC)` index.
 - `SimilarityFeatureService` owns the versioned provider-neutral track feature
-  contract. Version two uses effective genre, BPM, explicit mood, favourite,
+  contract. Version two uses effective genre, BPM, explicit mood, favorite,
   personal/community rating, listening history, and optional cached acoustic
   descriptors. Preserve deterministic normalization and credential-free source
-  keys; future descriptor changes must extend the schema explicitly.
-  `RankSimilar` is deterministic, accepts mixed credential-free provider keys,
-  rejects vectors from another schema version, and retains artist/album
-  diversity limits; UI consumers must resolve returned provider-local IDs
-  through their owning catalog. `RankMood` provides deterministic calm,
-  balanced, and energetic ordering from explicit mood tags, normalized BPM,
-  preferences, community confidence, and familiarity, with the same
-  provider-aware diversity constraints. `RankPreset` provides deterministic
-  **Focus**, **Workout**, and **Wind down** ordering from cached acoustic
-  descriptors (energy, brightness, dynamics), normalized tempo, explicit mood
-  tags, and preference signals; missing descriptors use a neutral prior rather
-  than excluding the track. All three rankings share one private
-  diversity-limited selection helper, and results always carry credential-free
-  provider keys. Server vectors are paged by stable track ID order, and the
-  desktop client must replace the server's placeholder source with
-  `hyperfidel:{server.Id}`; never place a server URL or credential in `SourceKey`.
-  `SmartPlaylistCriteria.Resolve(candidates, similarityFeatures)` uses
-  `RankSimilar` whenever `SimilaritySourceKey` and `SimilarityTrackId` are set:
-  the reference is matched by provider key plus provider-local track id, results
-  are ordered by descending score, `SimilarityMinimumScore` removes weak
-  neighbours, an unresolvable reference returns an empty list rather than an
-  unrelated set, and every other criterion still applies. The desktop re-keys
-  remote vectors onto the smart-playlist candidate provider key and pseudo-IDs
-  before resolving, and the stored reference must never contain a server URL or
-  credential.
+  keys. `RankSimilar`, `RankMood`, and `RankPreset` are deterministic and share
+  one diversity-limited selection helper; **Focus**, **Workout** and **Wind down**
+  presets use cached descriptors with a neutral prior for missing values.
+  `SmartPlaylistCriteria.Resolve` applies `RankSimilar` when a reference is set,
+  removes weak neighbours by `SimilarityMinimumScore`, and returns an empty list
+  for an unresolvable reference.
 - Optional acoustic descriptors live in the provider-local
   `track_audio_features` table and survive metadata scans. Version changes must
   trigger bounded reanalysis. `AudioFeatureAnalysisService` decodes at most 90
   seconds as 8-kHz mono, restricts FFmpeg to one thread and best-effort reduced
   priority, and produces only normalized energy, brightness, and dynamics plus
-  an optional estimated key. Maintenance is sequential and failed sources have a
-  seven-day retry cooldown.
+  an optional estimated key. Maintenance is sequential with a seven-day retry
+  cooldown for failed sources.
 - `CamelotKey` is the single Camelot-wheel mapping: it parses conventional key
   names and wheel labels, exposes wheel distance (identical `0`, relative or
   neighbouring `1`), and never guesses an unsupported spelling. Key estimation
   uses a bounded Goertzel chromagram correlated against Krumhansl-Schmuckler
-  profiles and must stay conservative — a flat or ambiguous chroma returns no
-  key rather than a guess — and the canonical wheel label is what gets cached in
-  `track_audio_features.camelot_key` and carried on facet, similarity, and genre
-  cloud payloads. `HarmonicOrdering.Order` is the single greedy wheel walk used
-  by playback batches: it is deterministic, keeps keyless items in their
-  original relative order after the chain, and returns its input unchanged when
-  fewer than two items carry a key.
+  profiles and must stay conservative. `HarmonicOrdering.Order` is the single
+  greedy wheel walk used by playback batches: deterministic, keeps keyless items
+  in relative order, and returns its input unchanged below two keyed items.
 - `GenreCloudService` owns the stable hierarchical genre taxonomy, tag
-  normalization, count aggregation, breadcrumbs, and bounded provider-local
-  candidate selection. Candidate offsets rotate and wrap the stable order for
-  repeated background batches. Its curated data lives in the embedded
+  normalization, count aggregation, breadcrumbs, and bounded candidate selection
+  from the local library. Its curated data lives in the embedded
   `Library/GenreTaxonomy.json`; definitions may be top-level and have multiple
   parents, so traversal must be cycle-safe and node counts must deduplicate a
-  track even when several graph paths reach the same ancestor. Every node also
-  carries a distinct provider-local album count derived from the compact facet
-  row's optional `AlbumId`; cross-provider merging sums those counts. Controlled
-  compound-name matching resolves recognized descriptive tags without guessing
-  from arbitrary substrings. Unmapped tags retain dynamic `unmapped:` keys and
-  appear by their actual names beneath `more-genres`; never collapse them into
-  an Other bucket. The desktop merges snapshots across providers.
-  `ResolveLeafGenreKeys` performs cycle-safe recursive expansion of one or more
-  visible taxonomy branches for Genre Cloud-driven Infinite Mix filters and
-  preserves dynamic unmapped keys as leaves. `ResolveDescendantGenreKeys`
-  returns each supplied branch itself plus every recursive descendant,
-  preserving direct parent-tag matches in branch-based recommendation queries.
+  track across graph paths. Every node carries a distinct album count from the
+  compact facet row's optional `AlbumId`. Unmapped tags retain dynamic
+  `unmapped:` keys under `more-genres`. `ResolveLeafGenreKeys` and
+  `ResolveDescendantGenreKeys` perform cycle-safe recursive expansion for
+  Genre Cloud-driven Infinite Mix filters.
 - `AudioDatabase.GetListeningTrend` supports up to 366 equal chronological
   buckets so the client can request daily Dashboard points without materializing
   playback-history rows.
 - `ArtistNameNormalizer.CreateComparisonKey` is the shared identity key for
-  comparing artist names across local and HyperFidel Server catalogs.
-- `ArtistProfileService` accepts `de`, `en`, `fr`, `es`, `ru`, `zh`, and `hi`
-  profile language codes; supported UI languages must not silently fall back to
-  another language.
+  comparing artist names in the local library.
 - Local artist browsing is album-artist-centered. The scanner records whether
   `ALBUMARTIST` was missing, imports supported compilation flags, and
   `AudioDatabase.ReconcileAlbumArtists` resolves the complete album before the
   Artists view is exposed. Explicit consistent album artists win; otherwise
   compilation or differing inferred track artists resolve to `Various Artists`.
   Primary track artists stay attached to their tracks. Featured suffixes remain
-  governed by `ArtistNameNormalizer`. Embedded MusicBrainz artist IDs take
-  precedence over name comparison when resolving a local artist identity.
-- `FanartTvArtistImageService` uses a known MusicBrainz artist ID or an
-  unambiguous exact MusicBrainz name match, accepts only HTTPS `artistthumb`
-  URLs, bounds image downloads, and never includes the Fanart.tv API key in
-  diagnostics. `ArtistProfileService` prefers that image only when automatic
-  image refresh is allowed; manual artist images must remain untouched.
-  `ArtistImageSearchService` owns writes and explicit deletion of the
-  provider-local `artist-images/<id>.*` cache variants. Cache file stems and
-  save/delete wildcard patterns must use invariant-culture numeric artist IDs,
-  including negative server download cache identities. Shared in-process
-  mutation admission uses canonical data-directory plus artist identity, never
-  logged or persisted. Hold ownership through unique staging, publication and
-  old-format cleanup; remove idle gates after all active/waiting reservations
-  leave. Cancelled waiters must not release another writer. Cancellation before
-  publication and failed publication clean staging and preserve the prior image.
-  Wikipedia/Last.fm profile image downloads must use the same stream staging
-  path; never open the final cache file for direct provider streaming. Keep
-  caller-owned streams open, reject empty transfers before publication, and
-  preserve provider MIME/URL-extension fallback rules. UI callers must await
+  governed by `ArtistNameNormalizer`. Embedded MusicBrainz artist IDs in tags
+  take precedence over name comparison when resolving a local artist identity.
+- `ArtistImageSearchService` owns writes and explicit deletion of the local
+  `artist-images/<id>.*` cache variants. Cache stems and delete patterns must use
+  invariant-culture numeric artist IDs. Shared in-process mutation admission
+  uses canonical data-directory plus artist identity, never logged or persisted.
+  Hold ownership through unique staging, publication and old-format cleanup.
+  Cancelled waiters must not release another writer; cancellation before
+  publication preserves the prior image. Keep caller-owned streams open and
+  reject empty transfers before publication. UI callers must await
   `DeleteImageAsync` or use a worker for legacy deletion. File serialization
-  does not order user intent or make SQLite metadata and cache files
-  transactional, and does not coordinate separate processes.
-- Web page fetching must retain SSRF protection, connect-time address checks,
-  redirect and size limits, text-only responses, timeouts, and audit logging.
-  The loopback/private/link-local/CGNAT/multicast/reserved address
-  classification lives in the tested `HyperFidel.Web.PrivateNetworkPolicy`; keep it
-  there rather than inlining the range checks.
-- Streaming URL builders may carry credentials for immediate playback, but such
-  URLs must never be persisted, logged, documented, or returned to a model.
-- Catalog reads expose an opt-in `requireComplete` mode for artists, albums,
-  track pages, facets, ID resolution, similarity feature pages, and categorized
-  full search. Strict full search requires all three category arrays; missing
-  categories are invalid, while three empty arrays are a valid no-match result.
-  It must propagate HTTP, payload, and cancellation failures; successful empty
-  lists remain valid. Keep the tolerant fallback for existing callers.
-  Complete-catalog cache writers use strict mode so a failed page cannot
-  masquerade as the end of a catalog.
-- Shared release-update models verify the ECDSA P-256 signed manifest before an
-  asset is selected and verify its SHA-256 digest after download. Consumers must
-  never bypass either verification or accept an unsigned fallback.
+  does not order user intent or coordinate separate processes.
 - `FfmpegLocator` searches platform-specific installation directories in
-  addition to the inherited `PATH`. Windows and macOS may download matching
-  FFmpeg/FFprobe binaries into the per-user cache; Linux remains
-  system-package-managed. Downloaded macOS tools must be marked executable.
-- `HyperFidel.Server` has no `InternalsVisibleTo` grant; server-facing Core APIs
-  must be deliberately public.
+  addition to the inherited `PATH`. Linux remains system-package-managed; do not
+  download binaries at runtime.
 
-Consult the detailed database, scanner, search, streaming, audio, and web rules
-in `docs/PROJECT-REFERENCE.md` (repository-relative) before modifying those
-areas.
+Consult the detailed database, scanner, search, and audio rules in
+`docs/PROJECT-REFERENCE.md` (repository-relative) before modifying those areas.
 
 - `AudioDatabase` applies connection pragmas on every connection but coalesces
   schema creation/migration once per physical path and process. A newly created
   file at a reused path must discard the old initialization marker.
 - Use `GetTrackListPage` when only one ordered page is required; do not load the
   complete track list and page it in managed memory.
-
 - All compact track readers (full list, album, paths, IDs and pages) must
   overlay active-profile favorites and user ratings in SQLite with the
   established legacy-column fallback. Explicit false/zero state overrides legacy
   values; absent state keeps fallback. Preserve bounded paging/batching and
   caller ID order; never materialize the whole library to apply personal state
   after paging.
-
 - Explicit HYPERFIDEL_DATA_DIR roots never import legacy Player data. Default-root
   migration preserves current destination files, tolerates concurrent file
   creation only for file-exists errors and marks completion only after success.

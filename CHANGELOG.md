@@ -138,11 +138,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Removed
 
 - HyperFidel is now a local-only offline player. All network-facing features have
-  been removed: the HyperFidel Server client and backend, AI Chat, the embedded
-  MCP server, the mobile web remote, browser/remote audio streaming, SearXNG web
-  browsing, online lyrics lookup, Last.fm scrobbling, and desktop/server auto
-  updates. Local library, playback, queue, playlists, equalizer, MPRIS media keys
-  and scheduled local backup continue to work.
+  been removed: the HyperFidel Server client and backend, Plex, AI Chat, the
+  embedded MCP server, the mobile web remote, browser/remote audio streaming,
+  Internet Radio and Podcasts, AirPlay output, cross-device resume, MusicBrainz
+  community ratings and online cover/metadata lookup, SearXNG web browsing,
+  online lyrics lookup, Last.fm scrobbling, WebDAV backup upload, FFmpeg and
+  desktop/server auto updates. The HyperFidel Server and Plex clients remain only
+  as offline, network-free data stand-ins so legacy local settings still load;
+  no shipped code creates an `HttpClient`, socket or network request. Local
+  library, playback (including local DSD/DoP), queue, playlists, equalizer,
+  MPRIS media keys and scheduled local backup continue to work. PCM playback
+  never changes the system or hardware mixer volume.
 - The Genre Cloud intro card with its title and explanatory hint is gone; the
   cloud surface now sits directly below the content header.
 - The separate karaoke window and the manual lyrics-search dialog and action are
