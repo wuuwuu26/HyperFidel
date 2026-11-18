@@ -328,13 +328,9 @@ public partial class MainWindow : Window
         ArtistArtworkListBox.IsVisible = false;
         SearchResultsScrollViewer.IsVisible = false;
         GenreCloudSurface.IsVisible = false;
-        PodcastEpisodesView.IsVisible = false;
         DashboardScrollViewer.IsVisible = false;
-        InternetRadioView.IsVisible = false;
-        PodcastView.IsVisible = false;
         LyricsView.IsVisible = false;
         ArtistInfoView.IsVisible = false;
-        PodcastInfoView.IsVisible = false;
         PlexLoadMoreButton.IsVisible = false;
         PlexViewModeBorder.IsVisible = false;
         AlbumViewModeBorder.IsVisible = false;

@@ -109,8 +109,6 @@ public partial class MainWindow : Window
         FolderTreeView.IsVisible = false;
         SearchResultsScrollViewer.IsVisible = false;
         DashboardScrollViewer.IsVisible = false;
-        InternetRadioView.IsVisible = false;
-        PodcastView.IsVisible = false;
         UpdateAlphabetIndex(null, false);
 
         var request = BeginLogicalAlbumLoad();
@@ -301,8 +299,6 @@ public partial class MainWindow : Window
         FolderTreeView.IsVisible = false;
         SearchResultsScrollViewer.IsVisible = false;
         DashboardScrollViewer.IsVisible = false;
-        InternetRadioView.IsVisible = false;
-        PodcastView.IsVisible = false;
         UpdateAlphabetIndex(null, false);
 
         var request = await ReloadVisibleAlbumTracksAsync();
@@ -476,8 +472,6 @@ public partial class MainWindow : Window
         FolderTreeView.IsVisible = false;
         SearchResultsScrollViewer.IsVisible = false;
         DashboardScrollViewer.IsVisible = false;
-        InternetRadioView.IsVisible = false;
-        PodcastView.IsVisible = false;
         UpdateAlphabetIndex(null, false);
 
         await ReloadVisibleProviderAlbumTracksAsync();

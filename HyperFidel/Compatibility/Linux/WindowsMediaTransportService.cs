@@ -135,7 +135,7 @@ internal sealed class WindowsMediaTransportService : IDisposable
 /// Describes metadata passed through the platform-neutral desktop UI.
 /// </summary>
 /// <param name="Title">Track, episode, or stream title.</param>
-/// <param name="Artist">Artist, podcast, or station name.</param>
+/// <param name="Artist">Artist name.</param>
 /// <param name="Album">Album or collection title.</param>
 /// <param name="ArtworkPath">Optional local artwork path.</param>
 /// <param name="ArtworkUri">Optional remote artwork URI.</param>

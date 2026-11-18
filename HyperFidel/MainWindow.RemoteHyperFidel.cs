@@ -279,14 +279,11 @@ public partial class MainWindow : Window
         ArtistArtworkListBox.IsVisible = false;
         SearchResultsScrollViewer.IsVisible = false;
         // Hide the other full-area views so navigating into a remote view from the
-        // dashboard, radio, podcast, lyrics, or artist-info view (e.g. a dashboard
+        // dashboard, lyrics, or artist-info view (e.g. a dashboard
         // recent-album card) does not leave that view covering the remote content.
         DashboardScrollViewer.IsVisible = false;
-        InternetRadioView.IsVisible = false;
-        PodcastView.IsVisible = false;
         LyricsView.IsVisible = false;
         ArtistInfoView.IsVisible = false;
-        PodcastInfoView.IsVisible = false;
         StatusTextBlock.Text = LocalizationManager.Current.HyperFidelLoading;
         ContentDataGrid.ItemsSource = null;
         if (view != "AlbumTracks")

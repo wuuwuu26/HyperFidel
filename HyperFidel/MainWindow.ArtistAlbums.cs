@@ -82,7 +82,6 @@ public partial class MainWindow : Window
         SaveSmartPlaylistButton.IsVisible = false;
         UpdateEntityFavoritesFilterToggle(null);
         LyricsView.IsVisible = false;
-        PodcastInfoView.IsVisible = false;
         ArtistInfoView.IsVisible = true;
         ArtistInfoScrollViewer.Offset = default;
         ArtistInfoTitleButton.Content = artistName;

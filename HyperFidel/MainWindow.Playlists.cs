@@ -447,94 +447,6 @@ public partial class MainWindow : Window
     // Playlist – Löschen aus Sidebar / Entfernen aus Playlist-Ansicht
     // ------------------------------------------------------------------
 
-    private MenuFlyout BuildDeleteRadioContextFlyout(RadioStationRecord radio)
-    {
-        var menu = CreateSidebarMenuFlyout();
-        var header = CreateFlyoutMenuItem(
-            radio.Name,
-            new SolidColorBrush(Color.FromRgb(0x6C, 0x63, 0xFF)));
-        header.IsHitTestVisible = false;
-        header.Focusable = false;
-        header.FontWeight = FontWeight.SemiBold;
-        menu.Items.Add(header);
-
-        var separator = new Separator();
-        menu.Items.Add(separator);
-
-        var deleteItem = CreateFlyoutMenuItem(
-            LocalizationManager.Current.DeleteRadio,
-            new SolidColorBrush(Color.FromRgb(0xFF, 0x6B, 0x6B)));
-        deleteItem.Tag = radio;
-        deleteItem.Click += DeleteRadioMenuItem_OnClick;
-        menu.Items.Add(deleteItem);
-        return menu;
-    }
-
-    private void DeleteRadioMenuItem_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not MenuItem { Tag: RadioStationRecord radio })
-            return;
-        try
-        {
-            using var db = AudioDatabase.OpenDefault();
-            db.DeleteRadioStation(radio.Id);
-        }
-        catch
-        {
-            return;
-        }
-
-        LoadNavPlaylists();
-        var internetRadioItem = NavListBox.Items.OfType<ListBoxItem>()
-            .FirstOrDefault(item => string.Equals(item.Tag as string, "InternetRadio", StringComparison.Ordinal));
-        NavListBox.SelectedItem = internetRadioItem;
-        StatusTextBlock.Text = string.Format(LocalizationManager.Current.RadioDeleted, radio.Name);
-    }
-
-    private MenuFlyout BuildDeletePodcastContextFlyout(PodcastRecord podcast)
-    {
-        var menu = CreateSidebarMenuFlyout();
-        var header = CreateFlyoutMenuItem(
-            podcast.Name,
-            new SolidColorBrush(Color.FromRgb(0x6C, 0x63, 0xFF)));
-        header.IsHitTestVisible = false;
-        header.Focusable = false;
-        header.FontWeight = FontWeight.SemiBold;
-        menu.Items.Add(header);
-
-        var separator = new Separator();
-        menu.Items.Add(separator);
-
-        var deleteItem = CreateFlyoutMenuItem(
-            LocalizationManager.Current.DeletePodcast,
-            new SolidColorBrush(Color.FromRgb(0xFF, 0x6B, 0x6B)));
-        deleteItem.Tag = podcast;
-        deleteItem.Click += DeletePodcastMenuItem_OnClick;
-        menu.Items.Add(deleteItem);
-        return menu;
-    }
-
-    private void DeletePodcastMenuItem_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not MenuItem { Tag: PodcastRecord podcast })
-            return;
-        try
-        {
-            using var db = AudioDatabase.OpenDefault();
-            db.DeletePodcast(podcast.Id);
-        }
-        catch
-        {
-            return;
-        }
-
-        LoadNavPlaylists();
-        var podcastsItem = NavListBox.Items.OfType<ListBoxItem>()
-            .FirstOrDefault(item => string.Equals(item.Tag as string, "Podcasts", StringComparison.Ordinal));
-        NavListBox.SelectedItem = podcastsItem;
-        StatusTextBlock.Text = string.Format(LocalizationManager.Current.PodcastDeleted, podcast.Name);
-    }
-
     private MenuFlyout BuildPlaylistSidebarContextFlyout(PlaylistRecord playlist)
     {
         var menu = CreateSidebarMenuFlyout();
@@ -1150,6 +1062,4 @@ public partial class MainWindow : Window
             await ShowTopLevelViewAsync(navTag);
     }
 }
-
-
 

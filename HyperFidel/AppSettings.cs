@@ -77,8 +77,6 @@ public sealed class AppSettings
     public bool PcmOutputBoostEnabled { get; set; }
     /// <summary>Gets or sets the fade duration used when advancing non-gapless queues, in seconds.</summary>
     public double NonGaplessCrossfadeSeconds { get; set; }
-    /// <summary>Gets or sets a value indicating whether radio and podcast streams are loudness-normalized.</summary>
-    public bool StreamingLoudnessNormalizationEnabled { get; set; }
     /// <summary>Gets or sets a value indicating whether headphone crossfeed is applied to PCM playback.</summary>
     public bool CrossfeedEnabled { get; set; }
     /// <summary>Gets or sets the selected headphone crossfeed strength.</summary>
@@ -142,10 +140,6 @@ public sealed class AppSettings
     public HashSet<string> HyperFidelServerFavorites { get; set; } = [];
     /// <summary>Gets or sets persisted Infinite Mix preferences and recommendation feedback.</summary>
     public InfiniteMixSettings InfiniteMix { get; set; } = new();
-    /// <summary>Gets or sets a value indicating whether the Internet Radio sidebar item is visible.</summary>
-    public bool ShowInternetRadioItem { get; set; } = true;
-    /// <summary>Gets or sets a value indicating whether the Podcasts sidebar item is visible.</summary>
-    public bool ShowPodcastsItem { get; set; } = true;
     /// <summary>Gets or sets a value indicating whether the Up Next sidebar item is visible.</summary>
     public bool ShowQueueItem { get; set; } = true;
     /// <summary>Gets or sets a value indicating whether the main window starts maximized.</summary>
@@ -160,10 +154,6 @@ public sealed class AppSettings
     public int? MainWindowY { get; set; }
     /// <summary>Gets or sets a value indicating whether the Library sidebar section is visible.</summary>
     public bool ShowLocalLibrarySection { get; set; } = true;
-    /// <summary>Gets or sets a value indicating whether the Own Radios sidebar section is visible.</summary>
-    public bool ShowOwnRadiosSection { get; set; } = true;
-    /// <summary>Gets or sets a value indicating whether the My Podcasts sidebar section is visible.</summary>
-    public bool ShowMyPodcastsSection { get; set; } = true;
     /// <summary>Gets or sets a value indicating whether the Plex sidebar section is visible.</summary>
     public bool ShowPlexSection { get; set; } = true;
     /// <summary>Gets or sets a legacy value for the removed HyperFidel Server sidebar section.</summary>
@@ -178,21 +168,12 @@ public sealed class AppSettings
     public HashSet<string> CollapsedHyperFidelServerLibraryGroups { get; set; } = [];
     /// <summary>Gets or sets remote HyperFidel Server identifiers whose Playlists sidebar child group is collapsed.</summary>
     public HashSet<string> CollapsedHyperFidelServerPlaylistGroups { get; set; } = [];
-    /// <summary>Gets or sets a value indicating whether the Own Radios section is expanded.</summary>
-    public bool IsOwnRadiosSectionExpanded { get; set; }
-    /// <summary>Gets or sets a value indicating whether the My Podcasts section is expanded.</summary>
-    public bool IsMyPodcastsSectionExpanded { get; set; }
     /// <summary>Gets or sets a value indicating whether the Plex section is expanded.</summary>
     public bool IsPlexSectionExpanded { get; set; }
     /// <summary>Gets or sets a legacy value for the removed HyperFidel Server section expansion state.</summary>
     public bool IsHyperFidelServerSectionExpanded { get; set; }
     /// <summary>Gets or sets a value indicating whether the Playlists section is expanded.</summary>
     public bool IsPlaylistsSectionExpanded { get; set; }
-    /// <summary>
-    /// Gets or sets the maximum size of the local podcast download cache in
-    /// megabytes; zero or less keeps every downloaded episode.
-    /// </summary>
-    public int PodcastDownloadLimitMb { get; set; } = 2048;
     /// <summary>
     /// Gets or sets a value indicating whether optional UI motion (Genre Cloud,
     /// Dashboard cover stage, and immersive lyrics transitions) is disabled.

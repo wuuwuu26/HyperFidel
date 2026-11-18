@@ -473,10 +473,6 @@
             <x:String x:Key="L_OpenAlbum">Album öffnen</x:String>
             <x:String x:Key="L_OpenArtist">Künstler öffnen</x:String>
             <x:String x:Key="L_ToggleFavorite">Favorit umschalten</x:String>
-            <x:String x:Key="L_RadioEmptyState">Suche nach Sendername, Land oder Genre, oder speichere gefundene Sender unter „Eigene Radios“.</x:String>
-            <x:String x:Key="L_OwnRadiosEmptyHint">Noch keine eigenen Radios gespeichert. Suche im Internetradio-Verzeichnis und füge Sender hinzu.</x:String>
-            <x:String x:Key="L_PodcastEmptyState">Suche nach einem Podcast, filtere nach Kategorie oder Sprache und pinne Favoriten unter „Meine Podcasts“.</x:String>
-            <x:String x:Key="L_MyPodcastsEmptyHint">Noch keine Podcasts angepinnt. Suche im Podcast-Verzeichnis und füge Podcasts hinzu.</x:String>
             <x:String x:Key="L_Artists">Künstler</x:String>
             <x:String x:Key="L_Albums">Alben</x:String>
             <x:String x:Key="L_Tracks">Tracks</x:String>

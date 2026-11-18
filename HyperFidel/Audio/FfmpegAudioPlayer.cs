@@ -71,7 +71,7 @@ public sealed class FfmpegAudioPlayer : IGaplessAudioPlayer, IEqualizerAudioPlay
             enabled: false,
             CrossfeedStrength.Medium);
         // Loudness normalization starts disabled; the window enables it only for
-        // radio and podcast streams.
+        // streaming sources.
         _loudnessNormalizer = new StreamingLoudnessNormalizer(
             firstInfo.OutputSampleRate,
             enabled: false);

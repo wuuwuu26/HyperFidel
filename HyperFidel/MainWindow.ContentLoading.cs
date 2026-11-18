@@ -100,8 +100,7 @@ public partial class MainWindow : Window
         if (!CanPublish()) return;
         var diagnosticStopwatch = Stopwatch.StartNew();
         LogUiDiagnostics($"ShowTopLevelViewAsync start tag={tag}");
-        var showLoadingSkeleton = tag is not ("Dashboard" or "GenreCloud") &&
-            !tag.StartsWith("Radio:", StringComparison.Ordinal);
+        var showLoadingSkeleton = tag is not ("Dashboard" or "GenreCloud");
         if (showLoadingSkeleton)
             ShowContentLoadingSkeleton();
         using var loading = showLoadingSkeleton ? new ContentLoadingLease(HideContentLoadingSkeleton) : null;
@@ -121,7 +120,6 @@ public partial class MainWindow : Window
         SetLibraryRefreshAvailable(false);
         LyricsView.IsVisible = false;
         ArtistInfoView.IsVisible = false;
-        PodcastInfoView.IsVisible = false;
         _activePlaylistId = tag.StartsWith("Playlist:") &&
                             long.TryParse(tag.AsSpan("Playlist:".Length), out long parsedPid)
             ? parsedPid : null;
@@ -141,8 +139,6 @@ public partial class MainWindow : Window
             "GenreCloud" => LocalizationManager.Current.GenreExplorer,
             "Folders" => LocalizationManager.Current.FolderStructure,
             "Queue" => LocalizationManager.Current.UpNext,
-            "InternetRadio" => LocalizationManager.Current.InternetRadio,
-            "Podcasts" => LocalizationManager.Current.Podcasts,
             "RecentAlbumsAll" => LocalizationManager.Current.RecentAlbums,
             "RecentlyPlayedAll" => LocalizationManager.Current.RecentlyPlayed,
             _ when tag.StartsWith("PlexLibrary:", StringComparison.Ordinal) =>
@@ -150,8 +146,6 @@ public partial class MainWindow : Window
             _ when tag.StartsWith("HyperFidelServer:", StringComparison.Ordinal) =>
                 _activeHyperFidelServer?.Name ?? LocalizationManager.Current.HyperFidelServers,
             _ when tag.StartsWith("HyperFidelServerPlaylist:", StringComparison.Ordinal) => GetHyperFidelPlaylistName(tag),
-            _ when tag.StartsWith("Radio:", StringComparison.Ordinal) => GetRadioName(tag),
-            _ when tag.StartsWith("Podcast:", StringComparison.Ordinal) => GetPodcastName(tag),
             _         => tag.StartsWith("Playlist:") ? GetPlaylistName(tag) : tag
         };
         AnimateContentHeader();
@@ -177,19 +171,14 @@ public partial class MainWindow : Window
         GenreCloudSurface.IsVisible = false;
         ContentDataGrid.Margin = new Thickness(0);
         AlbumArtworkListBox.Margin = new Thickness(0);
-        InternetRadioView.IsVisible = false;
-        PodcastView.IsVisible = false;
-        PodcastEpisodesView.IsVisible = false;
         HideAlbumDetailHeader();
         ContentCountTextBlock.Text  = "";
         var isHyperFidelServerTag = tag.StartsWith("HyperFidelServer:", StringComparison.Ordinal);
         var isHyperFidelTracksTag = TryParseHyperFidelServerTag(tag, out _, out var hyperfidelViewForHeader) &&
                                  hyperfidelViewForHeader == "Tracks";
         SearchTextBox.IsVisible = isHyperFidelTracksTag ||
-                                   !(tag is "InternetRadio" or "Podcasts" or "Queue" or "AiChat" or "GenreCloud"
+                                   !(tag is "Queue" or "AiChat" or "GenreCloud"
                                         or "RecentAlbumsAll" or "RecentlyPlayedAll" ||
-                                    tag.StartsWith("Radio:", StringComparison.Ordinal) ||
-                                    tag.StartsWith("Podcast:", StringComparison.Ordinal) ||
                                     tag.StartsWith("PlexLibrary:", StringComparison.Ordinal) ||
                                     tag.StartsWith("HyperFidelServerPlaylist:", StringComparison.Ordinal) ||
                                     isHyperFidelServerTag);
@@ -243,35 +232,6 @@ public partial class MainWindow : Window
                 DashboardScrollViewer.IsVisible = true;
                 await BuildAllRecentlyPlayedViewAsync();
             }
-            else if (tag == "InternetRadio")
-            {
-                ContentDataGrid.IsVisible = false;
-                FolderTreeView.IsVisible = false;
-                AlbumArtworkListBox.IsVisible = false;
-                ArtistArtworkListBox.IsVisible = false;
-                InternetRadioView.IsVisible = true;
-                await EnsureRadioFilterCatalogAsync();
-                if (RadioStationsDataGrid.ItemsSource is null)
-                {
-                    RadioStatusTextBlock.Text = LocalizationManager.Current.RadioEmptyState;
-                    RadioStatusTextBlock.IsVisible = true;
-                }
-            }
-            else if (tag == "Podcasts")
-            {
-                ContentDataGrid.IsVisible = false;
-                FolderTreeView.IsVisible = false;
-                AlbumArtworkListBox.IsVisible = false;
-                ArtistArtworkListBox.IsVisible = false;
-                PodcastView.IsVisible = true;
-                PodcastEpisodesView.IsVisible = false;
-                await EnsurePodcastFilterCatalogAsync();
-                if (PodcastsDataGrid.ItemsSource is null)
-                {
-                    PodcastStatusTextBlock.Text = LocalizationManager.Current.PodcastEmptyState;
-                    PodcastStatusTextBlock.IsVisible = true;
-                }
-            }
             else if (tag == "Queue")
             {
                 ContentDataGrid.IsVisible = true;
@@ -292,26 +252,6 @@ public partial class MainWindow : Window
                 if (!_navigationRestores.ShouldSuppressHistory)
                     _genreCloudSelectedKey = null;
                 await ShowGenreCloudAsync(_genreCloudSelectedKey, CanPublish);
-            }
-            else if (tag.StartsWith("Podcast:", StringComparison.Ordinal) &&
-                     long.TryParse(tag.AsSpan("Podcast:".Length), out var podcastId))
-            {
-                ContentDataGrid.IsVisible = false;
-                FolderTreeView.IsVisible = false;
-                AlbumArtworkListBox.IsVisible = false;
-                ArtistArtworkListBox.IsVisible = false;
-                PodcastView.IsVisible = true;
-                await ShowSavedPodcastAsync(podcastId);
-            }
-            else if (tag.StartsWith("Radio:", StringComparison.Ordinal) &&
-                     long.TryParse(tag.AsSpan("Radio:".Length), out var radioId))
-            {
-                ContentDataGrid.IsVisible = false;
-                FolderTreeView.IsVisible = false;
-                AlbumArtworkListBox.IsVisible = false;
-                ArtistArtworkListBox.IsVisible = false;
-                InternetRadioView.IsVisible = true;
-                _ = PlaySavedRadioAsync(radioId);
             }
             else if (tag.StartsWith("PlexLibrary:", StringComparison.Ordinal))
             {

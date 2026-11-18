@@ -925,66 +925,13 @@ public sealed record LocalizedStrings(
     public string ExitImmersivePlayback { get; init; } = "";
     public string OutputQuality { get; init; } = "";
     public string InternetRadio { get; init; } = "";
-    public string OwnRadios { get; init; } = "";
-    public string RadioDirectory { get; init; } = "";
-    public string RadioDirectoryHint { get; init; } = "";
-    public string RadioSearch { get; init; } = "";
-    public string RadioStation { get; init; } = "";
     public string Country { get; init; } = "";
-    public string PlayRadio { get; init; } = "";
-    public string AddToOwnRadios { get; init; } = "";
-    public string DeleteRadio { get; init; } = "";
-    public string RadioLoading { get; init; } = "";
-    public string RadioNoResults { get; init; } = "";
-    /// <summary>Gets the empty-state text shown before an internet-radio search is run.</summary>
-    public string RadioEmptyState { get; init; } = "";
-    /// <summary>Gets the sidebar hint shown when no personal radio station is saved.</summary>
-    public string OwnRadiosEmptyHint { get; init; } = "";
-    public string RadioAdded { get; init; } = "";
-    public string RadioDeleted { get; init; } = "";
-    public string RadioSearchFailed { get; init; } = "";
-    public string RadioNowPlaying { get; init; } = "";
-    public string RadioMetadataUnavailable { get; init; } = "";
-    public string RadioGenres { get; init; } = "";
     public string ClearFilter { get; init; } = "";
-    public string Podcasts { get; init; } = "";
-    public string MyPodcasts { get; init; } = "";
-    public string PodcastDirectory { get; init; } = "";
-    public string PodcastDirectoryHint { get; init; } = "";
-    public string PodcastSearch { get; init; } = "";
     public string Podcast { get; init; } = "";
-    public string PodcastAuthor { get; init; } = "";
     public string PlayLatestEpisode { get; init; } = "";
-    public string AddToMyPodcasts { get; init; } = "";
-    public string DeletePodcast { get; init; } = "";
-    public string PodcastLoading { get; init; } = "";
-    public string PodcastNoResults { get; init; } = "";
-    /// <summary>Gets the empty-state text shown before a podcast search is run.</summary>
-    public string PodcastEmptyState { get; init; } = "";
-    /// <summary>Gets the sidebar hint shown when no podcast is pinned.</summary>
-    public string MyPodcastsEmptyHint { get; init; } = "";
-    public string PodcastAdded { get; init; } = "";
-    public string PodcastDeleted { get; init; } = "";
-    public string PodcastSearchFailed { get; init; } = "";
-    public string PodcastFeedFailed { get; init; } = "";
     public string ShowEpisodes { get; init; } = "";
     public string Published { get; init; } = "";
     public string Progress { get; init; } = "";
-    public string PodcastStatus { get; init; } = "";
-    public string PodcastUnplayed { get; init; } = "";
-    public string PodcastInProgress { get; init; } = "";
-    public string PodcastPlayed { get; init; } = "";
-    public string PodcastEpisodesLoading { get; init; } = "";
-    public string PodcastNoEpisodes { get; init; } = "";
-    public string PodcastCategories { get; init; } = "";
-    public string PodcastLanguages { get; init; } = "";
-    public string PodcastLanguage { get; init; } = "";
-    public string PodcastLanguagesLoading { get; init; } = "";
-    public string PodcastOverview { get; init; } = "";
-    public string PodcastEpisodeTotal { get; init; } = "";
-    public string PodcastEpisodeUnheard { get; init; } = "";
-    public string PodcastEpisodeStarted { get; init; } = "";
-    public string PodcastLatestEpisode { get; init; } = "";
     public string DailyHistoryTitle { get; init; } = "";
     public string PlayedAt { get; init; } = "";
     public string ListenedDuration { get; init; } = "";
@@ -993,12 +940,6 @@ public sealed record LocalizedStrings(
     public string DailyHistoryNoEntries { get; init; } = "";
     public string SidebarSections { get; init; } = "";
     public string SidebarSectionsHint { get; init; } = "";
-    public string PodcastInfo { get; init; } = "";
-    public string ShowPodcastInfo { get; init; } = "";
-    public string ClosePodcastInfo { get; init; } = "";
-    public string PodcastPublishedOn { get; init; } = "";
-    public string PodcastEpisodeDuration { get; init; } = "";
-    public string PodcastDescriptionUnavailable { get; init; } = "";
     public string PlexServers { get; init; } = "";
     public string PlexServersSettings { get; init; } = "";
     public string PlexServersHint { get; init; } = "";
@@ -1365,22 +1306,6 @@ public sealed record LocalizedStrings(
     public string AiChatToolResultFallback { get; init; } = "";
     /// <summary>Gets the option for automatically accepting Fanart.tv artist-image results.</summary>
     public string AutoAcceptFanartTvImages { get; init; } = "";
-    /// <summary>Gets the action that downloads a podcast episode for offline playback.</summary>
-    public string PodcastDownload { get; init; } = "";
-    /// <summary>Gets the action that removes a downloaded podcast episode.</summary>
-    public string PodcastDeleteDownload { get; init; } = "";
-    /// <summary>Gets the label marking a downloaded episode.</summary>
-    public string PodcastDownloaded { get; init; } = "";
-    /// <summary>Gets the message shown after removing a download.</summary>
-    public string PodcastDownloadRemoved { get; init; } = "";
-    /// <summary>Gets the message shown while an episode downloads.</summary>
-    public string PodcastDownloading { get; init; } = "";
-    /// <summary>Gets the message shown when a download fails.</summary>
-    public string PodcastDownloadFailed { get; init; } = "";
-    /// <summary>Gets the label of the podcast download cache size limit.</summary>
-    public string PodcastDownloadLimit { get; init; } = "";
-    /// <summary>Gets the explanation of the podcast download cache size limit.</summary>
-    public string PodcastDownloadLimitHint { get; init; } = "";
     /// <summary>Gets the bulk genre input watermark.</summary>
     public string BulkGenre { get; init; } = "";
     /// <summary>Gets the bulk genre input tooltip.</summary>
@@ -1557,10 +1482,6 @@ public sealed record LocalizedStrings(
     public string StreamingQualityOpus { get; init; } = "";
     /// <summary>Gets the streaming-quality option for AAC 192 kbps.</summary>
     public string StreamingQualityAac { get; init; } = "";
-    /// <summary>Gets the streaming-loudness section label.</summary>
-    public string StreamingLoudnessNormalization { get; init; } = "";
-    /// <summary>Gets the label for enabling streaming loudness normalization.</summary>
-    public string StreamingLoudnessNormalizationEnabled { get; init; } = "";
     /// <summary>Gets the headphone crossfeed section label.</summary>
     public string Crossfeed { get; init; } = "";
     /// <summary>Gets the label for enabling headphone crossfeed.</summary>

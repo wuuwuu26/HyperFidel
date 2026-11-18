@@ -268,10 +268,7 @@ public partial class MainWindow : Window
     private void TrackDataGrid_OnLoadingRow(object? sender, DataGridRowEventArgs e)
     {
         ApplyNowPlayingClass(e.Row);
-        if (e.Row.DataContext is PodcastEpisodeViewModel)
-            SetPodcastEpisodeContextFlyout(e.Row);
-        else
-            SetPlaylistContextFlyout(e.Row);
+        SetPlaylistContextFlyout(e.Row);
     }
 
     private void PlaylistDataGrid_OnLoadingRow(object? sender, DataGridRowEventArgs e) =>
@@ -495,8 +492,6 @@ public partial class MainWindow : Window
     private static string? GetPlaybackPath(object? row) => row switch
     {
         ContentRow content => content.FilePath,
-        RadioStationViewModel radio => radio.StreamUrl,
-        PodcastEpisodeViewModel podcast => podcast.Episode.AudioUrl,
         _ => null
     };
 

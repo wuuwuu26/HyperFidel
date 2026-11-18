@@ -593,17 +593,6 @@
 
                     <Separator Margin="0,18,0,14"/>
 
-                    <TextBlock Text="{DynamicResource L_StreamingLoudnessNormalization}"
-                               FontSize="{DynamicResource FontSizeCaption}"
-                               FontWeight="SemiBold"
-                               Margin="0,0,0,8"/>
-                    <CheckBox x:Name="StreamingLoudnessNormalizationCheckBox"
-                              Theme="{StaticResource SettingsToggleTheme}"
-                              Content="{DynamicResource L_StreamingLoudnessNormalizationEnabled}"
-                              Margin="0,0,0,8"/>
-
-                    <Separator Margin="0,18,0,14"/>
-
                     <TextBlock Text="{DynamicResource L_Crossfeed}"
                                FontSize="{DynamicResource FontSizeCaption}"
                                FontWeight="SemiBold"
@@ -887,26 +876,6 @@
                                FontSize="{DynamicResource FontSizeMeta}"
                                Foreground="{DynamicResource AppSecondaryTextBrush}"
                                TextWrapping="Wrap"/>
-
-                    <Separator Margin="0,18,0,14"/>
-
-                    <TextBlock Text="{DynamicResource L_PodcastDownloadLimit}"
-                               FontSize="{DynamicResource FontSizeCaption}"
-                               Foreground="{DynamicResource AppMutedTextBrush}"
-                               Margin="0,16,0,4"/>
-                    <NumericUpDown x:Name="PodcastDownloadLimitInput"
-                                   Width="160"
-                                   Height="30"
-                                   HorizontalAlignment="Left"
-                                   Minimum="0"
-                                   Maximum="102400"
-                                   Increment="256"
-                                   FormatString="0"/>
-                    <TextBlock Text="{DynamicResource L_PodcastDownloadLimitHint}"
-                               FontSize="{DynamicResource FontSizeMeta}"
-                               Foreground="{DynamicResource AppMutedTextBrush}"
-                               TextWrapping="Wrap"
-                               Margin="0,4,0,0"/>
 
                     <Separator Margin="0,18,0,14"/>
 
@@ -1385,28 +1354,12 @@
                                Foreground="{DynamicResource AppMutedTextBrush}"
                                TextWrapping="Wrap"
                                Margin="0,0,0,8"/>
-                    <CheckBox x:Name="ShowInternetRadioItemCheckBox"
-                              Content="{DynamicResource L_InternetRadio}"
-                              Theme="{StaticResource SettingsToggleTheme}"
-                              Margin="0,4"/>
-                    <CheckBox x:Name="ShowPodcastsItemCheckBox"
-                              Content="{DynamicResource L_Podcasts}"
-                              Theme="{StaticResource SettingsToggleTheme}"
-                              Margin="0,4"/>
                     <CheckBox x:Name="ShowQueueItemCheckBox"
                               Content="{DynamicResource L_UpNext}"
                               Theme="{StaticResource SettingsToggleTheme}"
                               Margin="0,4"/>
                     <CheckBox x:Name="ShowLocalLibrarySectionCheckBox"
                               Content="{DynamicResource L_LocalLibrary}"
-                              Theme="{StaticResource SettingsToggleTheme}"
-                              Margin="0,4"/>
-                    <CheckBox x:Name="ShowOwnRadiosSectionCheckBox"
-                              Content="{DynamicResource L_OwnRadios}"
-                              Theme="{StaticResource SettingsToggleTheme}"
-                              Margin="0,4"/>
-                    <CheckBox x:Name="ShowMyPodcastsSectionCheckBox"
-                              Content="{DynamicResource L_MyPodcasts}"
                               Theme="{StaticResource SettingsToggleTheme}"
                               Margin="0,4"/>
                     <CheckBox x:Name="ShowPlexSectionCheckBox"

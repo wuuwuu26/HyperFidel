@@ -250,18 +250,13 @@ internal partial class SettingsView : UserControl
             LocalizationManager.Current.CrossfeedStrong
         };
         CrossfeedStrengthComboBox.SelectedIndex = Math.Clamp((int)settings.CrossfeedStrength, 0, 2);
-        StreamingLoudnessNormalizationCheckBox.IsChecked = settings.StreamingLoudnessNormalizationEnabled;
         RefreshEqualizerProfileText();
         RebuildEqualizerEditor();
         UpdateSubsystemStatusBadges();
-        ShowInternetRadioItemCheckBox.IsChecked = settings.ShowInternetRadioItem;
-        ShowPodcastsItemCheckBox.IsChecked      = settings.ShowPodcastsItem;
         ShowQueueItemCheckBox.IsChecked         = settings.ShowQueueItem;
         ReduceMotionCheckBox.IsChecked          = settings.ReduceMotion;
         StartMaximizedCheckBox.IsChecked             = settings.StartMaximized;
         ShowLocalLibrarySectionCheckBox.IsChecked = settings.ShowLocalLibrarySection;
-        ShowOwnRadiosSectionCheckBox.IsChecked = settings.ShowOwnRadiosSection;
-        ShowMyPodcastsSectionCheckBox.IsChecked = settings.ShowMyPodcastsSection;
         ShowPlexSectionCheckBox.IsChecked          = settings.ShowPlexSection;
         ArtistInfoSourceComboBox.ItemsSource = Enum.GetValues<ArtistInfoSource>();
         ArtistInfoSourceComboBox.SelectedItem = settings.ArtistInfoSource;
@@ -277,7 +272,6 @@ internal partial class SettingsView : UserControl
         ScheduledBackupEnabledCheckBox.IsChecked = settings.ScheduledBackup.Enabled;
         ScheduledBackupIntervalInput.Value = Math.Clamp(settings.ScheduledBackup.IntervalDays, 1, 365);
         ScheduledBackupRetentionInput.Value = Math.Clamp(settings.ScheduledBackup.RetentionCount, 1, 50);
-        PodcastDownloadLimitInput.Value = Math.Clamp(settings.PodcastDownloadLimitMb, 0, 102400);
         UpdateScheduledBackupStatus();
         _plexServers.AddRange((settings.PlexServers ?? []).Select(ClonePlexServer));
         _hyperfidelServers.AddRange((settings.HyperFidelServers ?? []).Select(CloneHyperFidelServer));
@@ -364,10 +358,6 @@ internal partial class SettingsView : UserControl
     /// <summary>Gets the configured number of backups kept before older ones are removed.</summary>
     public int ScheduledBackupRetentionValue =>
         (int)Math.Clamp(ScheduledBackupRetentionInput.Value ?? 3m, 1m, 50m);
-
-    /// <summary>Gets the configured maximum podcast download cache size in megabytes.</summary>
-    public int PodcastDownloadLimitMbValue =>
-        (int)Math.Clamp(PodcastDownloadLimitInput.Value ?? 2048m, 0m, 102400m);
 
     /// <summary>Gets the configured backup folder.</summary>
     public string ScheduledBackupDirectoryValue => _scheduledBackupDirectory;
@@ -478,9 +468,6 @@ internal partial class SettingsView : UserControl
     public string? SelectedEqualizerProfileName => _equalizerProfile?.Name;
     /// <summary>Gets a value indicating whether headphone crossfeed is enabled.</summary>
     public bool SelectedCrossfeedEnabled => CrossfeedEnabledCheckBox.IsChecked == true;
-    /// <summary>Gets a value indicating whether radio and podcast streams are loudness-normalized.</summary>
-    public bool SelectedStreamingLoudnessNormalizationEnabled =>
-        StreamingLoudnessNormalizationCheckBox.IsChecked == true;
     /// <summary>Gets the selected headphone crossfeed strength.</summary>
     public CrossfeedStrength SelectedCrossfeedStrength => CrossfeedStrengthComboBox.SelectedIndex switch
     {
@@ -519,10 +506,6 @@ internal partial class SettingsView : UserControl
     /// <summary>Gets independent copies of all configured HyperFidel Server connections.</summary>
     public IReadOnlyList<HyperFidelServerSettings> SelectedHyperFidelServers =>
         _hyperfidelServers.Select(CloneHyperFidelServer).ToList().AsReadOnly();
-    /// <summary>Gets a value indicating whether the Internet Radio sidebar item should be visible.</summary>
-    public bool ShowInternetRadioItem => ShowInternetRadioItemCheckBox.IsChecked == true;
-    /// <summary>Gets a value indicating whether the Podcasts sidebar item should be visible.</summary>
-    public bool ShowPodcastsItem => ShowPodcastsItemCheckBox.IsChecked == true;
     /// <summary>Gets a value indicating whether the Up Next sidebar item should be visible.</summary>
     public bool ShowQueueItem => ShowQueueItemCheckBox.IsChecked == true;
 
@@ -532,10 +515,6 @@ internal partial class SettingsView : UserControl
     public bool StartMaximized => StartMaximizedCheckBox.IsChecked == true;
     /// <summary>Gets a value indicating whether the Library sidebar section should be visible.</summary>
     public bool ShowLocalLibrarySection => ShowLocalLibrarySectionCheckBox.IsChecked == true;
-    /// <summary>Gets a value indicating whether the Own Radios sidebar section should be visible.</summary>
-    public bool ShowOwnRadiosSection => ShowOwnRadiosSectionCheckBox.IsChecked == true;
-    /// <summary>Gets a value indicating whether the My Podcasts sidebar section should be visible.</summary>
-    public bool ShowMyPodcastsSection => ShowMyPodcastsSectionCheckBox.IsChecked == true;
     /// <summary>Gets a value indicating whether the Plex sidebar section should be visible.</summary>
     public bool ShowPlexSection => ShowPlexSectionCheckBox.IsChecked == true;
 

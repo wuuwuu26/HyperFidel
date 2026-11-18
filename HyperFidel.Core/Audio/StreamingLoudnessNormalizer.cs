@@ -1,7 +1,7 @@
 namespace HyperFidel.Audio;
 
 /// <summary>
-/// Applies a slow, bounded automatic gain to live radio and podcast PCM so their
+/// Applies a slow, bounded automatic gain to live streaming PCM so that
 /// loudness does not jump relative to the ReplayGain-normalized music library.
 /// </summary>
 /// <remarks>

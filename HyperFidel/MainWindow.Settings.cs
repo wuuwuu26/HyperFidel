@@ -407,17 +407,16 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Applies the persisted streaming-loudness settings. Normalization runs only
-    /// for radio and podcast streams, never for library tracks or native DSD.
+    /// for library tracks; native DSD remains unaffected.
     /// </summary>
     /// <param name="player">The active player, or <see langword="null"/> when none is open.</param>
-    /// <param name="isStream">Whether the current item is a radio or podcast stream.</param>
-    private void ApplyLoudnessNormalizationSettings(IAudioPlayer? player, bool isStream)
+    private void ApplyLoudnessNormalizationSettings(IAudioPlayer? player)
     {
         if (player is not ILoudnessNormalizerAudioPlayer normalizerPlayer)
             return;
 
         normalizerPlayer.UpdateLoudnessNormalization(
-            isStream && _settings.StreamingLoudnessNormalizationEnabled,
+            enabled: false,
             StreamingLoudnessNormalizer.DefaultTargetDbfs,
             StreamingLoudnessNormalizer.DefaultMaximumGainDb);
     }
@@ -653,10 +652,8 @@ public partial class MainWindow : Window
             !string.Equals(_settings.SelectedWasapiDeviceId, profile.SelectedWasapiDeviceId, StringComparison.Ordinal) ||
             !string.Equals(_settings.SelectedAirPlayDeviceId, profile.SelectedAirPlayDeviceId, StringComparison.Ordinal);
 
-        // Snapshot playback state before StopPlaybackCore clears station/podcast fields.
+        // Snapshot playback state before StopPlaybackCore clears current state.
         var resumePath     = _currentFilePath;
-        var resumeStation  = _currentRadioStation;
-        var resumePodcast  = _currentPodcastPlayback;
         var resumePosition = _player?.Position ?? TimeSpan.Zero;
         var wasPaused      = _player?.IsPaused == true;
         var shouldResume   = outputChanged && _player is not null && !string.IsNullOrEmpty(resumePath);
@@ -686,7 +683,7 @@ public partial class MainWindow : Window
 
         if (!shouldResume)
             return;
-        var ready = StartReadyPlaybackAsync(resumePath, resumeStation, resumePodcast, resumePosition, wasPaused);
+        var ready = StartReadyPlaybackAsync(resumePath, resumePosition, wasPaused);
         var resumeIntent = _playbackStarts.Current;
         try { await ready; }
         catch (Exception) when (_playbackShuttingDown || !_playbackStarts.IsCurrent(resumeIntent)) { }
@@ -721,8 +718,6 @@ public partial class MainWindow : Window
         if (_player is { } player)
         {
             _releasedOutputPath = _currentFilePath;
-            _releasedOutputRadioStation = _currentRadioStation;
-            _releasedOutputPodcastPlayback = _currentPodcastPlayback;
             _releasedOutputPosition = player.Position;
             _releasedOutputWasPaused = player.IsPaused;
             var release = StopPlaybackAsync(waitForCompleteDisposal: true);
@@ -740,11 +735,9 @@ public partial class MainWindow : Window
             return;
 
         var path = _releasedOutputPath;
-        var station = _releasedOutputRadioStation;
-        var podcast = _releasedOutputPodcastPlayback;
         var position = _releasedOutputPosition;
         var wasPaused = _releasedOutputWasPaused;
-        var ready = StartReadyPlaybackAsync(path, station, podcast, position, wasPaused);
+        var ready = StartReadyPlaybackAsync(path, position, wasPaused);
         var resumeIntent = _playbackStarts.Current;
         try { await ready; }
         catch (Exception) when (_playbackShuttingDown || !_playbackStarts.IsCurrent(resumeIntent)) { }
@@ -756,8 +749,6 @@ public partial class MainWindow : Window
             if (_playbackShuttingDown || !_playbackStarts.IsCurrent(stoppedIntent))
                 return;
             _releasedOutputPath = path;
-            _releasedOutputRadioStation = station;
-            _releasedOutputPodcastPlayback = podcast;
             _releasedOutputPosition = position;
             _releasedOutputWasPaused = wasPaused;
             _audioDeviceExplicitlyReleased = true;
@@ -814,8 +805,6 @@ public partial class MainWindow : Window
     private void ClearReleasedOutputResumeState()
     {
         _releasedOutputPath = null;
-        _releasedOutputRadioStation = null;
-        _releasedOutputPodcastPlayback = null;
         _releasedOutputPosition = TimeSpan.Zero;
         _releasedOutputWasPaused = false;
     }
@@ -843,12 +832,8 @@ public partial class MainWindow : Window
                     window.SelectedFanartTvApiKey,
                     StringComparison.Ordinal);
             var sidebarChanged =
-                _settings.ShowInternetRadioItem != window.ShowInternetRadioItem ||
-                _settings.ShowPodcastsItem != window.ShowPodcastsItem ||
                 _settings.ShowQueueItem != window.ShowQueueItem ||
                 _settings.ShowLocalLibrarySection != window.ShowLocalLibrarySection ||
-                _settings.ShowOwnRadiosSection != window.ShowOwnRadiosSection ||
-                _settings.ShowMyPodcastsSection != window.ShowMyPodcastsSection ||
                 _settings.ShowPlexSection != window.ShowPlexSection;
             var motionChanged = _settings.ReduceMotion != window.ReduceMotionValue;
             var plexServersChanged = !PlexServerSettingsEqual(
@@ -913,7 +898,6 @@ public partial class MainWindow : Window
             _settings.LastFmApiKey           = window.SelectedLastFmApiKey;
             _settings.LastFmApiSecret        = window.SelectedLastFmApiSecret;
             _settings.LastFmScrobblingEnabled = window.SelectedLastFmScrobblingEnabled;
-            _settings.StreamingLoudnessNormalizationEnabled = window.SelectedStreamingLoudnessNormalizationEnabled;
             _settings.CrossfeedEnabled       = window.SelectedCrossfeedEnabled;
             _settings.CrossfeedStrength      = window.SelectedCrossfeedStrength;
             _settings.FanartTvApiKey         = window.SelectedFanartTvApiKey;
@@ -928,16 +912,11 @@ public partial class MainWindow : Window
             _settings.ScheduledBackup.IntervalDays   = window.ScheduledBackupIntervalValue;
             _settings.ScheduledBackup.RetentionCount = window.ScheduledBackupRetentionValue;
             _settings.ScheduledBackup.Directory      = window.ScheduledBackupDirectoryValue;
-            _settings.PodcastDownloadLimitMb  = window.PodcastDownloadLimitMbValue;
-            _settings.ShowInternetRadioItem   = window.ShowInternetRadioItem;
-            _settings.ShowPodcastsItem        = window.ShowPodcastsItem;
             _settings.ShowQueueItem           = window.ShowQueueItem;
             _settings.ReduceMotion             = window.ReduceMotionValue;
             StartAppLogoGlow();
             _settings.StartMaximized           = window.StartMaximized;
             _settings.ShowLocalLibrarySection = window.ShowLocalLibrarySection;
-            _settings.ShowOwnRadiosSection    = window.ShowOwnRadiosSection;
-            _settings.ShowMyPodcastsSection   = window.ShowMyPodcastsSection;
             _settings.ShowPlexSection              = window.ShowPlexSection;
             if (window.PlexCredentialsChanged)
             {
@@ -954,9 +933,7 @@ public partial class MainWindow : Window
             }
             await Task.Run(() => _settingsStore.Save(_settings));
             ApplyCrossfeedSettings(_player);
-            ApplyLoudnessNormalizationSettings(
-                _player,
-                _currentRadioStation is not null || _currentPodcastPlayback is not null);
+            ApplyLoudnessNormalizationSettings(_player);
             if (themeChanged)
             {
                 ThemeManager.Apply(_settings.Theme);

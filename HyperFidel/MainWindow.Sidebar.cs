@@ -58,9 +58,7 @@ public partial class MainWindow : Window
         foreach (var dynamicItem in NavListBox.Items
                      .OfType<ListBoxItem>()
                      .Where(item => item.Tag is string tag &&
-                                    (tag.StartsWith("Radio:", StringComparison.Ordinal) ||
-                                     tag.StartsWith("Podcast:", StringComparison.Ordinal) ||
-                                     tag.StartsWith("Plex", StringComparison.Ordinal) ||
+                                    (tag.StartsWith("Plex", StringComparison.Ordinal) ||
                                      tag == "LibraryGroup:LocalPlaylists" ||
                                      tag.StartsWith("Playlist:", StringComparison.Ordinal)))
                      .ToList())
@@ -69,54 +67,6 @@ public partial class MainWindow : Window
         try
         {
             using var db = AudioDatabase.OpenDefault();
-            var podcastHeaderIndex = NavListBox.Items.IndexOf(MyPodcastsHeaderItem);
-            var savedRadios = db.GetRadioStations().ToList();
-            if (savedRadios.Count == 0 && podcastHeaderIndex >= 0)
-            {
-                NavListBox.Items.Insert(podcastHeaderIndex++, CreateSidebarHintItem(
-                    "Radio:EmptyHint",
-                    LocalizationManager.Current.OwnRadiosEmptyHint));
-            }
-
-            foreach (var radio in savedRadios)
-            {
-                var content = new StackPanel { Orientation = Orientation.Horizontal };
-                content.Children.Add(CreateSidebarIcon("IconRadio"));
-                content.Children.Add(CreateSidebarEntryText(radio.Name));
-
-                NavListBox.Items.Insert(podcastHeaderIndex++, new ListBoxItem
-                {
-                    Content = content,
-                    Tag = $"Radio:{radio.Id}",
-                    Theme = FindResource<ControlTheme>("NavItemTheme"),
-                    ContextFlyout = BuildDeleteRadioContextFlyout(radio)
-                });
-            }
-
-            var plexHeaderIndex = NavListBox.Items.IndexOf(PlexHeaderItem);
-            var savedPodcasts = db.GetPodcasts().ToList();
-            if (savedPodcasts.Count == 0 && plexHeaderIndex >= 0)
-            {
-                NavListBox.Items.Insert(plexHeaderIndex++, CreateSidebarHintItem(
-                    "Podcast:EmptyHint",
-                    LocalizationManager.Current.MyPodcastsEmptyHint));
-            }
-
-            foreach (var podcast in savedPodcasts)
-            {
-                var content = new StackPanel { Orientation = Orientation.Horizontal };
-                content.Children.Add(CreateSidebarIcon("IconPodcast"));
-                content.Children.Add(CreateSidebarEntryText(podcast.Name));
-
-                NavListBox.Items.Insert(plexHeaderIndex++, new ListBoxItem
-                {
-                    Content = content,
-                    Tag = $"Podcast:{podcast.Id}",
-                    Theme = FindResource<ControlTheme>("NavItemTheme"),
-                    ContextFlyout = BuildDeletePodcastContextFlyout(podcast)
-                });
-            }
-
             var localPlaylistInsertIndex = NavListBox.Items.IndexOf(FoldersNavItem);
             if (localPlaylistInsertIndex >= 0)
             {
@@ -382,20 +332,8 @@ public partial class MainWindow : Window
 
     private void ApplySidebarNavigationSettings()
     {
-        SetSidebarItemVisibility(InternetRadioNavItem, _settings.ShowInternetRadioItem);
-        SetSidebarItemVisibility(PodcastsNavItem, _settings.ShowPodcastsItem);
         SetSidebarItemVisibility(QueueNavItem, _settings.ShowQueueItem);
         ApplyLibrarySectionVisibility();
-        SetSidebarSectionVisibility(
-            OwnRadiosHeaderItem,
-            "OwnRadios",
-            _settings.ShowOwnRadiosSection,
-            dynamicPrefix: "Radio:");
-        SetSidebarSectionVisibility(
-            MyPodcastsHeaderItem,
-            "MyPodcasts",
-            _settings.ShowMyPodcastsSection,
-            dynamicPrefix: "Podcast:");
         SetSidebarSectionVisibility(
             PlexHeaderItem,
             "Plex",
@@ -416,8 +354,6 @@ public partial class MainWindow : Window
         var arrow = section switch
         {
             "LocalLibrary" => LocalLibraryHeaderArrow,
-            "OwnRadios" => OwnRadiosHeaderArrow,
-            "MyPodcasts" => MyPodcastsHeaderArrow,
             "Plex" => PlexHeaderArrow,
             "Playlists" => PlaylistsHeaderArrow,
             _ => null
@@ -605,8 +541,6 @@ public partial class MainWindow : Window
     private bool IsSidebarSectionExpanded(string section) => section switch
     {
         "LocalLibrary" => _settings.IsLocalLibrarySectionExpanded,
-        "OwnRadios" => _settings.IsOwnRadiosSectionExpanded,
-        "MyPodcasts" => _settings.IsMyPodcastsSectionExpanded,
         "Plex" => _settings.IsPlexSectionExpanded,
         "Playlists" => _settings.IsPlaylistsSectionExpanded,
         _ => false
@@ -618,12 +552,6 @@ public partial class MainWindow : Window
         {
             case "LocalLibrary":
                 _settings.IsLocalLibrarySectionExpanded = isExpanded;
-                break;
-            case "OwnRadios":
-                _settings.IsOwnRadiosSectionExpanded = isExpanded;
-                break;
-            case "MyPodcasts":
-                _settings.IsMyPodcastsSectionExpanded = isExpanded;
                 break;
             case "Plex":
                 _settings.IsPlexSectionExpanded = isExpanded;

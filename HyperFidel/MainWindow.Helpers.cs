@@ -119,36 +119,6 @@ public partial class MainWindow : Window
         return server is not null;
     }
 
-    private string GetRadioName(string tag)
-    {
-        if (!long.TryParse(tag.AsSpan("Radio:".Length), out var id))
-            return LocalizationManager.Current.InternetRadio;
-        try
-        {
-            using var db = AudioDatabase.OpenDefault();
-            return db.GetRadioStation(id)?.Name ?? LocalizationManager.Current.InternetRadio;
-        }
-        catch
-        {
-            return LocalizationManager.Current.InternetRadio;
-        }
-    }
-
-    private string GetPodcastName(string tag)
-    {
-        if (!long.TryParse(tag.AsSpan("Podcast:".Length), out var id))
-            return LocalizationManager.Current.Podcasts;
-        try
-        {
-            using var db = AudioDatabase.OpenDefault();
-            return db.GetPodcast(id)?.Name ?? LocalizationManager.Current.Podcasts;
-        }
-        catch
-        {
-            return LocalizationManager.Current.Podcasts;
-        }
-    }
-
     private async Task ShowHyperFidelPlaylistAsync(string tag)
     {
         if (!TryParseHyperFidelPlaylistTag(tag, out var server, out var playlistId) || server is null)

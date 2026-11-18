@@ -122,8 +122,6 @@ public partial class MainWindow : Window
         exception => CrashLogger.Log(exception, "Background audio-player disposal"));
     private bool _audioDeviceExplicitlyReleased;
     private string? _releasedOutputPath;
-    private RadioStationRecord? _releasedOutputRadioStation;
-    private PodcastPlayback? _releasedOutputPodcastPlayback;
     private TimeSpan _releasedOutputPosition;
     private bool _releasedOutputWasPaused;
     private readonly SettingsStore _settingsStore = new();
@@ -201,27 +199,6 @@ public partial class MainWindow : Window
     private double _contentDataGridAverageRowHeight = 32d;
     private int _diagnosticScrollEventCount;
     private int _diagnosticLoadingRowCount;
-    private readonly RadioBrowserService _radioBrowserService = new();
-    private readonly RadioStreamMetadataService _radioMetadataService = new();
-    private readonly PodcastService _podcastService = new();
-    private readonly CatalogFilterCache _catalogFilterCache = new();
-    private CatalogFilterCacheData _catalogFilterCacheData = new();
-    private CancellationTokenSource? _radioSearchCts;
-    private CancellationTokenSource? _podcastSearchCts;
-    private CancellationTokenSource? _podcastFeedCts;
-    private CancellationTokenSource? _radioMetadataCts;
-    private static readonly HttpClient RadioImageHttpClient = CreateRadioImageHttpClient();
-    private readonly List<RadioStationViewModel> _radioSearchResults = [];
-    private readonly HashSet<string> _selectedRadioGenres = new(StringComparer.OrdinalIgnoreCase);
-    private readonly List<PodcastViewModel> _podcastSearchResults = [];
-    private readonly HashSet<string> _selectedPodcastCategories = new(StringComparer.OrdinalIgnoreCase);
-    private readonly HashSet<string> _selectedPodcastLanguages = new(StringComparer.OrdinalIgnoreCase);
-    private readonly List<CatalogFilterOption> _radioGenreCatalog = [];
-    private readonly List<CatalogFilterOption> _podcastCategoryCatalog = [];
-    private readonly List<CatalogFilterOption> _podcastLanguageCatalog = [];
-    private bool _radioFilterCatalogLoading;
-    private bool _podcastFilterCatalogLoading;
-    private bool _podcastLanguagesLoading;
 
     private readonly ObservableCollection<PlaylistItem> _queue = [];
     private readonly ObservableCollection<ContentRow> _queueRows = [];
@@ -236,11 +213,6 @@ public partial class MainWindow : Window
     private readonly List<int> _shuffleHistory = [];
     private int _shuffleHistoryPosition = -1;
     private string _currentFilePath = string.Empty;
-    private RadioStationRecord? _currentRadioStation;
-    private string? _currentRadioArtworkPath;
-    private PodcastPlayback? _currentPodcastPlayback;
-    private PodcastRecord? _activePodcast;
-    private DateTimeOffset _lastPodcastProgressSave = DateTimeOffset.MinValue;
     private TimeSpan _currentPlaybackDuration;
     private bool _nonGaplessFadeTransitionInProgress;
     private long? _currentAlbumId;
@@ -361,7 +333,6 @@ public partial class MainWindow : Window
     private sealed record HyperFidelPlaylistMenuTag(HyperFidelServerSettings Server, long PlaylistId, IReadOnlyList<long> TrackIds);
     private sealed record RemovePlaylistEntryTag(long PlaylistEntryId);
     private sealed record RemoveHyperFidelPlaylistEntryTag(HyperFidelServerSettings Server, long PlaylistEntryId);
-    private sealed record PodcastPlayback(PodcastRecord Podcast, PodcastEpisode Episode);
     /// <summary>Retains the existing in-memory global Back payload and optional source-owned Plex detail.</summary>
     /// <param name="View">Saved view discriminator or sidebar tag.</param>
     /// <param name="SelectedId">Selected provider-local identifier.</param>
@@ -441,10 +412,7 @@ public partial class MainWindow : Window
         _animatedViewSurfaces =
         [
             DashboardScrollViewer,
-            InternetRadioView,
-            PodcastView,
-            PodcastEpisodesView,
-            ContentDataGrid,
+                        ContentDataGrid,
             AlbumFolderGroupsScrollViewer,
             SearchResultsScrollViewer,
             FolderTreeView,
@@ -508,8 +476,6 @@ public partial class MainWindow : Window
         using (StartupTimingLog.Time("MainWindow.AttachDataGridColumnChoosers"))
             AttachDataGridColumnChoosers();
         LogUiDiagnostics("MainWindow data grid setup completed");
-        using (StartupTimingLog.Time("MainWindow.LoadCatalogFilterCache"))
-            LoadCatalogFilterCache();
         using (StartupTimingLog.Time("MainWindow.LoadNavPlaylists"))
             LoadNavPlaylists();
         LogUiDiagnostics("MainWindow LoadNavPlaylists completed");
@@ -817,9 +783,6 @@ public partial class MainWindow : Window
         // made moments before closing is not lost to the debounce.
         _volumeSaveTimer?.Stop();
         PersistViewState();
-        CancelAndDispose(ref _radioSearchCts);
-        CancelAndDispose(ref _podcastSearchCts);
-        CancelAndDispose(ref _podcastFeedCts);
         CancelPlexViewLoad();
         CancelLibrarySearch();
         CancelAndDispose(ref _unifiedLibraryAppendCts);

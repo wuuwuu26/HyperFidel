@@ -302,8 +302,6 @@ public partial class MainWindow : Window
             if (!_playbackStarts.IsCurrent(stopIntent)) return null;
         }
         RecordPlaybackEnd(completed: false);
-        SavePodcastProgress(completed: false);
-        _podcastResumePrepared = false;
         if (!_playbackStarts.IsCurrent(stopIntent)) return null;
         _currentHyperFidelTrackRow = null;
         if (invalidateStart)
@@ -311,7 +309,6 @@ public partial class MainWindow : Window
             _playbackPreparations.CancelAll();
             if (!_playbackStarts.IsCurrent(stopIntent)) return null;
         }
-        CancelAndDispose(ref _radioMetadataCts);
         if (!_playbackStarts.IsCurrent(stopIntent)) return null;
         var player = _playbackSession.Detach();
         if (player is IGaplessAudioPlayer gaplessPlayer)
@@ -346,16 +343,11 @@ public partial class MainWindow : Window
         _currentArtistId = null;
         _currentArtistName = null;
         _currentTrackIsFavorite = false;
-        _currentRadioStation = null;
-        _currentRadioArtworkPath = null;
-        _currentPodcastPlayback = null;
         _windowsMediaTransport?.Clear();
         LyricsButton.IsEnabled = false;
         ArtistInfoButton.IsEnabled = false;
         ToolTip.SetTip(ArtistInfoButton, LocalizationManager.Current.ShowArtistInfo);
-        PodcastInfoView.IsVisible = false;
         ArtistInfoView.IsVisible = false;
-        ClearRadioNowPlaying();
         UpdateNowPlayingFavoriteButton();
         UpdateOutputDeviceLockButton();
         return player;
@@ -397,101 +389,6 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Saves progress only after the owning episode resume preparation.</summary>
-    /// <param name="completed">Whether playback ended normally.</param>
-    private void SavePodcastProgress(bool completed)
-    {
-        if (!_podcastResumePrepared ||
-            _currentPodcastPlayback is not { Podcast.Id: > 0 } playback ||
-            _player is null)
-            return;
-
-        var duration = _player.Duration.TotalSeconds > 0
-            ? _player.Duration.TotalSeconds
-            : playback.Episode.FeedDuration?.TotalSeconds;
-        var position = completed && duration is > 0
-            ? duration.Value
-            : _player.Position.TotalSeconds;
-        var isCompleted = completed ||
-                          (duration is > 0 && position / duration.Value >= 0.95);
-        try
-        {
-            using var db = AudioDatabase.OpenDefault();
-            db.SavePodcastEpisodeProgress(
-                playback.Podcast.Id,
-                playback.Episode.EpisodeKey,
-                position,
-                duration,
-                isCompleted);
-            UpdateVisiblePodcastEpisodeProgress(
-                playback.Episode.EpisodeKey,
-                position,
-                duration,
-                isCompleted);
-        }
-        catch
-        {
-        }
-
-        _lastPodcastProgressSave = DateTimeOffset.UtcNow;
-        if (isCompleted)
-            _currentPodcastPlayback = null;
-    }
-
-    private void UpdateVisiblePodcastEpisodeProgress(
-        string episodeKey,
-        double positionSeconds,
-        double? durationSeconds,
-        bool completed)
-    {
-        if (PodcastEpisodesDataGrid.ItemsSource is not IEnumerable<PodcastEpisodeViewModel> rows ||
-            _activePodcast is not { } podcast)
-        {
-            return;
-        }
-
-        var row = rows.FirstOrDefault(item =>
-            string.Equals(item.Episode.EpisodeKey, episodeKey, StringComparison.Ordinal));
-        if (row is null)
-            return;
-
-        var replacement = CreatePodcastEpisodeRow(
-            podcast,
-            row.Episode,
-            new Dictionary<string, PodcastEpisodeProgress>(StringComparer.Ordinal)
-            {
-                [episodeKey] = new(
-                    episodeKey,
-                    positionSeconds,
-                    durationSeconds,
-                    completed)
-            });
-        if (PodcastEpisodesDataGrid.ItemsSource is IList<PodcastEpisodeViewModel> list)
-        {
-            var index = list.IndexOf(row);
-            if (index >= 0)
-            {
-                list[index] = replacement;
-                { var _tmp = PodcastEpisodesDataGrid.ItemsSource; PodcastEpisodesDataGrid.ItemsSource = null; PodcastEpisodesDataGrid.ItemsSource = _tmp; };
-                UpdateVisiblePodcastStatistics(list);
-            }
-        }
-    }
-
-    private void UpdateVisiblePodcastStatistics(IEnumerable<PodcastEpisodeViewModel> source)
-    {
-        var rows = source.ToList();
-        var completed = rows.Count(row =>
-            string.Equals(row.Status, LocalizationManager.Current.PodcastPlayed, StringComparison.Ordinal));
-        var started = rows.Count(row =>
-            string.Equals(row.Status, LocalizationManager.Current.PodcastInProgress, StringComparison.Ordinal));
-        PodcastEpisodesStatistics.Text = string.Join(
-            "  ·  ",
-            string.Format(LocalizationManager.Current.PodcastEpisodeTotal, rows.Count),
-            string.Format(LocalizationManager.Current.PodcastEpisodeUnheard, rows.Count - completed),
-            string.Format(LocalizationManager.Current.PodcastEpisodeStarted, started));
-    }
-
     private async Task<bool> TryPlayNextAsync()
     {
         if (!TryMoveToNextQueueIndex())
@@ -508,8 +405,6 @@ public partial class MainWindow : Window
     {
         if (_nonGaplessFadeTransitionInProgress ||
             _settings.NonGaplessCrossfadeSeconds <= 0 ||
-            _currentRadioStation is not null ||
-            _currentPodcastPlayback is not null ||
             _player is null ||
             _player.Duration <= TimeSpan.Zero ||
             IsContinuousGaplessQueueActive() ||

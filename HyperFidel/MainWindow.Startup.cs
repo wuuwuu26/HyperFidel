@@ -136,9 +136,6 @@ public partial class MainWindow : Window
 
     private void RestoreFixedDataGridColumnWidths()
     {
-        RestoreColumnWidths("RadioStations", RadioStationsDataGrid);
-        RestoreColumnWidths("Podcasts", PodcastsDataGrid);
-        RestoreColumnWidths("PodcastEpisodes", PodcastEpisodesDataGrid);
     }
 
     private void AttachDataGridColumnChoosers()
@@ -151,17 +148,11 @@ public partial class MainWindow : Window
         DataGridColumnChooser.Attach(SearchAlbumsDataGrid, "SearchAlbums", _settings);
         DataGridColumnChooser.Attach(SearchArtistsDataGrid, "SearchArtists", _settings);
         DataGridColumnChooser.Attach(ArtistInfoTracksDataGrid, "ArtistInfoTracks", _settings);
-        DataGridColumnChooser.Attach(RadioStationsDataGrid, "RadioStations", _settings);
-        DataGridColumnChooser.Attach(PodcastsDataGrid, "Podcasts", _settings);
-        DataGridColumnChooser.Attach(PodcastEpisodesDataGrid, "PodcastEpisodes", _settings);
     }
 
     private void CaptureAllDataGridColumnWidths()
     {
         CaptureContentDataGridColumnWidths();
-        CaptureColumnWidths("RadioStations", RadioStationsDataGrid);
-        CaptureColumnWidths("Podcasts", PodcastsDataGrid);
-        CaptureColumnWidths("PodcastEpisodes", PodcastEpisodesDataGrid);
         CaptureColumnWidths("SearchTracks", SearchTracksDataGrid);
         CaptureColumnWidths("SearchAlbums", SearchAlbumsDataGrid);
         CaptureColumnWidths("SearchArtists", SearchArtistsDataGrid);
@@ -405,7 +396,6 @@ public partial class MainWindow : Window
             _activeCatalogAlbum is not null ||
             LyricsView.IsVisible ||
             ArtistInfoView.IsVisible ||
-            PodcastInfoView.IsVisible ||
             SearchResultsScrollViewer.IsVisible)
         {
             return false;

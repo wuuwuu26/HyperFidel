@@ -141,11 +141,6 @@ public partial class MainWindow : Window
         if (!_isSeekingWithSlider)
             PositionSlider.Value = Math.Min(PositionSlider.Maximum, visiblePosition.TotalSeconds);
         _windowsMediaTransport?.UpdateTimeline(visiblePosition, _player.Duration);
-        if (_currentPodcastPlayback is not null &&
-            DateTimeOffset.UtcNow - _lastPodcastProgressSave >= TimeSpan.FromSeconds(5))
-        {
-            SavePodcastProgress(completed: false);
-        }
         UpdateActiveLyric(_player.Position);
         EnsureInfiniteMixQueue();
         MaybeStartNonGaplessFadeTransition(visiblePosition);
@@ -346,7 +341,6 @@ public partial class MainWindow : Window
     private void LyricsButton_OnClick(object? sender, RoutedEventArgs e)
     {
         ArtistInfoView.IsVisible = false;
-        PodcastInfoView.IsVisible = false;
         LyricsView.IsVisible = !(LyricsView.IsVisible);
         if (!LyricsView.IsVisible)
         {

@@ -45,8 +45,6 @@ namespace HyperFidel;
 /// </summary>
 public partial class MainWindow : Window
 {
-    // Progress is publishable only after the owning podcast resume seek finishes.
-    private bool _podcastResumePrepared;
 
     // ------------------------------------------------------------------
     // Wiedergabe
@@ -110,7 +108,7 @@ public partial class MainWindow : Window
             StatusTextBlock.Text = LocalizationManager.Current.SelectTrackFirst;
             return;
         }
-        var ready = StartReadyPlaybackAsync(_currentFilePath, _currentRadioStation, _currentPodcastPlayback);
+        var ready = StartReadyPlaybackAsync(_currentFilePath);
         var intent = _playbackStarts.Current;
         try { await ready; }
         catch (Exception) when (_playbackShuttingDown || !_playbackStarts.IsCurrent(intent)) { }
@@ -186,19 +184,16 @@ public partial class MainWindow : Window
 
     /// <summary>Returns when preparation finishes, while observing the remaining playback lifetime.</summary>
     /// <param name="filePath">The local path or remote playback reference.</param>
-    /// <param name="radioStation">Optional radio metadata.</param>
-    /// <param name="podcastPlayback">Optional podcast metadata.</param>
-    /// <param name="initialPosition">Requested initial position; a nonzero value overrides saved podcast progress.</param>
+    /// <param name="initialPosition">Requested initial position.</param>
     /// <param name="initiallyPaused">Whether to pause the prepared player before publishing readiness.</param>
     /// <param name="onPrepared">Optional synchronous action on the current prepared player.</param>
     /// <returns>The prepared player, or null for an abandoned or unavailable start.</returns>
     private Task<IAudioPlayer?> StartReadyPlaybackAsync(
-        string filePath, RadioStationRecord? radioStation = null,
-        PodcastPlayback? podcastPlayback = null, TimeSpan initialPosition = default,
+        string filePath, TimeSpan initialPosition = default,
         bool initiallyPaused = false, Action<IAudioPlayer>? onPrepared = null)
     {
         var readiness = new PlaybackReadiness();
-        var lifetime = StartPlaybackAsync(filePath, radioStation, podcastPlayback, initialPosition,
+        var lifetime = StartPlaybackAsync(filePath, initialPosition,
             initiallyPaused, player =>
             {
                 onPrepared?.Invoke(player);
@@ -226,16 +221,12 @@ public partial class MainWindow : Window
 
     /// <summary>Starts the requested source and ignores results superseded by another start or stop.</summary>
     /// <param name="filePath">The local path or remote playback reference.</param>
-    /// <param name="radioStation">Optional radio source metadata.</param>
-    /// <param name="podcastPlayback">Optional podcast source metadata.</param>
-    /// <param name="initialPosition">Requested initial position; a nonzero value overrides saved podcast progress.</param>
+    /// <param name="initialPosition">Requested initial position.</param>
     /// <param name="initiallyPaused">Whether to pause before publishing readiness.</param>
     /// <param name="onPrepared">Optional synchronous callback after preparation and ownership checks.</param>
     /// <returns>The playback lifetime, including automatic queue advancement.</returns>
     private async Task StartPlaybackAsync(
         string filePath,
-        RadioStationRecord? radioStation = null,
-        PodcastPlayback? podcastPlayback = null,
         TimeSpan initialPosition = default,
         bool initiallyPaused = false,
         Action<IAudioPlayer>? onPrepared = null)
@@ -245,22 +236,19 @@ public partial class MainWindow : Window
         await _playbackStarts.RunAsync(intent =>
         {
             _playbackPreparations.CancelAll();
-            return StartPlaybackIntentAsync(intent, filePath, radioStation, podcastPlayback, initialPosition, initiallyPaused, onPrepared);
+            return StartPlaybackIntentAsync(intent, filePath, initialPosition, initiallyPaused, onPrepared);
         });
     }
 
     /// <summary>Exposes pending preparation to queue edits without superseding its owning start.</summary>
     /// <param name="intent">The owning start identifier.</param>
     /// <param name="filePath">The local path or remote reference.</param>
-    /// <param name="radioStation">Optional radio metadata.</param>
-    /// <param name="podcastPlayback">Optional podcast metadata.</param>
-    /// <param name="initialPosition">Requested initial position; a nonzero value overrides saved podcast progress.</param>
+    /// <param name="initialPosition">Requested initial position.</param>
     /// <param name="initiallyPaused">Whether to pause the prepared player before readiness.</param>
     /// <param name="onPrepared">Optional synchronous current-player callback.</param>
     /// <returns>The owning playback lifetime.</returns>
     private async Task StartPlaybackIntentAsync(
-        long intent, string filePath, RadioStationRecord? radioStation,
-        PodcastPlayback? podcastPlayback, TimeSpan initialPosition,
+        long intent, string filePath, TimeSpan initialPosition,
         bool initiallyPaused, Action<IAudioPlayer>? onPrepared)
     {
         var publication = new TaskCompletionSource<IAudioPlayer?>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -268,7 +256,7 @@ public partial class MainWindow : Window
         _playbackPreparationIntent = intent;
         try
         {
-            await StartPlaybackPreparationAndLifetimeAsync(intent, filePath, radioStation, podcastPlayback,
+            await StartPlaybackPreparationAndLifetimeAsync(intent, filePath,
                 initialPosition, initiallyPaused, player =>
                 {
                     onPrepared?.Invoke(player);
@@ -281,15 +269,12 @@ public partial class MainWindow : Window
     /// <summary>Publishes playback state only while its captured start intent remains current.</summary>
     /// <param name="intent">The owning start identifier.</param>
     /// <param name="filePath">The local path or remote reference.</param>
-    /// <param name="radioStation">Optional radio metadata.</param>
-    /// <param name="podcastPlayback">Optional podcast metadata.</param>
-    /// <param name="initialPosition">Requested initial position; a nonzero value overrides saved podcast progress.</param>
+    /// <param name="initialPosition">Requested initial position.</param>
     /// <param name="initiallyPaused">Whether to pause the prepared player before readiness.</param>
     /// <param name="onPrepared">Optional synchronous current-player callback.</param>
     /// <returns>The owning playback lifetime.</returns>
     private async Task StartPlaybackPreparationAndLifetimeAsync(
-        long intent, string filePath, RadioStationRecord? radioStation,
-        PodcastPlayback? podcastPlayback, TimeSpan initialPosition,
+        long intent, string filePath, TimeSpan initialPosition,
         bool initiallyPaused, Action<IAudioPlayer>? onPrepared)
     {
         using var preparation = _playbackPreparations.Begin();
@@ -307,19 +292,13 @@ public partial class MainWindow : Window
         if (!_playbackStarts.IsCurrent(intent))
             return;
         _currentFilePath = filePath;
-        _currentRadioStation = radioStation;
-        _currentPodcastPlayback = podcastPlayback;
-        _podcastResumePrepared = false;
-        if (radioStation is null && podcastPlayback is null)
-            _playedQueuePaths.Add(filePath);
+        _playedQueuePaths.Add(filePath);
 
         if (!_playbackSession.TryBegin(intent, preparation.Token, out var playbackToken))
             return;
-        var created = await PrepareCurrentPlaybackPlayerAsync(intent, filePath, radioStation, podcastPlayback, initialPosition, playbackToken);
+        var created = await PrepareCurrentPlaybackPlayerAsync(intent, filePath, initialPosition, playbackToken);
         if (created is not { } result) return;
         var (player, info) = result;
-        _podcastResumePrepared = podcastPlayback is not null;
-        _lastPodcastProgressSave = DateTimeOffset.UtcNow;
         PlayButton.IsEnabled   = false;
         PlayButton.IsEnabled   = true;
         SetPlayPauseIcon(isPlaying: true);
@@ -331,15 +310,10 @@ public partial class MainWindow : Window
 
         // Now-playing anzeigen
         var queueMetadata = GetPlaylistMetadata(filePath);
-        var filename = podcastPlayback?.Episode.Title ??
-                       radioStation?.Name ??
-                       queueMetadata?.DisplayTitle ??
+        var filename = queueMetadata?.DisplayTitle ??
                        Path.GetFileNameWithoutExtension(filePath);
         NowPlayingTitleBlock.Text  = filename;
-        NowPlayingArtistBlock.Text = podcastPlayback?.Podcast.Name ??
-                                     (radioStation is null
-                                         ? SelectedDriverTextBlock.Text
-                                         : LocalizationManager.Current.InternetRadio);
+        NowPlayingArtistBlock.Text = SelectedDriverTextBlock.Text;
         ClearNowPlayingAlbum();
         var usesNativeDsd = player is DsfAudioPlayer or DffAudioPlayer or RemoteDsfAudioPlayer or RemoteDffAudioPlayer
 #if !WINDOWS
@@ -356,127 +330,36 @@ public partial class MainWindow : Window
         const bool usesDop = false;
 #endif
         FileInfoTextBlock.Text = FormatFileInfo(info, usesDop, usesNativeDsd);
-        if (radioStation is null && podcastPlayback is null)
+        _currentNowPlayingProvider = _localNowPlayingProvider;
+        _currentHyperFidelTrackRow = null;
+        var isPlexTrack = _plexTracksByUrl.TryGetValue(filePath, out var plexTrack);
+        var isHyperFidelTrack = _hyperfidelTracksByUrl.TryGetValue(filePath, out var hyperfidelTrack);
+        try
         {
-            _currentNowPlayingProvider = _localNowPlayingProvider;
-            _currentHyperFidelTrackRow = null;
-            var isPlexTrack = _plexTracksByUrl.TryGetValue(filePath, out var plexTrack);
-            var isHyperFidelTrack = _hyperfidelTracksByUrl.TryGetValue(filePath, out var hyperfidelTrack);
-            try
+            using var db = AudioDatabase.OpenDefault();
+            var track = db.GetByPath(filePath);
+            var artist = db.GetArtistByTrackPath(filePath);
+            var trackInfo = db.GetTrackIdAndFavorite(filePath);
+            var navigationIds = db.GetTrackNavigationIds(filePath);
+            _currentTrackId = trackInfo?.Id;
+            _currentTrackIsFavorite = trackInfo?.IsFavorite ?? false;
+            _currentArtistId = artist?.Id;
+            _currentArtistName = artist?.Artist;
+            _currentAlbumId = navigationIds.AlbumId;
+            NowPlayingArtistButton.IsEnabled = artist is not null;
+            LyricsButton.IsEnabled = track is not null;
+            ArtistInfoButton.IsEnabled = artist is not null;
+            ToolTip.SetTip(ArtistInfoButton, LocalizationManager.Current.ShowArtistInfo);
+            if (track is not null)
             {
-                using var db = AudioDatabase.OpenDefault();
-                var track = db.GetByPath(filePath);
-                var artist = db.GetArtistByTrackPath(filePath);
-                var trackInfo = db.GetTrackIdAndFavorite(filePath);
-                var navigationIds = db.GetTrackNavigationIds(filePath);
-                _currentTrackId = trackInfo?.Id;
-                _currentTrackIsFavorite = trackInfo?.IsFavorite ?? false;
-                _currentArtistId = artist?.Id;
-                _currentArtistName = artist?.Artist;
-                _currentAlbumId = navigationIds.AlbumId;
-                NowPlayingArtistButton.IsEnabled = artist is not null;
-                LyricsButton.IsEnabled = track is not null;
-                ArtistInfoButton.IsEnabled = artist is not null;
-                ToolTip.SetTip(ArtistInfoButton, LocalizationManager.Current.ShowArtistInfo);
-                if (track is not null)
-                {
-                    NowPlayingTitleBlock.Text = track.Title ?? filename;
-                    NowPlayingArtistBlock.Text = track.Artist ?? string.Empty;
-                    SetNowPlayingAlbum(track.Album, navigationIds.AlbumId, navigationIds.AlbumId is not null);
-                }
+                NowPlayingTitleBlock.Text = track.Title ?? filename;
+                NowPlayingArtistBlock.Text = track.Artist ?? string.Empty;
+                SetNowPlayingAlbum(track.Album, navigationIds.AlbumId, navigationIds.AlbumId is not null);
             }
-            catch
-            {
-                NowPlayingArtworkImage.Source = null;
-                LyricsBackgroundImage.Source = null;
-                _currentTrackId = null;
-                _currentArtistId = null;
-                _currentArtistName = null;
-                ClearNowPlayingAlbum();
-                NowPlayingArtistButton.IsEnabled = false;
-                _currentTrackIsFavorite = false;
-                LyricsButton.IsEnabled = false;
-                ArtistInfoButton.IsEnabled = false;
-            }
-            if (isPlexTrack && plexTrack is not null)
-            {
-                NowPlayingTitleBlock.Text = plexTrack.Title ?? filename;
-                NowPlayingArtistBlock.Text = plexTrack.Artist ?? string.Empty;
-                NowPlayingArtworkImage.Source = null;
-                LyricsBackgroundImage.Source = null;
-                _currentTrackId = null;
-                _currentArtistId = null;
-                _currentArtistName = plexTrack.Artist;
-                SetNowPlayingAlbum(plexTrack.Album, null, canNavigate: false);
-                _currentTrackIsFavorite = false;
-                NowPlayingArtistButton.IsEnabled = false;
-                LyricsButton.IsEnabled = false;
-                ArtistInfoButton.IsEnabled = false;
-            }
-            else if (isHyperFidelTrack && hyperfidelTrack is not null)
-            {
-                NowPlayingTitleBlock.Text = hyperfidelTrack.Title ?? filename;
-                NowPlayingArtistBlock.Text = hyperfidelTrack.Artist ?? string.Empty;
-                // Show the list thumbnail immediately if already hydrated; the provider
-                // then loads full artwork below so it appears even when the row is not.
-                NowPlayingArtworkImage.Source = hyperfidelTrack.Thumbnail ?? hyperfidelTrack.Artwork;
-                LyricsBackgroundImage.Source = hyperfidelTrack.Artwork ?? hyperfidelTrack.Thumbnail;
-                _currentTrackId = null;
-                _currentArtistId = null;
-                _currentArtistName = hyperfidelTrack.Artist;
-                SetNowPlayingAlbum(
-                    hyperfidelTrack.Album,
-                    hyperfidelTrack.AlbumId,
-                    hyperfidelTrack.HyperFidelServer is not null && hyperfidelTrack.AlbumId is not null);
-                _currentTrackIsFavorite = false;
-                _currentHyperFidelTrackRow = hyperfidelTrack;
-                if (hyperfidelTrack.HyperFidelServer is { } trackServer)
-                {
-                    _currentNowPlayingProvider = CreateHyperFidelNowPlayingProvider(trackServer);
-                    if (hyperfidelTrack.Id is long favoriteTrackId)
-                        _currentTrackIsFavorite = IsHyperFidelFavorite(trackServer, "Track", favoriteTrackId);
-                }
-                // The now-playing artist button navigates within the remote library
-                // using the row's server and artist ID (see NowPlayingArtistButton_OnClick).
-                NowPlayingArtistButton.IsEnabled = hyperfidelTrack.ArtistId is not null
-                    && !string.IsNullOrWhiteSpace(hyperfidelTrack.Artist);
-                LyricsButton.IsEnabled = !string.IsNullOrWhiteSpace(hyperfidelTrack.Title)
-                    && !string.IsNullOrWhiteSpace(hyperfidelTrack.Artist);
-                ArtistInfoButton.IsEnabled = hyperfidelTrack.ArtistId is not null
-                    && !string.IsNullOrWhiteSpace(hyperfidelTrack.Artist);
-                ToolTip.SetTip(ArtistInfoButton, LocalizationManager.Current.ShowArtistInfo);
-                if (LyricsButton.IsEnabled)
-                    _ = LoadLyricsForTrackAsync(filePath, forceRefresh: false);
-            }
-            else
-            {
-                _ = LoadLyricsForTrackAsync(filePath, forceRefresh: false);
-            }
-
-            if (!isPlexTrack)
-                _ = LoadNowPlayingArtworkAsync(
-                    filePath,
-                    _currentNowPlayingProvider ?? _localNowPlayingProvider,
-                    BuildNowPlayingTrackContext(filePath));
         }
-        else if (podcastPlayback is not null)
+        catch
         {
-            _currentTrackId = null;
-            _currentArtistId = null;
-            _currentArtistName = null;
-            ClearNowPlayingAlbum();
-            _currentTrackIsFavorite = false;
-            NowPlayingArtistButton.IsEnabled = false;
-            LyricsButton.IsEnabled = false;
-            ArtistInfoButton.IsEnabled = true;
-            ToolTip.SetTip(ArtistInfoButton, LocalizationManager.Current.ShowPodcastInfo);
-            _ = LoadPodcastArtworkAsync(
-                podcastPlayback.Podcast.ArtworkUrl,
-                playbackToken);
-        }
-        else if (radioStation is not null)
-        {
-            ShowRadioNowPlaying(radioStation, info);
+            NowPlayingArtworkImage.Source = null;
             LyricsBackgroundImage.Source = null;
             _currentTrackId = null;
             _currentArtistId = null;
@@ -486,9 +369,67 @@ public partial class MainWindow : Window
             _currentTrackIsFavorite = false;
             LyricsButton.IsEnabled = false;
             ArtistInfoButton.IsEnabled = false;
-            ToolTip.SetTip(ArtistInfoButton, LocalizationManager.Current.ShowArtistInfo);
-            StartRadioMetadataMonitor(radioStation);
         }
+        if (isPlexTrack && plexTrack is not null)
+        {
+            NowPlayingTitleBlock.Text = plexTrack.Title ?? filename;
+            NowPlayingArtistBlock.Text = plexTrack.Artist ?? string.Empty;
+            NowPlayingArtworkImage.Source = null;
+            LyricsBackgroundImage.Source = null;
+            _currentTrackId = null;
+            _currentArtistId = null;
+            _currentArtistName = plexTrack.Artist;
+            SetNowPlayingAlbum(plexTrack.Album, null, canNavigate: false);
+            _currentTrackIsFavorite = false;
+            NowPlayingArtistButton.IsEnabled = false;
+            LyricsButton.IsEnabled = false;
+            ArtistInfoButton.IsEnabled = false;
+        }
+        else if (isHyperFidelTrack && hyperfidelTrack is not null)
+        {
+            NowPlayingTitleBlock.Text = hyperfidelTrack.Title ?? filename;
+            NowPlayingArtistBlock.Text = hyperfidelTrack.Artist ?? string.Empty;
+            // Show the list thumbnail immediately if already hydrated; the provider
+            // then loads full artwork below so it appears even when the row is not.
+            NowPlayingArtworkImage.Source = hyperfidelTrack.Thumbnail ?? hyperfidelTrack.Artwork;
+            LyricsBackgroundImage.Source = hyperfidelTrack.Artwork ?? hyperfidelTrack.Thumbnail;
+            _currentTrackId = null;
+            _currentArtistId = null;
+            _currentArtistName = hyperfidelTrack.Artist;
+            SetNowPlayingAlbum(
+                hyperfidelTrack.Album,
+                hyperfidelTrack.AlbumId,
+                hyperfidelTrack.HyperFidelServer is not null && hyperfidelTrack.AlbumId is not null);
+            _currentTrackIsFavorite = false;
+            _currentHyperFidelTrackRow = hyperfidelTrack;
+            if (hyperfidelTrack.HyperFidelServer is { } trackServer)
+            {
+                _currentNowPlayingProvider = CreateHyperFidelNowPlayingProvider(trackServer);
+                if (hyperfidelTrack.Id is long favoriteTrackId)
+                    _currentTrackIsFavorite = IsHyperFidelFavorite(trackServer, "Track", favoriteTrackId);
+            }
+            // The now-playing artist button navigates within the remote library
+            // using the row's server and artist ID (see NowPlayingArtistButton_OnClick).
+            NowPlayingArtistButton.IsEnabled = hyperfidelTrack.ArtistId is not null
+                && !string.IsNullOrWhiteSpace(hyperfidelTrack.Artist);
+            LyricsButton.IsEnabled = !string.IsNullOrWhiteSpace(hyperfidelTrack.Title)
+                && !string.IsNullOrWhiteSpace(hyperfidelTrack.Artist);
+            ArtistInfoButton.IsEnabled = hyperfidelTrack.ArtistId is not null
+                && !string.IsNullOrWhiteSpace(hyperfidelTrack.Artist);
+            ToolTip.SetTip(ArtistInfoButton, LocalizationManager.Current.ShowArtistInfo);
+            if (LyricsButton.IsEnabled)
+                _ = LoadLyricsForTrackAsync(filePath, forceRefresh: false);
+        }
+        else
+        {
+            _ = LoadLyricsForTrackAsync(filePath, forceRefresh: false);
+        }
+
+        if (!isPlexTrack)
+            _ = LoadNowPlayingArtworkAsync(
+                filePath,
+                _currentNowPlayingProvider ?? _localNowPlayingProvider,
+                BuildNowPlayingTrackContext(filePath));
         UpdateNowPlayingFavoriteButton();
         UpdateReplayGainBadge(usesNativeDsd);
         RefreshWindowsMediaMetadata();
@@ -501,43 +442,15 @@ public partial class MainWindow : Window
         try
         {
             using var db = AudioDatabase.OpenDefault();
-            if (radioStation is not null)
-            {
-                _currentPlayHistoryId = db.RecordPlaybackStart(
-                    filePath,
-                    null,
-                    null,
-                    mediaType: "radio",
-                    title: radioStation.Name,
-                    subtitle: LocalizationManager.Current.InternetRadio,
-                    externalId: radioStation.StationUuid);
-            }
-            else if (podcastPlayback is not null)
-            {
-                _currentPlayHistoryId = db.RecordPlaybackStart(
-                    filePath,
-                    null,
-                    player.Duration.TotalSeconds > 0
-                        ? player.Duration.TotalSeconds
-                        : podcastPlayback.Episode.FeedDuration?.TotalSeconds,
-                    mediaType: "podcast",
-                    title: podcastPlayback.Episode.Title,
-                    subtitle: podcastPlayback.Podcast.Name,
-                    album: podcastPlayback.Podcast.Name,
-                    externalId: podcastPlayback.Episode.EpisodeKey);
-            }
-            else
-            {
-                _currentPlayHistoryId = db.RecordPlaybackStart(
-                    filePath,
-                    db.GetTrackIdByPath(filePath),
-                    player.Duration.TotalSeconds > 0 ? player.Duration.TotalSeconds : null,
-                    title: NowPlayingTitleBlock.Text,
-                    subtitle: NowPlayingArtistBlock.Text,
-                    album: _currentAlbumTitle,
-                    externalId: ResolveNowPlayingExternalId(filePath),
-                    genre: ResolveNowPlayingGenre(filePath));
-            }
+            _currentPlayHistoryId = db.RecordPlaybackStart(
+                filePath,
+                db.GetTrackIdByPath(filePath),
+                player.Duration.TotalSeconds > 0 ? player.Duration.TotalSeconds : null,
+                title: NowPlayingTitleBlock.Text,
+                subtitle: NowPlayingArtistBlock.Text,
+                album: _currentAlbumTitle,
+                externalId: ResolveNowPlayingExternalId(filePath),
+                genre: ResolveNowPlayingGenre(filePath));
         }
         catch
         {
@@ -565,8 +478,7 @@ public partial class MainWindow : Window
         if (_playbackStarts.IsCurrent(intent) && ReferenceEquals(_player, player))
         {
             RecordPlaybackEnd(completed: true);
-            SavePodcastProgress(completed: true);
-            if (radioStation is not null || podcastPlayback is not null || !await TryPlayNextAsync())
+            if (!await TryPlayNextAsync())
             {
                 if (!ReferenceEquals(_player, player))
                     return;
@@ -589,19 +501,16 @@ public partial class MainWindow : Window
     /// <summary>Prepares seek and queue snapshot before one readiness/history publication.</summary>
     /// <param name="intent">Owning playback intent.</param>
     /// <param name="filePath">Resolved current track.</param>
-    /// <param name="radioStation">Optional radio source.</param>
-    /// <param name="podcastPlayback">Optional podcast source.</param>
     /// <param name="initialPosition">Requested or already completed resume position.</param>
     /// <param name="playbackToken">Captured preparation cancellation.</param>
     /// <returns>The current fully sought player and format, or null for supersession.</returns>
     private async Task<(IAudioPlayer Player, AudioFileInfo Info)?> PrepareCurrentPlaybackPlayerAsync(
-        long intent, string filePath, RadioStationRecord? radioStation,
-        PodcastPlayback? podcastPlayback, TimeSpan initialPosition, CancellationToken playbackToken)
+        long intent, string filePath, TimeSpan initialPosition, CancellationToken playbackToken)
     {
         while (_playbackStarts.IsCurrent(intent))
         {
             var created = await CreateCurrentQueuePlaybackPlayerAsync(
-                intent, filePath, radioStation is null && podcastPlayback is null, playbackToken);
+                intent, filePath, allowQueuedTracks: true, playbackToken);
             if (created is not { } result)
                 return null;
             if (!_playbackStarts.IsCurrent(intent))
@@ -617,9 +526,7 @@ public partial class MainWindow : Window
                 return null;
             }
             ApplyCrossfeedSettings(_player);
-            ApplyLoudnessNormalizationSettings(
-                _player,
-                radioStation is not null || podcastPlayback is not null);
+            ApplyLoudnessNormalizationSettings(_player);
             _audioDeviceExplicitlyReleased = false;
             ClearReleasedOutputResumeState();
             UpdateOutputDeviceLockButton();
@@ -644,32 +551,9 @@ public partial class MainWindow : Window
                 $"{_endpointVolumeSynchronizer?.AppliesToOutputPath.ToString() ?? "none"})");
             _player.ReplayGainFactor = GetReplayGainFactor(filePath);
             _currentPlaybackDuration = player.Duration;
-            if (initialPosition == TimeSpan.Zero &&
-                podcastPlayback is not null &&
-                podcastPlayback.Podcast.Id > 0 &&
-                player.CanSeek)
-            {
-                try
-                {
-                    using var db = AudioDatabase.OpenDefault();
-                    var progress = db.GetPodcastEpisodeProgress(
-                        podcastPlayback.Podcast.Id,
-                        podcastPlayback.Episode.EpisodeKey);
-                    if (progress is { IsCompleted: false, PositionSeconds: > 5 } &&
-                        progress.PositionSeconds < Math.Max(0, player.Duration.TotalSeconds - 10))
-                    {
-                        if (!await _playbackSession.SeekAsync(intent, player, TimeSpan.FromSeconds(progress.PositionSeconds)))
-                            return null;
-                    }
-                }
-                catch
-                {
-                    // A corrupt or unavailable resume point must not prevent playback.
-                }
-            }
             if (!_playbackStarts.IsCurrent(intent) || !ReferenceEquals(_player, player))
                 return null;
-            if (player is IGaplessAudioPlayer && radioStation is null && podcastPlayback is null &&
+            if (player is IGaplessAudioPlayer &&
                 !_preparedGaplessQueuePaths.SequenceEqual(BuildGaplessQueuePaths(filePath, true)))
             {
                 initialPosition = player.Position;
@@ -1453,28 +1337,7 @@ public partial class MainWindow : Window
         string? artworkPath = null;
         Uri? artworkUri = null;
 
-        if (_currentPodcastPlayback is { } podcastPlayback)
-        {
-            album = podcastPlayback.Podcast.Name;
-            if (Uri.TryCreate(
-                    podcastPlayback.Podcast.ArtworkUrl,
-                    UriKind.Absolute,
-                    out var podcastArtworkUri))
-            {
-                artworkUri = podcastArtworkUri;
-            }
-        }
-        else if (_currentRadioStation is { } radioStation)
-        {
-            album = radioStation.Name;
-            artworkPath = _currentRadioArtworkPath;
-            if (string.IsNullOrWhiteSpace(artworkPath) &&
-                Uri.TryCreate(radioStation.Favicon, UriKind.Absolute, out var radioArtworkUri))
-            {
-                artworkUri = radioArtworkUri;
-            }
-        }
-        else if (_plexTracksByUrl.TryGetValue(_currentFilePath, out var plexTrack))
+        if (_plexTracksByUrl.TryGetValue(_currentFilePath, out var plexTrack))
         {
             album = plexTrack.Album ?? string.Empty;
         }

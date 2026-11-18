@@ -48,23 +48,11 @@ public partial class MainWindow : Window
     private async void ArtistInfoButton_OnClick(object? sender, RoutedEventArgs e)
     {
         ArtistInfoCloseButton.IsVisible = true;
-        if (_currentPodcastPlayback is { } podcastPlayback)
-        {
-            LyricsView.IsVisible = false;
-            ArtistInfoView.IsVisible = false;
-            PodcastInfoView.IsVisible = !(PodcastInfoView.IsVisible);
-            if (PodcastInfoView.IsVisible)
-                ShowPodcastInfo(podcastPlayback);
-            UpdateBackButtonForDetailView();
-            return;
-        }
-
         if (_currentHyperFidelTrackRow is { ArtistId: not null } &&
             _currentNowPlayingProvider is HyperFidelServerNowPlayingMetadataProvider)
         {
             _artistInfoUnifiedArtistName = null;
             LyricsView.IsVisible = false;
-            PodcastInfoView.IsVisible = false;
             ArtistInfoView.IsVisible = !ArtistInfoView.IsVisible;
             UpdateBackButtonForDetailView();
             if (ArtistInfoView.IsVisible)
@@ -76,7 +64,6 @@ public partial class MainWindow : Window
             return;
 
         LyricsView.IsVisible = false;
-        PodcastInfoView.IsVisible = false;
         _artistInfoUnifiedArtistName = null;
         ArtistInfoView.IsVisible = !(ArtistInfoView.IsVisible);
         UpdateBackButtonForDetailView();
@@ -167,7 +154,6 @@ public partial class MainWindow : Window
         BackButton.IsVisible =
             LyricsView.IsVisible ||
             ArtistInfoView.IsVisible ||
-            PodcastInfoView.IsVisible ||
             _plexNavigationStack.Count > 0 ||
             _navigationStack.Count > 0;
     }
@@ -178,7 +164,6 @@ public partial class MainWindow : Window
         StopLyricsScrollAnimation();
         LyricsView.IsVisible = false;
         ArtistInfoView.IsVisible = false;
-        PodcastInfoView.IsVisible = false;
         BackButton.IsVisible = _plexNavigationStack.Count > 0 || _navigationStack.Count > 0;
     }
 

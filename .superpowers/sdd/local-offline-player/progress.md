@@ -243,3 +243,36 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) â
 - Verified: desktop 0 CS/0 AXN; Core tests 0; desktop tests 0 build errors;
   Core tests 443 passed; desktop 376 passed / 1 known pre-existing
   YearInReviewPdfExporter failure; zero residual refs to removed symbols.
+
+## Task: Radio + Podcast removal â€” DONE
+- Deleted desktop partials MainWindow.Radio.cs / MainWindow.Podcasts.cs, view
+  models (RadioStationViewModel, PodcastViewModel, PodcastEpisodeViewModel),
+  PodcastDownloadService.cs.
+- Deleted Core services: RadioBrowserService, RadioStreamMetadataService,
+  PodcastService, PodcastDownloadCache, CatalogFilterCache, plus records
+  RadioStationRecord / PodcastRecord, and PodcastDownloadCacheTests.
+- AudioDatabase: removed radio_stations/podcasts/podcast_episode_progress schema
+  and all related CRUD.
+- MainWindow.axaml: removed InternetRadioNavItem, PodcastsNavItem, OwnRadios /
+  MyPodcasts headers, InternetRadioView, PodcastView, PodcastEpisodesView and
+  PodcastInfoView. SettingsView.axaml: removed podcast download limit and all
+  radio/podcast visibility checkboxes plus loudness normalization section.
+- Playback core (MainWindow.Playback.cs): removed radioStation/podcastPlayback
+  parameters from the whole StartReadyPlaybackAsync->...->PrepareCurrent...
+  chain, collapsed metadata/history/branches to local-only, removed podcast
+  progress resume/save and radio metadata monitor calls; playback safety
+  machinery (ownership/preparation/readiness/session/retirement/gapless)
+  untouched. RefreshWindowsMediaMetadata radio/podcast branches removed.
+- MainWindow.xaml.cs / Settings.cs / PlaybackState.cs / Transport.cs / Sidebar /
+  ContentLoading / ContextMenus / Helpers / TableRendering / Startup / Playlists /
+  ArtistInfo / Dashboard.Media / RemoteHyperFidel: removed all radio/podcast
+  fields, branches, flyouts, wiring and doc comments.
+- AppSettings: removed 9 radio/podcast settings props. SettingsView.axaml.cs:
+  removed matching control reads/properties.
+- Localization: removed 65 radio/podcast string properties (x7 languages) plus
+  resource map and 4 stale App.axaml keys. KEPT InternetRadio + Podcast strings
+  solely for dormant-history/playlist display (DailyHistoryDialog,
+  Playlists.Loading). Verified 7/7 language parity via static check.
+- Verified: all 5 projects build 0 CS/0 AXN; Core tests 431 passed (12 cache
+  tests removed with their file); desktop 376 passed / 1 known pre-existing
+  YearInReviewPdfExporter failure; zero residual feature symbols.

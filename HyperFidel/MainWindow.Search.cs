@@ -133,7 +133,6 @@ public partial class MainWindow : Window
             }).ToArray();
         LyricsView.IsVisible = false;
         ArtistInfoView.IsVisible = false;
-        PodcastInfoView.IsVisible = false;
         UpdateEntityFavoritesFilterToggle(null);
         UpdateAlphabetIndex(null, false);
         ContentTitleTextBlock.Text = LocalizationManager.Current.Search;
@@ -147,8 +146,6 @@ public partial class MainWindow : Window
         ArtistArtworkListBox.IsVisible = false;
         SearchResultsScrollViewer.IsVisible = true;
         DashboardScrollViewer.IsVisible = false;
-        InternetRadioView.IsVisible = false;
-        PodcastView.IsVisible = false;
         HideAlbumDetailHeader();
 
         UpdateUnifiedLibraryLoadNotice();

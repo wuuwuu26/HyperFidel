@@ -39,7 +39,7 @@ using Windows.Media;
 namespace HyperFidel;
 
 /// <summary>
-/// Dashboard recently added and recently played strips, media cards, calendar, and podcast info.
+/// Dashboard recently added and recently played strips, media cards, and calendar.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -770,7 +770,7 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Determines whether a recently played entry can be replayed in place: only
-    /// music tracks (not radio/podcast, which have their own views) that are either
+    /// music tracks that are either
     /// a locally available file or a playable stream URL (remote server / Plex).
     /// </summary>
     /// <param name="entry">The history entry to test.</param>
@@ -975,48 +975,4 @@ public partial class MainWindow : Window
         return border;
     }
 
-    private void ShowPodcastInfo(PodcastPlayback playback)
-    {
-        var episode = playback.Episode;
-        PodcastInfoImage.Source = null;
-        PodcastInfoImagePlaceholder.IsVisible = true;
-        PodcastInfoPodcastName.Text = playback.Podcast.Name;
-        PodcastInfoEpisodeTitle.Text = episode.Title;
-
-        var metadata = new List<string>();
-        if (episode.PublishedAt is { } publishedAt)
-            metadata.Add(string.Format(
-                LocalizationManager.Current.PodcastPublishedOn,
-                publishedAt.ToLocalTime().ToString("d")));
-        if (episode.FeedDuration is { } duration && duration > TimeSpan.Zero)
-            metadata.Add(string.Format(
-                LocalizationManager.Current.PodcastEpisodeDuration,
-                FormatTime(duration)));
-        if (!string.IsNullOrWhiteSpace(playback.Podcast.Author))
-            metadata.Add(playback.Podcast.Author);
-        if (!string.IsNullOrWhiteSpace(playback.Podcast.Genre))
-            metadata.Add(playback.Podcast.Genre);
-        PodcastInfoMetadata.Text = string.Join("  ·  ", metadata);
-
-        var description = NormalizePodcastDescription(episode.Description);
-        PodcastInfoDescription.Text = string.IsNullOrWhiteSpace(description)
-            ? LocalizationManager.Current.PodcastDescriptionUnavailable
-            : description;
-
-        _ = LoadPodcastInfoArtworkAsync(
-            playback.Podcast.ArtworkUrl,
-            _playbackSession.Token);
-    }
-
-    private async Task LoadPodcastInfoArtworkAsync(
-        string? artworkUrl,
-        CancellationToken cancellationToken)
-    {
-        var image = await DownloadPodcastImageAsync(artworkUrl, 600, cancellationToken);
-        if (image is null || cancellationToken.IsCancellationRequested)
-            return;
-
-        PodcastInfoImage.Source = image;
-        PodcastInfoImagePlaceholder.IsVisible = false;
-    }
 }

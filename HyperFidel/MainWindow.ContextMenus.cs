@@ -39,7 +39,7 @@ using Windows.Media;
 namespace HyperFidel;
 
 /// <summary>
-/// Playlist and album-artwork context menus and radio genre pruning.
+/// Playlist and album-artwork context menus.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -135,12 +135,4 @@ public partial class MainWindow : Window
         AppendPlaylistItems(menu, GetPathsForRow(row));
     }
 
-    private void PruneRadioGenreSelection()
-    {
-        var available = string.IsNullOrWhiteSpace(RadioSearchTextBox.Text)
-            ? _radioGenreCatalog.Select(option => option.Value)
-            : _radioSearchResults.SelectMany(row => row.Genres);
-        var values = available.ToHashSet(StringComparer.OrdinalIgnoreCase);
-        _selectedRadioGenres.RemoveWhere(value => !values.Contains(value));
-    }
 }

@@ -303,8 +303,7 @@ public partial class MainWindow : Window
         }
 
         if (LyricsView.IsVisible ||
-            ArtistInfoView.IsVisible ||
-            PodcastInfoView.IsVisible)
+            ArtistInfoView.IsVisible)
         {
             CloseNowPlayingDetailViews();
             return;
