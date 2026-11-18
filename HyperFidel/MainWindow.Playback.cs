@@ -651,15 +651,6 @@ public partial class MainWindow : Window
                     cancellationToken,
                     _settings.MaxOutputSampleRateHz);
         }
-        else if (_settings.OutputBackend == OutputBackend.AirPlay)
-        {
-            if (string.IsNullOrWhiteSpace(_settings.SelectedAirPlayDeviceId))
-            {
-                StatusTextBlock.Text = LocalizationManager.Current.SelectAirPlayDevice;
-                return null;
-            }
-            (player, info) = await CreateAirPlayPlayerAsync(playbackTrack, cancellationToken);
-        }
         else if (_settings.OutputBackend == OutputBackend.Wasapi)
         {
             if (string.IsNullOrWhiteSpace(_settings.SelectedWasapiDeviceId))

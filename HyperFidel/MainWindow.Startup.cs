@@ -476,8 +476,6 @@ public partial class MainWindow : Window
                         ? LocalizationManager.Current.DirectAlsaMode
                         : LocalizationManager.Current.OpenAl
                     : "WASAPI")}",
-            OutputBackend.AirPlay when !string.IsNullOrWhiteSpace(_settings.SelectedAirPlayDeviceName) =>
-                $"{_settings.SelectedAirPlayDeviceName}  ·  {LocalizationManager.Current.AirPlay}",
             OutputBackend.KernelStreaming => "KernelStreaming",
             _ => LocalizationManager.Current.NoDeviceSelected
         };

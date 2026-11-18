@@ -325,14 +325,6 @@ internal partial class SettingsView : UserControl
     public string? SelectedWasapiDeviceId => _outputProfile?.SelectedWasapiDeviceId;
     /// <summary>Gets the WASAPI device display name of the selected output profile.</summary>
     public string? SelectedWasapiDeviceName => _outputProfile?.SelectedWasapiDeviceName;
-    /// <summary>Gets the selected AirPlay service identifier.</summary>
-    public string? SelectedAirPlayDeviceId => _outputProfile?.SelectedAirPlayDeviceId;
-    /// <summary>Gets the selected AirPlay receiver display name.</summary>
-    public string? SelectedAirPlayDeviceName => _outputProfile?.SelectedAirPlayDeviceName;
-    /// <summary>Gets the last resolved AirPlay receiver address.</summary>
-    public string? SelectedAirPlayHost => _outputProfile?.SelectedAirPlayHost;
-    /// <summary>Gets the selected AirPlay receiver port.</summary>
-    public int SelectedAirPlayPort => _outputProfile?.SelectedAirPlayPort ?? 0;
     /// <summary>Gets the output backend of the selected output profile.</summary>
     public OutputBackend SelectedOutputBackend => _outputProfile?.Backend ?? OutputBackend.Wasapi;
     /// <summary>Gets independent copies of all configured output profiles.</summary>
@@ -546,10 +538,6 @@ internal partial class SettingsView : UserControl
         SelectedDriverName = profile.SelectedDriverName,
         SelectedWasapiDeviceId = profile.SelectedWasapiDeviceId,
         SelectedWasapiDeviceName = profile.SelectedWasapiDeviceName,
-        SelectedAirPlayDeviceId = profile.SelectedAirPlayDeviceId,
-        SelectedAirPlayDeviceName = profile.SelectedAirPlayDeviceName,
-        SelectedAirPlayHost = profile.SelectedAirPlayHost,
-        SelectedAirPlayPort = profile.SelectedAirPlayPort
     };
 
     private Button CreateStyledButton(string content, double width, double height, Thickness margin = default)
@@ -1807,7 +1795,6 @@ internal partial class SettingsView : UserControl
         {
             OutputBackend.Asio   => LocalizationManager.Current.SteinbergAsio,
             OutputBackend.CwAsio => LocalizationManager.Current.CwAsio,
-            OutputBackend.AirPlay => LocalizationManager.Current.AirPlay,
             _                    => !OperatingSystem.IsWindows()
                 ? profile.SelectedWasapiDeviceId?.StartsWith("alsa:", StringComparison.Ordinal) == true
                     ? LocalizationManager.Current.DirectAlsa
@@ -1817,7 +1804,6 @@ internal partial class SettingsView : UserControl
         var device = profile.Backend switch
         {
             OutputBackend.Asio or OutputBackend.CwAsio => profile.SelectedDriverName,
-            OutputBackend.AirPlay => profile.SelectedAirPlayDeviceName,
             _ => profile.SelectedWasapiDeviceName
         };
         return string.IsNullOrEmpty(device) ? backend : $"{backend}  ·  {device}";

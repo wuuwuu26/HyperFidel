@@ -4,8 +4,8 @@
 #
 # CI runs these steps itself; this script only mirrors them for local use, so it
 # deliberately does not force the native-bridge properties the Windows workflow
-# sets (a local build keeps its own IncludeAsioBridge / IncludeCwAsioBridge /
-# IncludeAirPlay2Bridge defaults).
+# sets (a local build keeps its own IncludeAsioBridge / IncludeCwAsioBridge
+# defaults).
 #
 # Usage:
 #   pwsh -NoProfile -File scripts/verify-all.ps1

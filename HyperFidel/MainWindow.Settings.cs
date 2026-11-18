@@ -649,8 +649,7 @@ public partial class MainWindow : Window
         var outputChanged =
             _settings.OutputBackend != profile.Backend ||
             !string.Equals(_settings.SelectedDriverName, profile.SelectedDriverName, StringComparison.Ordinal) ||
-            !string.Equals(_settings.SelectedWasapiDeviceId, profile.SelectedWasapiDeviceId, StringComparison.Ordinal) ||
-            !string.Equals(_settings.SelectedAirPlayDeviceId, profile.SelectedAirPlayDeviceId, StringComparison.Ordinal);
+            !string.Equals(_settings.SelectedWasapiDeviceId, profile.SelectedWasapiDeviceId, StringComparison.Ordinal);
 
         // Snapshot playback state before StopPlaybackCore clears current state.
         var resumePath     = _currentFilePath;
@@ -673,10 +672,6 @@ public partial class MainWindow : Window
         _settings.SelectedDriverName         = profile.SelectedDriverName;
         _settings.SelectedWasapiDeviceId     = profile.SelectedWasapiDeviceId;
         _settings.SelectedWasapiDeviceName   = profile.SelectedWasapiDeviceName;
-        _settings.SelectedAirPlayDeviceId    = profile.SelectedAirPlayDeviceId;
-        _settings.SelectedAirPlayDeviceName  = profile.SelectedAirPlayDeviceName;
-        _settings.SelectedAirPlayHost        = profile.SelectedAirPlayHost;
-        _settings.SelectedAirPlayPort        = profile.SelectedAirPlayPort;
         _ = Task.Run(() => _settingsStore.Save(_settings));
 
         RefreshOutputPickerSelection();
@@ -855,10 +850,6 @@ public partial class MainWindow : Window
                     _settings.SelectedWasapiDeviceId,
                     window.SelectedWasapiDeviceId,
                     StringComparison.Ordinal);
-            outputChanged = outputChanged || !string.Equals(
-                _settings.SelectedAirPlayDeviceId,
-                window.SelectedAirPlayDeviceId,
-                StringComparison.Ordinal);
             if (outputChanged && _player is not null)
                 await StopPlaybackAsync();
 
@@ -868,10 +859,6 @@ public partial class MainWindow : Window
             _settings.SelectedDriverName         = window.SelectedDriverName;
             _settings.SelectedWasapiDeviceId     = window.SelectedWasapiDeviceId;
             _settings.SelectedWasapiDeviceName   = window.SelectedWasapiDeviceName;
-            _settings.SelectedAirPlayDeviceId    = window.SelectedAirPlayDeviceId;
-            _settings.SelectedAirPlayDeviceName  = window.SelectedAirPlayDeviceName;
-            _settings.SelectedAirPlayHost        = window.SelectedAirPlayHost;
-            _settings.SelectedAirPlayPort        = window.SelectedAirPlayPort;
             _settings.ReplayGainMode        = window.SelectedReplayGainMode;
             _settings.CalculateMissingReplayGainDuringScan = window.CalculateMissingReplayGainDuringScan;
             _settings.AlwaysConvertDsdToPcm = window.AlwaysConvertDsdToPcm;
@@ -1006,8 +993,6 @@ public partial class MainWindow : Window
                     LocalizationManager.Current.SelectAsioDevice,
                 OutputBackend.Wasapi when string.IsNullOrWhiteSpace(_settings.SelectedWasapiDeviceId) =>
                     LocalizationManager.Current.SelectWasapiDevice,
-                OutputBackend.AirPlay when string.IsNullOrWhiteSpace(_settings.SelectedAirPlayDeviceId) =>
-                    LocalizationManager.Current.SelectAirPlayDevice,
                 OutputBackend.KernelStreaming =>
                     string.Format(LocalizationManager.Current.NotImplemented, "KernelStreaming"),
                 _ => LocalizationManager.Current.SettingsSaved

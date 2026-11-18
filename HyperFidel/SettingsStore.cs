@@ -385,11 +385,7 @@ public sealed class SettingsStore
                 Backend = settings.OutputBackend,
                 SelectedDriverName = settings.SelectedDriverName,
                 SelectedWasapiDeviceId = settings.SelectedWasapiDeviceId,
-                SelectedWasapiDeviceName = settings.SelectedWasapiDeviceName,
-                SelectedAirPlayDeviceId = settings.SelectedAirPlayDeviceId,
-                SelectedAirPlayDeviceName = settings.SelectedAirPlayDeviceName,
-                SelectedAirPlayHost = settings.SelectedAirPlayHost,
-                SelectedAirPlayPort = settings.SelectedAirPlayPort
+                SelectedWasapiDeviceName = settings.SelectedWasapiDeviceName
             };
             settings.OutputProfiles.Add(legacy);
             settings.SelectedOutputProfileName = legacy.Name;
@@ -410,10 +406,6 @@ public sealed class SettingsStore
                 settings.SelectedDriverName = null;
                 settings.SelectedWasapiDeviceId = null;
                 settings.SelectedWasapiDeviceName = null;
-                settings.SelectedAirPlayDeviceId = null;
-                settings.SelectedAirPlayDeviceName = null;
-                settings.SelectedAirPlayHost = null;
-                settings.SelectedAirPlayPort = 0;
                 return;
             }
         }
@@ -423,10 +415,6 @@ public sealed class SettingsStore
         settings.SelectedDriverName = selected.SelectedDriverName;
         settings.SelectedWasapiDeviceId = selected.SelectedWasapiDeviceId;
         settings.SelectedWasapiDeviceName = selected.SelectedWasapiDeviceName;
-        settings.SelectedAirPlayDeviceId = selected.SelectedAirPlayDeviceId;
-        settings.SelectedAirPlayDeviceName = selected.SelectedAirPlayDeviceName;
-        settings.SelectedAirPlayHost = selected.SelectedAirPlayHost;
-        settings.SelectedAirPlayPort = selected.SelectedAirPlayPort;
     }
 
     /// <summary>
@@ -439,10 +427,6 @@ public sealed class SettingsStore
         {
             OutputBackend.Wasapi => !string.IsNullOrWhiteSpace(profile.SelectedWasapiDeviceId),
             OutputBackend.Asio or OutputBackend.CwAsio => !string.IsNullOrWhiteSpace(profile.SelectedDriverName),
-            OutputBackend.AirPlay =>
-                !string.IsNullOrWhiteSpace(profile.SelectedAirPlayDeviceId) &&
-                !string.IsNullOrWhiteSpace(profile.SelectedAirPlayHost) &&
-                profile.SelectedAirPlayPort > 0,
             _ => false
         };
 

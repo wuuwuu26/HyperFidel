@@ -65,16 +65,6 @@ jobs:
           & $msbuild Native/CwAsioBridge/CwAsioBridge.vcxproj /p:Configuration=${{ matrix.configuration }} /p:Platform=x64
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Build and test AirPlay 2 bridge
-        shell: pwsh
-        run: |
-          cmake -S Native/AirPlay2Bridge -B artifacts/AirPlay2Bridge -A x64
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cmake --build artifacts/AirPlay2Bridge --config ${{ matrix.configuration }} --parallel
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          ctest --test-dir artifacts/AirPlay2Bridge -C ${{ matrix.configuration }} --output-on-failure
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
       - name: Build application
         run: >
           dotnet build HyperFidel/HyperFidel.csproj
@@ -83,7 +73,6 @@ jobs:
           --warnaserror
           /p:IncludeAsioBridge=false
           /p:IncludeCwAsioBridge=true
-          /p:IncludeAirPlay2Bridge=true
 
       - name: Run unit tests
         run: |
@@ -100,7 +89,6 @@ jobs:
           --configuration ${{ matrix.configuration }}
           /p:IncludeAsioBridge=false
           /p:IncludeCwAsioBridge=true
-          /p:IncludeAirPlay2Bridge=true
 
       - name: Publish Windows build
         if: matrix.configuration == 'Release'
@@ -112,7 +100,6 @@ jobs:
           --output artifacts/HyperFidel-win-x64
           /p:IncludeAsioBridge=false
           /p:IncludeCwAsioBridge=true
-          /p:IncludeAirPlay2Bridge=true
 
       - name: Upload Windows build
         if: matrix.configuration == 'Release'

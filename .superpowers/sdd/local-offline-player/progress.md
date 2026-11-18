@@ -276,3 +276,24 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) â
 - Verified: all 5 projects build 0 CS/0 AXN; Core tests 431 passed (12 cache
   tests removed with their file); desktop 376 passed / 1 known pre-existing
   YearInReviewPdfExporter failure; zero residual feature symbols.
+
+## Task: AirPlay removal â€” DONE
+- Deleted Audio/AirPlay2NativeSession.cs, AirPlayAudioPlayer.cs,
+  AirPlayDeviceDiscovery.cs, MainWindow.AirPlay.cs and Native/AirPlay2Bridge/
+  (Qt-free native sender project).
+- HyperFidel.csproj: removed IncludeAirPlay2Bridge props, DLL include, removal
+  targets and the Zeroconf package reference.
+- CI (.github/workflows/dotnet-desktop.yml, release.yml): removed the
+  "Build and test AirPlay 2 bridge" steps and /p:IncludeAirPlay2Bridge lines,
+  keeping runner/matrix and offline upload-recovery invariants unchanged.
+- build.ps1: removed -SkipAirPlay2Bridge param, bridge build block and property;
+  scripts/verify-all.ps1 comment updated.
+- OutputBackend enum: removed AirPlay value. AppSettings/OutputProfile/
+  SettingsStore/SettingsView/OutputProfileDialog: removed 4 AirPlay device
+  fields/properties and the AirPlay backend choice/discovery branch.
+- MainWindow.Playback/Settings/Startup: removed AirPlay player creation,
+  validation, output-change detection and status label branches.
+- Localization: removed 5 AirPlay strings x 7 languages. Verified 7/7 parity.
+- Verified: all 5 projects build 0 CS/0 AXN; zero residual AirPlay/Raop/
+  Zeroconf source refs; Core tests 431 passed; desktop 376 passed / 1 known
+  pre-existing YearInReviewPdfExporter failure.

@@ -11,8 +11,6 @@ param(
     [switch]$SkipAsio,
 
     [switch]$SkipCwAsio,
-
-    [switch]$SkipAirPlay2Bridge
 )
 
 $ErrorActionPreference = 'Stop'
@@ -97,26 +95,9 @@ $asioSdk = if ($SkipAsio) { $null } else { Resolve-AsioSdkPath $AsioSdkDir }
 $nativeProject = Join-Path $PSScriptRoot 'Native\AsioBridge\AsioBridge.vcxproj'
 $cwAsioProject = Join-Path $PSScriptRoot 'Native\CwAsioBridge\CwAsioBridge.vcxproj'
 $managedProject = Join-Path $PSScriptRoot 'HyperFidel\HyperFidel.csproj'
-$airPlay2Source = Join-Path $PSScriptRoot 'Native\AirPlay2Bridge'
-$airPlay2Build = Join-Path $PSScriptRoot 'artifacts\AirPlay2Bridge'
 $needsMsBuild = $null -ne $asioSdk -or -not $SkipCwAsio
 $msbuild = if ($needsMsBuild) { Resolve-MSBuildPath $MSBuildPath } else { $null }
 
-if (-not $SkipAirPlay2Bridge) {
-    Write-Host 'Building standalone AirPlay 2 bridge transport milestone.'
-    cmake -S $airPlay2Source -B $airPlay2Build -A x64
-    if ($LASTEXITCODE -ne 0) {
-        exit $LASTEXITCODE
-    }
-    cmake --build $airPlay2Build --config $Configuration
-    if ($LASTEXITCODE -ne 0) {
-        exit $LASTEXITCODE
-    }
-    ctest --test-dir $airPlay2Build -C $Configuration --output-on-failure
-    if ($LASTEXITCODE -ne 0) {
-        exit $LASTEXITCODE
-    }
-}
 
 if (-not $SkipCwAsio) {
     Write-Host "MSBuild: $msbuild"
@@ -149,9 +130,7 @@ else {
 
 $includeAsioBridge = if ($null -ne $asioSdk) { 'true' } else { 'false' }
 $includeCwAsioBridge = if (-not $SkipCwAsio) { 'true' } else { 'false' }
-$includeAirPlay2Bridge = if (-not $SkipAirPlay2Bridge) { 'true' } else { 'false' }
 dotnet build $managedProject -c $Configuration `
     "/p:IncludeAsioBridge=$includeAsioBridge" `
-    "/p:IncludeCwAsioBridge=$includeCwAsioBridge" `
-    "/p:IncludeAirPlay2Bridge=$includeAirPlay2Bridge"
+    "/p:IncludeCwAsioBridge=$includeCwAsioBridge"
 exit $LASTEXITCODE
