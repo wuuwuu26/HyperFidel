@@ -973,9 +973,9 @@ public partial class MainWindow : Window
                 {
                     _player.ReplayGainFactor = replayGainFactor;
                     UpdateReplayGainBadge(
-                        _player is DsfAudioPlayer or DffAudioPlayer or RemoteDsfAudioPlayer or RemoteDffAudioPlayer
+                        _player is DsfAudioPlayer or DffAudioPlayer
 #if !WINDOWS
-                        or DsfDopAudioPlayer or RemoteDsfDopAudioPlayer or DffDopAudioPlayer
+                        or DsfDopAudioPlayer or DffDopAudioPlayer
 #endif
                     );
                 }

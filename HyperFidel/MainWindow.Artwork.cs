@@ -112,31 +112,20 @@ public partial class MainWindow : Window
         string url,
         int decodeWidth,
         CancellationToken cancellationToken = default)
-    {
+    { 
         var cachePath = GetRemoteArtworkCachePath(url, decodeWidth);
-        if (File.Exists(cachePath))
-        {
-            var cached = await Task.Run(() => CreateArtworkImage(cachePath, decodeWidth), cancellationToken);
-            if (cached is not null)
-                return cached;
-
-            try { File.Delete(cachePath); }
-            catch { }
-        }
-
+        if (!File.Exists(cachePath))
+            return null;
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
-            var data = await RemoteArtworkHttpClient.GetByteArrayAsync(url, cancellationToken);
-            await File.WriteAllBytesAsync(cachePath, data, cancellationToken);
-            await using var stream = new MemoryStream(data);
-            return Bitmap.DecodeToWidth(stream, decodeWidth);
+            var cached = await Task.Run(() => CreateArtworkImage(cachePath, decodeWidth), cancellationToken);
+            return cached;
         }
         catch
         {
             return null;
         }
-    }
+        }
 
     private static void EnsureArtworkHydrated(ContentRow row)
     {

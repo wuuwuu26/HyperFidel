@@ -164,7 +164,6 @@ public sealed record MetadataReleaseMatch(
 /// </summary>
 public static class LibraryMetadataRepairService
 {
-    private static readonly HttpClient Client = CreateClient();
     private static readonly SemaphoreSlim MusicBrainzThrottle = new(1, 1);
     private static DateTimeOffset _lastRequest = DateTimeOffset.MinValue;
 
@@ -485,130 +484,18 @@ public static class LibraryMetadataRepairService
         CancellationToken cancellationToken = default,
         IProgress<MetadataReviewProgress>? progress = null)
     {
-        ArgumentNullException.ThrowIfNull(candidate);
-        var tracks = OrderTracks(candidate.Tracks);
-        progress?.Report(new("search", 0, 0));
-        if (tracks.Count == 0)
-            return [];
-
-        List<JsonElement> releases;
-        if (string.IsNullOrWhiteSpace(albumQuery))
-        {
-            if (tracks.Any(track => track.Duration is null or <= 0))
-                return [];
-            var offsets = new List<int>(tracks.Count);
-            var sector = 150;
-            foreach (var track in tracks)
-            {
-                offsets.Add(sector);
-                sector += Math.Max(1, (int)Math.Round(track.Duration!.Value * 75));
-            }
-            var toc = $"1+{tracks.Count}+{sector}+{string.Join('+', offsets)}";
-            releases = await LookupFuzzyTocReleasesAsync(toc, cancellationToken);
+        // Online MusicBrainz lookup is unavailable in the local-only player.
+        await Task.CompletedTask;
+        return [];
         }
-        else
-        {
-            releases = await SearchReleaseDetailsAsync(
-                albumQuery.Trim(),
-                artistQuery?.Trim(),
-                cancellationToken, progress);
-        }
-
-        var result = new List<MetadataReleaseMatch>();
-        foreach (var release in releases)
-        {
-            var releaseId = GetString(release, "id");
-            var title = GetString(release, "title");
-            if (string.IsNullOrWhiteSpace(releaseId) || string.IsNullOrWhiteSpace(title) ||
-                !release.TryGetProperty("media", out var media))
-            {
-                continue;
-            }
-            var albumArtist = ReadArtistCredit(release);
-            var artistId = ReadPrimaryArtistId(release);
-            var mediumCount = media.GetArrayLength();
-            foreach (var medium in media.EnumerateArray())
-            {
-                if (!medium.TryGetProperty("tracks", out var remoteTracks) ||
-                    remoteTracks.GetArrayLength() != tracks.Count)
-                {
-                    continue;
-                }
-                var mapped = new List<MetadataMatchTrack>();
-                var totalDifference = 0d;
-                var durationComparisons = 0;
-                foreach (var remoteTrack in remoteTracks.EnumerateArray())
-                {
-                    var recording = remoteTrack.TryGetProperty("recording", out var recordingElement)
-                        ? recordingElement
-                        : default;
-                    var length = GetInt(remoteTrack, "length") ??
-                                 (recording.ValueKind == JsonValueKind.Object
-                                     ? GetInt(recording, "length")
-                                     : null);
-                    var position = GetInt(remoteTrack, "position") ?? mapped.Count + 1;
-                    var localDuration = tracks[mapped.Count].Duration;
-                    if (length.HasValue && localDuration.HasValue)
-                    {
-                        totalDifference += Math.Abs(length.Value / 1000d - localDuration.Value);
-                        durationComparisons++;
-                    }
-                    mapped.Add(new MetadataMatchTrack(
-                        position,
-                        GetString(remoteTrack, "title") ??
-                        (recording.ValueKind == JsonValueKind.Object
-                            ? GetString(recording, "title")
-                            : null) ??
-                        string.Empty,
-                        ReadArtistCredit(remoteTrack) is { Length: > 0 } trackArtist
-                            ? trackArtist
-                            : recording.ValueKind == JsonValueKind.Object
-                                ? ReadArtistCredit(recording)
-                                : albumArtist,
-                        recording.ValueKind == JsonValueKind.Object
-                            ? GetString(recording, "id")
-                            : null,
-                        length));
-                }
-                var confidence = CalculateMatchConfidence(
-                    tracks,
-                    mapped,
-                    totalDifference,
-                    durationComparisons);
-                result.Add(new MetadataReleaseMatch(
-                    releaseId,
-                    title,
-                    albumArtist,
-                    artistId,
-                    ParseYear(GetString(release, "date")),
-                    GetInt(medium, "position") ?? 1,
-                    mediumCount,
-                    mapped,
-                    confidence));
-            }
-        }
-        return result
-            .OrderByDescending(match => match.Confidence)
-            .ThenBy(match => match.Title, StringComparer.CurrentCultureIgnoreCase)
-            .Take(10)
-            .ToList();
-    }
 
     private static async Task<List<JsonElement>> LookupFuzzyTocReleasesAsync(
         string toc,
         CancellationToken cancellationToken)
     {
-        var url = "https://musicbrainz.org/ws/2/discid/-" +
-                  $"?fmt=json&cdstubs=no&media-format=all&inc=artist-credits+recordings&toc={toc}";
-        using var response = await GetMusicBrainzAsync(url, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        using var document = await JsonDocument.ParseAsync(
-            await response.Content.ReadAsStreamAsync(cancellationToken),
-            cancellationToken: cancellationToken);
-        return document.RootElement.TryGetProperty("releases", out var releases)
-            ? releases.EnumerateArray().Select(release => release.Clone()).ToList()
-            : [];
-    }
+        await Task.CompletedTask;
+        return [];
+        }
 
     private static async Task<List<JsonElement>> SearchReleaseDetailsAsync(
         string albumQuery,
@@ -616,60 +503,17 @@ public static class LibraryMetadataRepairService
         CancellationToken cancellationToken,
         IProgress<MetadataReviewProgress>? progress)
     {
-        var exactQuery = $"release:\"{EscapeSearchValue(albumQuery)}\"";
-        if (!string.IsNullOrWhiteSpace(artistQuery))
-            exactQuery += $" AND artist:\"{EscapeSearchValue(artistQuery)}\"";
-
-        var releaseIds = await SearchReleaseIdsAsync(exactQuery, cancellationToken);
-        if (releaseIds.Count < 10)
-        {
-            var relaxedQuery = $"release:({EscapeSearchTerm(albumQuery)})";
-            foreach (var id in await SearchReleaseIdsAsync(relaxedQuery, cancellationToken))
-            {
-                if (!releaseIds.Contains(id, StringComparer.Ordinal))
-                    releaseIds.Add(id);
-                if (releaseIds.Count >= 10)
-                    break;
-            }
+        await Task.CompletedTask;
+        return [];
         }
-
-        var result = new List<JsonElement>();
-        progress?.Report(new("releases", 0, Math.Min(10, releaseIds.Count)));
-        foreach (var id in releaseIds.Take(10))
-        {
-            using var detailResponse = await GetMusicBrainzAsync(
-                $"https://musicbrainz.org/ws/2/release/{id}?fmt=json&inc=artist-credits+recordings",
-                cancellationToken);
-            detailResponse.EnsureSuccessStatusCode();
-            using var detailDocument = await JsonDocument.ParseAsync(
-                await detailResponse.Content.ReadAsStreamAsync(cancellationToken),
-                cancellationToken: cancellationToken);
-            result.Add(detailDocument.RootElement.Clone());
-            progress?.Report(new("releases", result.Count, Math.Min(10, releaseIds.Count)));
-        }
-        return result;
-    }
 
     private static async Task<List<string>> SearchReleaseIdsAsync(
         string query,
         CancellationToken cancellationToken)
     {
-        var searchUrl =
-            $"https://musicbrainz.org/ws/2/release?fmt=json&limit=10&query={Uri.EscapeDataString(query)}";
-        using var searchResponse = await GetMusicBrainzAsync(searchUrl, cancellationToken);
-        searchResponse.EnsureSuccessStatusCode();
-        using var searchDocument = await JsonDocument.ParseAsync(
-            await searchResponse.Content.ReadAsStreamAsync(cancellationToken),
-            cancellationToken: cancellationToken);
-        return searchDocument.RootElement.TryGetProperty("releases", out var releases)
-            ? releases.EnumerateArray()
-                .Select(release => GetString(release, "id"))
-                .Where(id => !string.IsNullOrWhiteSpace(id))
-                .Cast<string>()
-                .Distinct(StringComparer.Ordinal)
-                .ToList()
-            : [];
-    }
+        await Task.CompletedTask;
+        return [];
+        }
 
     /// <summary>Calculates a match score from title similarity and available duration evidence.</summary>
     /// <param name="localTracks">Local tracks in medium order.</param>
@@ -801,44 +645,16 @@ public static class LibraryMetadataRepairService
 
     private static async Task ThrottleAsync(CancellationToken cancellationToken)
     {
-        await MusicBrainzThrottle.WaitAsync(cancellationToken);
-        try
-        {
-            var delay = _lastRequest.AddMilliseconds(1100) - DateTimeOffset.UtcNow;
-            if (delay > TimeSpan.Zero)
-                await Task.Delay(delay, cancellationToken);
-            _lastRequest = DateTimeOffset.UtcNow;
+        await Task.CompletedTask;
         }
-        finally
-        {
-            MusicBrainzThrottle.Release();
-        }
-    }
 
     private static async Task<HttpResponseMessage> GetMusicBrainzAsync(
         string url,
         CancellationToken cancellationToken)
     {
-        for (var attempt = 0; ; attempt++)
-        {
-            await ThrottleAsync(cancellationToken);
-            var response = await Client.GetAsync(url, cancellationToken);
-            if (response.IsSuccessStatusCode ||
-                attempt >= 2 ||
-                response.StatusCode is not (System.Net.HttpStatusCode.TooManyRequests or
-                    System.Net.HttpStatusCode.BadGateway or
-                    System.Net.HttpStatusCode.ServiceUnavailable or
-                    System.Net.HttpStatusCode.GatewayTimeout))
-            {
-                return response;
-            }
-
-            var retryAfter = response.Headers.RetryAfter?.Delta ??
-                             TimeSpan.FromSeconds(attempt + 2);
-            response.Dispose();
-            await Task.Delay(retryAfter, cancellationToken);
+        await Task.CompletedTask;
+        throw new InvalidOperationException("Online lookup is unavailable offline.");
         }
-    }
 
     private static string ReadArtistCredit(JsonElement element)
     {
@@ -881,11 +697,5 @@ public static class LibraryMetadataRepairService
             ? year
             : null;
 
-    private static HttpClient CreateClient()
-    {
-        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("HyperFidel/1.0 (https://github.com/wuuwuu26/HyperFidel)");
-        client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
-        return client;
-    }
+
 }

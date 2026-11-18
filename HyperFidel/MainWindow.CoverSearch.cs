@@ -308,27 +308,8 @@ public partial class MainWindow : Window
 
     private async Task OpenCoverSearchAsync(ContentRow row)
     {
-        if (row.Id is not long albumId)
-            return;
-
-        var dialog = new CoverSearchWindow(row.Title ?? string.Empty, GetCoverSearchArtist(row));
-        if (await dialog.ShowDialog<bool>(this) == false || dialog.SelectedResult is not { } selected)
-            return;
-
-        await _localCatalogProvider.SetAlbumArtworkAsync(albumId, selected.ImageData, selected.MimeType);
-        InvalidateUnifiedLibraryViewCache();
-
-        // Refresh the bound row directly so a card outside the Albums list (e.g. a
-        // dashboard recent-album card) updates immediately.
-        UpdateRowArtworkFromBytes(row, selected.ImageData);
-
-        // Dashboard and its Show all pages share this viewer. The bound card is
-        // already refreshed; rebuilding Dashboard would replace the current page
-        // and lose its scroll position.
-        if (DashboardScrollViewer.IsVisible)
-            return;
-        if (_activeAlbumFilterId == albumId)
-            await ReloadAlbumDetailHeaderAsync(albumId);
+        // Online cover search is unavailable in the local-only player.
+        await Task.CompletedTask;
     }
 
     /// <summary>Decodes image bytes and assigns them to a row's artwork/thumbnail in place.</summary>
@@ -362,24 +343,8 @@ public partial class MainWindow : Window
         long albumId,
         ContentRow row)
     {
-        var dialog = new CoverSearchWindow(row.Title ?? string.Empty, GetCoverSearchArtist(row));
-        if (await dialog.ShowDialog<bool>(this) == false || dialog.SelectedResult is not { } selected)
-            return;
-
-        var provider = CreateHyperFidelCatalogProvider(server);
-        var uploaded = await provider.SetAlbumArtworkAsync(albumId, selected.ImageData, selected.MimeType);
-        if (!uploaded)
-        {
-            StatusTextBlock.Text = LocalizationManager.Current.HyperFidelConnectionFailed;
-            return;
-        }
-
-        row.ArtworkPath ??= HyperFidelServerClient.GetAlbumArtworkUrl(server, albumId, 320);
-        row.ThumbnailPath ??= HyperFidelServerClient.GetAlbumArtworkUrl(server, albumId, 96);
-        ApplyRemoteArtwork(row, selected.ImageData);
-        DeleteHyperFidelAlbumListCache(server);
-        InvalidateUnifiedLibraryViewCache();
-        StatusTextBlock.Text = string.Empty;
+        // Online cover search is unavailable in the local-only player.
+        await Task.CompletedTask;
     }
 
     /// <summary>Returns the best available artist name for narrowing manual cover searches.</summary>

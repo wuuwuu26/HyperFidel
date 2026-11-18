@@ -333,54 +333,27 @@ public partial class MainWindow
     private static async Task<(byte[] Data, string MimeType)?> TryReadArtworkBytesAsync(
         string? path,
         CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(path))
+    { 
+        if (string.IsNullOrWhiteSpace(path) || IsHttpUrl(path))
             return null;
         try
         {
-            byte[] data;
-            if (IsHttpUrl(path))
+            if (!File.Exists(path))
+                return null;
+            var data = await File.ReadAllBytesAsync(path, cancellationToken);
+            var mime = Path.GetExtension(path).ToLowerInvariant() switch
             {
-                using var response = await RemoteArtworkHttpClient.GetAsync(
-                    path,
-                    HttpCompletionOption.ResponseHeadersRead,
-                    cancellationToken);
-                response.EnsureSuccessStatusCode();
-                if (response.Content.Headers.ContentLength is > SynchronizedArtworkMaximumBytes)
-                    return null;
-                await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
-                await using var destination = new MemoryStream();
-                var buffer = new byte[81920];
-                while (true)
-                {
-                    var read = await source.ReadAsync(buffer, cancellationToken);
-                    if (read == 0)
-                        break;
-                    if (destination.Length + read > SynchronizedArtworkMaximumBytes)
-                        return null;
-                    await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
-                }
-                data = destination.ToArray();
-            }
-            else
-            {
-                var file = new FileInfo(path);
-                if (!file.Exists || file.Length <= 0 || file.Length > SynchronizedArtworkMaximumBytes)
-                    return null;
-                data = await File.ReadAllBytesAsync(path, cancellationToken);
-            }
-
-            return data.Length == 0 ? null : (data, DetectArtworkMimeType(data));
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                _ => "image/jpeg"
+            };
+            return (data, mime);
         }
         catch
         {
             return null;
         }
-    }
+        }
 
     /// <summary>Detects the supported artwork MIME type from its leading bytes.</summary>
     /// <param name="data">Image bytes.</param>

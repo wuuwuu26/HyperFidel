@@ -179,7 +179,6 @@ internal sealed class LocalNowPlayingMetadataProvider : INowPlayingMetadataProvi
 /// <summary>Now-playing metadata provider backed by a remote HyperFidel Server.</summary>
 internal sealed class HyperFidelServerNowPlayingMetadataProvider : INowPlayingMetadataProvider
 {
-    private static readonly HttpClient ImageClient = new() { Timeout = TimeSpan.FromSeconds(30) };
 
     private readonly HyperFidelServerSettings _server;
     private readonly HyperFidelServerClient _client;
@@ -211,24 +210,10 @@ internal sealed class HyperFidelServerNowPlayingMetadataProvider : INowPlayingMe
         NowPlayingTrackContext track,
         CancellationToken cancellationToken = default)
     {
-        if (track.TrackId is not long trackId)
-            return null;
-        try
-        {
-            var url = HyperFidelServerClient.GetTrackArtworkUrl(_server, trackId, 320);
-            var bytes = await ImageClient.GetByteArrayAsync(url, cancellationToken);
-            if (bytes.Length == 0)
-                return null;
-            var path = AppPaths.GetDataPath("remote-artworks", $"track-art-{_server.Id}-{trackId}.img");
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            await File.WriteAllBytesAsync(path, bytes, cancellationToken);
-            return new NowPlayingArtwork(path, path);
+        // Remote artwork download is unavailable in the local-only player.
+        await Task.CompletedTask;
+        return null;
         }
-        catch
-        {
-            return null;
-        }
-    }
 
     /// <summary>Resolves a source-owned artist profile through the standard metadata interface.</summary>
     /// <param name="artist">The artist identity to resolve.</param>
@@ -356,33 +341,9 @@ internal sealed class HyperFidelServerNowPlayingMetadataProvider : INowPlayingMe
         CancellationToken cancellationToken,
         Func<bool> canPublish)
     {
-        if (!canPublish()) return null;
-        try
-        {
-            var url = HyperFidelServerClient.GetArtistArtworkUrl(server, artistId);
-            var bytes = await ImageClient.GetByteArrayAsync(url, cancellationToken);
-            if (!canPublish() || bytes.Length == 0)
-                return null;
-            var path = AppPaths.GetDataPath("remote-artworks", $"artist-info-{server.Id}-{artistId}.img");
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            var temporaryPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
-            try
-            {
-                await File.WriteAllBytesAsync(temporaryPath, bytes, cancellationToken);
-                if (!canPublish()) return null;
-                File.Move(temporaryPath, path, true);
-                return path;
-            }
-            finally
-            {
-                if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
-            }
+        await Task.CompletedTask;
+        return null;
         }
-        catch
-        {
-            return null;
-        }
-    }
 }
 
 /// <summary>Shared helpers for now-playing metadata providers.</summary>

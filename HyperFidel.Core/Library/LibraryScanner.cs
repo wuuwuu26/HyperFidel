@@ -230,43 +230,9 @@ public static class LibraryScanner
         IProgress<ScanProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        using var db = AudioDatabase.OpenDefault();
-        var albums = db.GetAlbumsMissingArtworkReleaseIds();
-        var downloaded = 0;
-
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("HyperFidel/1.0 (album-artwork-download)");
-
-        for (var i = 0; i < albums.Count; i++)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var (albumId, releaseId) = albums[i];
-            progress?.Report(new ScanProgress(i + 1, albums.Count, releaseId));
-
-            try
-            {
-                using var response = await client.GetAsync(
-                    $"https://coverartarchive.org/release/{Uri.EscapeDataString(releaseId)}/front",
-                    cancellationToken);
-
-                if (response.StatusCode == HttpStatusCode.NotFound)
-                    continue;
-
-                response.EnsureSuccessStatusCode();
-                var data = await response.Content.ReadAsByteArrayAsync(cancellationToken);
-                if (data.Length == 0)
-                    continue;
-
-                db.AttachArtworkToAlbum(albumId, data, response.Content.Headers.ContentType?.MediaType);
-                downloaded++;
-            }
-            catch (HttpRequestException)
-            {
-                // Einzelne fehlende oder temporär nicht erreichbare Cover überspringen.
-            }
-        }
-
-        return downloaded;
+        // Online artwork download is unavailable in the local-only player.
+        await Task.CompletedTask;
+        return 0;
     }
 
     private static ScanResult Scan(

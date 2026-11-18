@@ -315,3 +315,30 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
   FanartTvArtistImageService, ArtistImageSearchService, MusicBrainzCoverSearch,
   LibraryMetadataRepairService, LibraryScanner) and the remote HTTP DSD players.
   These are the next slices before the final zero-HttpClient gate.
+
+## Task: 消除剩余全部网络调用 — DONE (零网络里程碑)
+- 决定（用户确认）: 保留休眠数据契约，移除网络。HyperFidelServerClient /
+  PlexServerClient 改为离线 stand-in：签名不变、无 HttpClient/网络 I/O，
+  读操作返回空/默认；静态 artwork/stream URL 生成器返回空串（不再产生带
+  凭据的 URL）。StreamingModels 数据契约移入 DormantDataContracts.cs；
+  ReleaseUpdateService 缩减为纯数据记录。
+- Cover Art Archive 封面搜索整体删除：MusicBrainzCoverSearch.cs、
+  CoverSearchWindow.axaml(.cs)、CoverSearchDiagnostics.cs、CoverSearchSmoke
+  与 CoverSearchUiSmoke 脚本；MainWindow.CoverSearch 的两个在线封面搜索方法
+  离线化（保留本地上传/删除封面逻辑）。
+- LibraryScanner.DownloadMissingAlbumArtworkAsync 离线化（返回 0）。
+- MusicBrainzCoverSearch / FanartTvArtistImageService / ArtistProfileService /
+  ArtistImageSearchService / LibraryMetadataRepairService 的网络下载方法改为
+  离线 no-op；保留纯本地缓存方法（SaveImageAsync/DeleteImage/Analyze/
+  FindDuplicateGroups/CreateOverrides/OrderTracks 等）。
+- 删除远程 HTTP DSD/DFF 播放器（RemoteDsf/RemoteDff/RemoteDsfDop），
+  CreateRemoteAsync 与 HttpDffSource 移除；MainWindow.Playback/Settings 的
+  远程 DSD 分支与 IsRemote* 辅助方法移除。
+- 删除桌面端 RemoteArtworkHttpClient / ImageClient，三处远程 artwork 下载
+  改为只读本地缓存。
+- 删除测试：7 个 Core 网络客户端测试、MissingArtistImageWriterTests、
+  NowPlayingArtistWriteTests。
+- 静态审计：HttpClient/Socket/TcpClient/WebClient/NetworkStream/Zeroconf
+  在 shipped 源码中 0 命中；http:// 字符串仅剩输入路径判断与文档/本地缓存键。
+- 验证：5 项目全部 build 0 CS/0 AXN；Core 测试 392 通过；桌面 357 通过 /
+  1 已知预先存在的 YearInReviewPdfExporter 失败。

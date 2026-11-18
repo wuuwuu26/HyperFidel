@@ -1,6 +1,4 @@
 using System.Buffers.Binary;
-using System.Net;
-using System.Net.Http.Headers;
 using System.Text;
 
 namespace HyperFidel.Audio;
@@ -63,22 +61,6 @@ public sealed class DffDopAudioPlayer : IAudioPlayer
         string deviceId,
         CancellationToken cancellationToken = default) =>
         CreateAsync(new FileDffSource(filePath), deviceId, cancellationToken);
-
-    /// <summary>Opens an HTTP range-capable uncompressed stereo DFF for direct ALSA DSD output.</summary>
-    /// <param name="streamUrl">Authenticated HTTP stream URL.</param>
-    /// <param name="deviceId">Direct ALSA device ID prefixed with <c>alsa:</c>.</param>
-    /// <param name="cancellationToken">Cancellation token for startup.</param>
-    /// <returns>The running player and its DSD source/output information.</returns>
-    public static Task<(DffDopAudioPlayer AudioPlayer, AudioFileInfo Info)> CreateRemoteAsync(
-        string streamUrl,
-        string deviceId,
-        CancellationToken cancellationToken = default)
-    {
-        if (!Uri.TryCreate(streamUrl, UriKind.Absolute, out var uri) ||
-            uri.Scheme is not ("http" or "https"))
-            throw new InvalidOperationException("Remote DFF playback requires an HTTP stream URL.");
-        return CreateAsync(new HttpDffSource(uri), deviceId, cancellationToken);
-    }
 
     private static async Task<(DffDopAudioPlayer AudioPlayer, AudioFileInfo Info)> CreateAsync(
         IDffSource source,
@@ -426,35 +408,7 @@ public sealed class DffDopAudioPlayer : IAudioPlayer
         public void Dispose() => _file.Dispose();
     }
 
-    private sealed class HttpDffSource : IDffSource
-    {
-        private readonly HttpClient _client = new();
-        private readonly Uri _uri;
 
-        internal HttpDffSource(Uri uri) => _uri = uri;
-
-        public async Task<int> ReadAsync(long position, Memory<byte> destination, CancellationToken cancellationToken)
-        {
-            using var request = new HttpRequestMessage(HttpMethod.Get, _uri);
-            request.Headers.Range = new RangeHeaderValue(position, position + destination.Length - 1);
-            using var response = await _client.SendAsync(
-                request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-            if (response.StatusCode != HttpStatusCode.PartialContent)
-                throw new InvalidOperationException("Remote DFF playback requires HTTP byte-range support.");
-            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            var read = 0;
-            while (read < destination.Length)
-            {
-                var count = await stream.ReadAsync(destination[read..], cancellationToken).ConfigureAwait(false);
-                if (count == 0)
-                    break;
-                read += count;
-            }
-            return read;
-        }
-
-        public void Dispose() => _client.Dispose();
-    }
 }
 
 internal static class DffSourceExtensions

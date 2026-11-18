@@ -315,16 +315,14 @@ public partial class MainWindow : Window
         NowPlayingTitleBlock.Text  = filename;
         NowPlayingArtistBlock.Text = SelectedDriverTextBlock.Text;
         ClearNowPlayingAlbum();
-        var usesNativeDsd = player is DsfAudioPlayer or DffAudioPlayer or RemoteDsfAudioPlayer or RemoteDffAudioPlayer
+        var usesNativeDsd = player is DsfAudioPlayer or DffAudioPlayer
 #if !WINDOWS
                             || player is DsfDopAudioPlayer { UsesNativeDsd: true }
-                            || player is RemoteDsfDopAudioPlayer { UsesNativeDsd: true }
                             || player is DffDopAudioPlayer { UsesNativeDsd: true }
 #endif
             ;
 #if !WINDOWS
         var usesDop = player is DsfDopAudioPlayer { UsesNativeDsd: false }
-                      or RemoteDsfDopAudioPlayer { UsesNativeDsd: false }
                       or DffDopAudioPlayer { UsesNativeDsd: false };
 #else
         const bool usesDop = false;
@@ -632,9 +630,6 @@ public partial class MainWindow : Window
                     _settings.SelectedDriverName,
                     cancellationToken);
             else if (!_settings.AlwaysConvertDsdToPcm &&
-                     IsRemoteHyperFidelDsdCandidate(filePath))
-                (player, info) = await CreateRemoteHyperFidelDsdOrPcmPlayerAsync(filePath, playbackTrack, cancellationToken);
-            else if (!_settings.AlwaysConvertDsdToPcm &&
                      ext.Equals(".dff", StringComparison.OrdinalIgnoreCase))
                 (player, info) = await DffAudioPlayer.CreateAsync(
                     filePath,
@@ -662,35 +657,18 @@ public partial class MainWindow : Window
             if (OperatingSystem.IsLinux() &&
                 _settings.DsdOverPcmEnabled &&
                 (ext.Equals(".dsf", StringComparison.OrdinalIgnoreCase) ||
-                 ext.Equals(".dff", StringComparison.OrdinalIgnoreCase) ||
-                 IsRemoteHyperFidelDsdCandidate(filePath)))
+                 ext.Equals(".dff", StringComparison.OrdinalIgnoreCase)))
             {
-                if (Uri.TryCreate(filePath, UriKind.Absolute, out var dopUri) &&
-                    dopUri.Scheme is "http" or "https")
-                {
-                    if (IsRemoteHyperFidelDffCandidate(filePath))
-                        (player, info) = await DffDopAudioPlayer.CreateRemoteAsync(
-                            filePath,
-                            _settings.SelectedWasapiDeviceId,
-                            cancellationToken);
-                    else
-                        (player, info) = await RemoteDsfDopAudioPlayer.CreateAsync(
-                            filePath,
-                            _settings.SelectedWasapiDeviceId,
-                            cancellationToken);
-                }
-                else if (ext.Equals(".dff", StringComparison.OrdinalIgnoreCase))
+                if (ext.Equals(".dff", StringComparison.OrdinalIgnoreCase))
                     (player, info) = await DffDopAudioPlayer.CreateLocalAsync(
                         playbackTrack.PlaybackPath,
                         _settings.SelectedWasapiDeviceId,
                         cancellationToken);
                 else
-                {
                     (player, info) = await DsfDopAudioPlayer.CreateAsync(
                         playbackTrack.PlaybackPath,
                         _settings.SelectedWasapiDeviceId,
                         cancellationToken);
-                }
             }
             else
 #endif
@@ -840,166 +818,7 @@ public partial class MainWindow : Window
         return new GaplessPlaybackItem(path, GetReplayGainFactor(path));
     }
 
-    /// <summary>Probes native remote DSD formats and falls back to PCM using one owning token.</summary>
-    /// <param name="filePath">The remote playable path.</param>
-    /// <param name="playbackTrack">The resolved PCM fallback item.</param>
-    /// <param name="cancellationToken">The owning playback cancellation token.</param>
-    /// <returns>The created native or PCM player and format.</returns>
-    private async Task<(IAudioPlayer Player, AudioFileInfo Info)> CreateRemoteHyperFidelDsdOrPcmPlayerAsync(
-        string filePath,
-        GaplessPlaybackItem playbackTrack,
-        CancellationToken cancellationToken)
-    {
-        var driverName = _settings.SelectedDriverName ?? string.Empty;
-        cancellationToken.ThrowIfCancellationRequested();
-        try
-        {
-            var (dsfPlayer, dsfInfo) = await RemoteDsfAudioPlayer.CreateAsync(
-                filePath,
-                _settings.OutputBackend,
-                driverName,
-                cancellationToken);
-            return (dsfPlayer, dsfInfo);
-        }
-        catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException)
-        {
-            SeekDiagnostics.Log(
-                "remote-dsf-player",
-                $"native-skip reason={ex.GetType().Name} message={ex.Message}");
-        }
 
-        cancellationToken.ThrowIfCancellationRequested();
-        try
-        {
-            var (dffPlayer, dffInfo) = await RemoteDffAudioPlayer.CreateAsync(
-                filePath,
-                _settings.OutputBackend,
-                driverName,
-                cancellationToken);
-            return (dffPlayer, dffInfo);
-        }
-        catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException)
-        {
-            SeekDiagnostics.Log(
-                "remote-dff-player",
-                $"native-fallback reason={ex.GetType().Name} message={ex.Message}");
-            cancellationToken.ThrowIfCancellationRequested();
-            return await FfmpegAudioPlayer.CreateAsync(
-                [playbackTrack],
-                _settings.OutputBackend,
-                driverName,
-                _settings.EqualizerEnabled,
-                _settings.EqualizerProfile,
-                cancellationToken,
-                _settings.MaxOutputSampleRateHz);
-        }
-    }
-
-    /// <summary>
-    /// Determines whether a remote HyperFidel Server stream should be routed through
-    /// the native DSD players. When the cached server metadata identifies a
-    /// concrete non-DSD format it is treated as authoritative so PCM tracks skip
-    /// the native DSF/DFF probes and go straight to the gapless FFmpeg PCM path;
-    /// only tracks with no usable format metadata fall back to the conservative
-    /// stream-URL check.
-    /// </summary>
-    /// <param name="path">Remote stream URL of the track.</param>
-    /// <returns>
-    /// <see langword="true"/> when the track may be native DSD; otherwise
-    /// <see langword="false"/>.
-    /// </returns>
-    private bool IsRemoteHyperFidelDsdCandidate(string path)
-    {
-        if (!_hyperfidelTracksByUrl.TryGetValue(path, out var row))
-            return IsConfiguredHyperFidelStreamUrl(path);
-
-        var format = row.Format?.Trim();
-        var sourceExtension = Path.GetExtension(row.SourcePath);
-        var fileNameExtension = Path.GetExtension(row.FileName);
-
-        if (string.Equals(format, "DSF", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(format, "DFF", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(format, "DSDIFF", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(sourceExtension, ".dsf", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(sourceExtension, ".dff", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(fileNameExtension, ".dsf", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(fileNameExtension, ".dff", StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        // Any concrete server-supplied format/extension identifies the track as
-        // PCM here, so it must not probe the native DSD players. Each of those
-        // probes reads remote header byte ranges, adding two wasted HTTP
-        // round-trips before the FFmpeg fallback — the main reason remote
-        // playback took several seconds to start on ASIO/cwASIO. Routing PCM
-        // tracks through the normal FFmpeg branch also restores gapless playback
-        // for them, because that branch uses the full gapless item list instead
-        // of a single item. Only genuinely unknown tracks stay conservative.
-        var hasKnownFormat =
-            !string.IsNullOrWhiteSpace(format) ||
-            !string.IsNullOrWhiteSpace(sourceExtension) ||
-            !string.IsNullOrWhiteSpace(fileNameExtension);
-        return !hasKnownFormat && IsConfiguredHyperFidelStreamUrl(path);
-    }
-
-    /// <summary>
-    /// Determines whether an HyperFidel Server stream is specifically a DSF
-    /// candidate for Linux DoP playback.
-    /// </summary>
-    /// <param name="path">Remote stream URL of the track.</param>
-    /// <returns><see langword="true"/> for known DSF or metadata-less HyperFidel streams.</returns>
-    private bool IsRemoteHyperFidelDsfCandidate(string path)
-    {
-        if (!_hyperfidelTracksByUrl.TryGetValue(path, out var row))
-            return IsConfiguredHyperFidelStreamUrl(path);
-
-        var format = row.Format?.Trim();
-        return string.Equals(format, "DSF", StringComparison.OrdinalIgnoreCase) ||
-               string.Equals(Path.GetExtension(row.SourcePath), ".dsf", StringComparison.OrdinalIgnoreCase) ||
-               string.Equals(Path.GetExtension(row.FileName), ".dsf", StringComparison.OrdinalIgnoreCase);
-    }
-
-    /// <summary>Determines whether a remote HyperFidel Server stream is a known DFF/DSDIFF track.</summary>
-    /// <param name="path">Remote stream URL of the track.</param>
-    /// <returns><see langword="true"/> when cached metadata identifies DFF/DSDIFF.</returns>
-    private bool IsRemoteHyperFidelDffCandidate(string path)
-    {
-        if (!_hyperfidelTracksByUrl.TryGetValue(path, out var row))
-            return false;
-
-        var format = row.Format?.Trim();
-        return string.Equals(format, "DFF", StringComparison.OrdinalIgnoreCase) ||
-               string.Equals(format, "DSDIFF", StringComparison.OrdinalIgnoreCase) ||
-               string.Equals(Path.GetExtension(row.SourcePath), ".dff", StringComparison.OrdinalIgnoreCase) ||
-               string.Equals(Path.GetExtension(row.FileName), ".dff", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private bool IsConfiguredHyperFidelStreamUrl(string path)
-    {
-        if (!Uri.TryCreate(path, UriKind.Absolute, out var uri))
-            return false;
-
-        foreach (var server in _settings.HyperFidelServers ?? [])
-        {
-            if (!Uri.TryCreate(server.BaseUrl, UriKind.Absolute, out var baseUri))
-                continue;
-
-            if (!string.Equals(uri.Scheme, baseUri.Scheme, StringComparison.OrdinalIgnoreCase) ||
-                !string.Equals(uri.Host, baseUri.Host, StringComparison.OrdinalIgnoreCase) ||
-                uri.Port != baseUri.Port)
-            {
-                continue;
-            }
-
-            var basePath = baseUri.AbsolutePath.TrimEnd('/');
-            var expectedPrefix = string.IsNullOrEmpty(basePath)
-                ? "/api/stream/"
-                : $"{basePath}/api/stream/";
-            if (uri.AbsolutePath.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase))
-                return true;
-        }
-
-        return false;
-    }
 
     /// <summary>Resolves a history entry to its remote HyperFidel Server track target.</summary>
     /// <param name="entry">The playback-history entry.</param>

@@ -74,10 +74,6 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, ContentRow> _hyperfidelTracksByUrl =
         new(StringComparer.OrdinalIgnoreCase);
     private List<TrackFacetInfo>? _hyperfidelTrackFacets;
-    private static readonly HttpClient RemoteArtworkHttpClient = new()
-    {
-        Timeout = TimeSpan.FromSeconds(10)
-    };
     private readonly Dictionary<string, TreeViewItem> _localFolderTrackItems =
         new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Border> _localFolderTrackHeaders =

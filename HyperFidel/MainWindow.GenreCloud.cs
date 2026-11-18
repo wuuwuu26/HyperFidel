@@ -761,8 +761,8 @@ public partial class MainWindow
                         data = await File.ReadAllBytesAsync(cachedPath, cancellationToken);
                     else
                     {
-                        data = await RemoteArtworkHttpClient.GetByteArrayAsync(image.Location, cancellationToken);
-                        WriteRemoteArtworkCache(image.Location, data);
+                        // Remote artwork download is unavailable in the local-only player.
+                        continue;
                     }
                 }
 
