@@ -1840,6 +1840,11 @@ WavPack metadata, PCM/DSD caps and an empty eligible candidate set.
 - SQLite through `Microsoft.Data.Sqlite`; no server process is required
 - `tracks` stores file paths, tags, technical metadata, and references to
   normalized `artists` and `albums`
+- `tracks.artwork_id` references the deduplicated `artworks` row for a track's
+  own embedded cover. `GetArtworkPathsByTrackPath` prefers this per-track image
+  and falls back to `albums.artwork_id`, so tracks in one album can show
+  different covers. Cached artwork paths in the now-playing view, lyrics
+  background, and MPRIS metadata come from this query.
 - CUE-defined tracks use a stable `cue://` path while `source_path`, `cue_path`,
   `segment_start`, and `segment_end` identify the shared FLAC/WAV source and
   playback range. The referenced source file is not also exposed as a duplicate

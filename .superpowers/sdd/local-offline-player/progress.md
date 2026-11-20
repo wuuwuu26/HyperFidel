@@ -362,3 +362,18 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
   占位符 + 网站 selector/metadata/gallery parity。
 - 最终验证：5 项目 build 0 CS/0 AXN；Core 测试 392 通过；桌面 357 通过 /
   1 已知预存 YearInReviewPdfExporter 失败；HttpClient/Socket 等网络原语 0 命中。
+
+## Task: 同专辑不同封面歌曲显示同一张图 — FIXED (2026-11-20)
+- 根因：tracks 表曾刻意只把 cover_data 存 NULL（封面去重到 artworks 表），
+  但每首曲目自己的 artwork_id 从未被保存；EnsureAlbum 用 COALESCE 让第一首歌
+  的封面成为整张专辑封面。所有显示路径（正在播放封面/歌词背景/MPRIS/启动恢复）
+  都经 GetArtworkPathsByTrackPath 读专辑级 artwork，忽略各曲目封面。
+- TDD：新增 PerTrackArtworkTests（2 个测试）先 RED（两首不同封面返回相同路径）
+  后 GREEN。
+- 修复：tracks 新增 artwork_id 列（schema + EnsureColumn 迁移）；Upsert 把每首
+  曲目 EnsureArtwork 得到的 id 存入 tracks.artwork_id；GetArtworkPathsByTrackPath
+  改为 COALESCE(track.artwork_id, album.artwork_id)，优先曲目自身封面，回退专辑
+  封面。旧库该列为 NULL，下次扫库时补齐。
+- CHANGELOG / PROJECT-REFERENCE 已更新。
+- 验证：5 项目 build 0 CS/0 AXN；Core 测试 394 全过（含新增 2）；桌面 357 过 /
+  1 已知预存 YearInReviewPdfExporter 失败。

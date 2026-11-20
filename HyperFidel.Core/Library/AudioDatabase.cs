@@ -655,7 +655,7 @@ public sealed class AudioDatabase : IDisposable
                 musicbrainz_track_id, musicbrainz_release_id,
                 musicbrainz_artist_id, acoustid_fingerprint, album_artist_inferred,
                 has_cover, cover_mime_type, cover_data,
-                artist_id, album_id
+                artwork_id, artist_id, album_id
             ) VALUES (
                 $path, $source_path, $cue_path, $segment_start, $segment_end,
                 $file_name, $file_size, $modified_at, $added_at,
@@ -672,7 +672,7 @@ public sealed class AudioDatabase : IDisposable
                 $musicbrainz_track_id, $musicbrainz_release_id,
                 $musicbrainz_artist_id, $acoustid_fingerprint, $album_artist_inferred,
                 $has_cover, $cover_mime_type, $cover_data,
-                $artist_id, $album_id
+                $artwork_id, $artist_id, $album_id
             )
             ON CONFLICT(path) DO UPDATE SET
                 source_path         = excluded.source_path,
@@ -730,11 +730,13 @@ public sealed class AudioDatabase : IDisposable
                 has_cover           = excluded.has_cover,
                 cover_mime_type     = excluded.cover_mime_type,
                 cover_data          = excluded.cover_data,
+                artwork_id          = excluded.artwork_id,
                 artist_id           = excluded.artist_id,
                 album_id            = excluded.album_id;
             """;
 
             BindTrack(cmd, track);
+            Add(cmd, "$artwork_id", (object?)artworkId ?? DBNull.Value);
             Add(cmd, "$artist_id", artistId);
             Add(cmd, "$album_id", albumId);
             cmd.ExecuteNonQuery();
@@ -3121,25 +3123,35 @@ public sealed class AudioDatabase : IDisposable
         return new ArtworkPaths(files.OriginalPath, files.Thumb96Path, files.Thumb320Path);
     }
 
-    /// <summary>Gets cached artwork file paths for a track's album.</summary>
+    /// <summary>
+    /// Gets cached artwork file paths for a track. A track with its own embedded
+    /// cover uses that image; otherwise the shared album cover is used.
+    /// </summary>
     /// <param name="path">Track path.</param>
-    /// <returns>Cached artwork paths, or <see langword="null"/> when the track or album has no artwork row.</returns>
+    /// <returns>
+    /// Cached artwork paths for the track's own cover or its album, or
+    /// <see langword="null"/> when neither has artwork.
+    /// </returns>
     public ArtworkPaths? GetArtworkPathsByTrackPath(string path)
     {
         using var cmd = _conn.CreateCommand();
         cmd.CommandText = """
-            SELECT aw.original_path, aw.thumb_96_path, aw.thumb_320_path
+            SELECT
+                COALESCE(track_art.original_path, album_art.original_path),
+                COALESCE(track_art.thumb_96_path, album_art.thumb_96_path),
+                COALESCE(track_art.thumb_320_path, album_art.thumb_320_path)
             FROM tracks t
             LEFT JOIN albums al ON al.id = t.album_id
-            LEFT JOIN artworks aw ON aw.id = al.artwork_id
+            LEFT JOIN artworks track_art ON track_art.id = t.artwork_id
+            LEFT JOIN artworks album_art ON album_art.id = al.artwork_id
             WHERE t.path = $path
             LIMIT 1;
             """;
         Add(cmd, "$path", path);
         using var reader = cmd.ExecuteReader();
-        return reader.Read()
+        return reader.Read() && !reader.IsDBNull(0)
             ? new ArtworkPaths(
-                reader.IsDBNull(0) ? null : reader.GetString(0),
+                reader.GetString(0),
                 reader.IsDBNull(1) ? null : reader.GetString(1),
                 reader.IsDBNull(2) ? null : reader.GetString(2))
             : null;
@@ -3425,6 +3437,7 @@ public sealed class AudioDatabase : IDisposable
                 has_cover               INTEGER NOT NULL DEFAULT 0,
                 cover_mime_type         TEXT,
                 cover_data              BLOB,
+                artwork_id              INTEGER REFERENCES artworks(id),
                 artist_id               INTEGER REFERENCES artists(id),
                 album_id                INTEGER REFERENCES albums(id),
                 is_favorite             INTEGER NOT NULL DEFAULT 0
@@ -3464,6 +3477,7 @@ public sealed class AudioDatabase : IDisposable
             EnsureColumn("tracks", "musicbrainz_rating_fetched_at", "INTEGER");
             EnsureColumn("tracks", "musicbrainz_genres", "TEXT");
             EnsureColumn("tracks", "musicbrainz_tags", "TEXT");
+            EnsureColumn("tracks", "artwork_id", "INTEGER REFERENCES artworks(id)");
         }
 
         using (HyperFidel.StartupDiagnostics.Time("AudioDatabase.EnsureSchema: core tables/indexes"))

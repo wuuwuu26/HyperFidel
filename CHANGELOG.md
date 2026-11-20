@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Tracks in the same album that carry different embedded cover images now show
+  their own cover in the now-playing view, lyrics background and system media
+  metadata instead of all sharing the album's first cover. Each track's artwork
+  is stored as its own reference when the library is scanned; libraries scanned
+  before this fix pick up per-track covers on the next library scan.
 - The volume no longer jumps back to 100 %. A second application instance is now
   refused at startup, so two copies can no longer overwrite the shared settings
   file or compete for the desktop media name. The volume is also persisted
