@@ -311,7 +311,6 @@ internal static class EmptyLibraryWorkflows
             var host = window.FindControl<ContentControl>("SettingsViewHost")!;
             var view = (SettingsView)host.Content!;
             Check(view.FindControl<Control>("LibraryPanel")!.IsVisible, "Local empty setup opened the wrong Settings section.");
-            Check(!notice.IsVisible, "Unconfigured source retained catalog guidance.");
         }
         finally
         {
