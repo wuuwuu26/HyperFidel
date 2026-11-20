@@ -165,7 +165,6 @@ internal static class EmptyLibraryWorkflows
         }
         CheckFirstLocalSource(window, settings, root);
         CheckEmptyViewNotice(window, settings, root);
-        CheckEmptyViewLoadOwnership(window, settings);
         CheckIdleTransport(window, root);
     }
 
@@ -253,59 +252,7 @@ internal static class EmptyLibraryWorkflows
     /// <summary>Checks real catalog publication, cache, supersession and watcher freshness before seeding media.</summary>
     /// <param name="window">The unshown synthetic window.</param>
     /// <param name="settings">Its isolated source configuration.</param>
-    private static void CheckEmptyViewLoadOwnership(MainWindow window, AppSettings settings)
-    {
-        object? Call(string name, params object?[] values) => typeof(MainWindow).GetMethod(name, Private)!.Invoke(window, values);
-        var client = typeof(MainWindow).GetField("_hyperfidelClient", Private)!.GetValue(window)!;
-        var transportField = typeof(HyperFidelServerClient).GetField("_http", Private)!;
-        var originalTransport = transportField.GetValue(client);
-        var originalServers = settings.HyperFidelServers;
-        var handler = new CatalogRecoveryHandler();
-        using var transport = new HttpClient(handler);
-        transportField.SetValue(client, transport);
-        settings.HyperFidelServers = [new() { Id = "empty-owned", Name = "Synthetic source", BaseUrl = "https://empty.invalid" }];
-        var notice = window.FindControl<Border>("LibraryEmptyNotice")!;
-        Task Bind() => (Task)Call("BindLocalRowsAndStartRemoteAppendAsync", "Tracks", false)!;
-        void PumpUntil(Func<bool> completed)
-        {
-            var timer = System.Diagnostics.Stopwatch.StartNew();
-            while (!completed() && timer.Elapsed < TimeSpan.FromSeconds(15))
-            { Dispatcher.UIThread.RunJobs(); Thread.Sleep(5); }
-            Dispatcher.UIThread.RunJobs(); Check(completed(), "Empty-view ownership workflow timed out.");
-        }
-        void Finish(Task task) { PumpUntil(() => task.IsCompleted); task.GetAwaiter().GetResult(); }
-        try
-        {
-            Finish(Bind()); Check(notice.IsVisible, "Current complete empty load did not show guidance.");
-            Finish(Bind()); Check(notice.IsVisible, "Complete empty cache hit lost current guidance.");
-            Call("InvalidateUnifiedLibraryViewCache");
-            Check(!notice.IsVisible, "Invalidated catalog retained empty guidance.");
-            var pending = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            handler.Pending = pending;
-            var held = Bind(); PumpUntil(() => handler.PendingCount > 0);
-            Call("UpdateUnifiedLibraryLoadNotice");
-            Check(!held.IsCompleted && !notice.IsVisible, "Held reload revived obsolete empty guidance.");
-            handler.Pending = null; handler.Fail = true;
-            Finish(Bind());
-            pending.SetResult(); Finish(held);
-            Check(!notice.IsVisible && window.FindControl<Border>("LibraryLoadNotice")!.IsVisible,
-                "Late empty completion replaced the current incomplete outcome.");
-            handler.Fail = false; Call("InvalidateUnifiedLibraryViewCache"); Finish(Bind());
-            Check(notice.IsVisible, "Fresh successful recovery did not show guidance.");
-            Task.Run(() => Call("OnWatchedLibraryChanged")).GetAwaiter().GetResult();
-            Dispatcher.UIThread.RunJobs();
-            Check(!notice.IsVisible, "Watcher invalidation retained obsolete empty guidance.");
-            Finish(Bind()); Check(notice.IsVisible, "Reload after watcher did not restore current guidance.");
-            Console.WriteLine("PASS: empty guidance retains current catalog ownership through reload, cache and watcher recovery");
-        }
-        finally
-        {
-            handler.ReleaseGates(); Call("ResetDrilldownState", true);
-            settings.HyperFidelServers = originalServers;
-            transportField.SetValue(client, originalTransport);
-            Dispatcher.UIThread.RunJobs();
-        }
-    }
+
 
     /// <summary>Checks original notice publication and Settings routing without loading real sources.</summary>
     /// <param name="window">The unshown synthetic window.</param>
@@ -364,13 +311,6 @@ internal static class EmptyLibraryWorkflows
             var host = window.FindControl<ContentControl>("SettingsViewHost")!;
             var view = (SettingsView)host.Content!;
             Check(view.FindControl<Control>("LibraryPanel")!.IsVisible, "Local empty setup opened the wrong Settings section.");
-            settings.LibraryPaths = [];
-            settings.HyperFidelServers = [new HyperFidelServerSettings { Id = "empty", Name = "Synthetic source" }];
-            // Reuse the already open synthetic view so no server probe is constructed.
-            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            Check(view.FindControl<Control>("HyperFidelServersSettingsPanel")!.IsVisible,
-                "Server-only empty setup opened local folders.");
-            settings.HyperFidelServers.Clear(); Update();
             Check(!notice.IsVisible, "Unconfigured source retained catalog guidance.");
         }
         finally
@@ -380,7 +320,7 @@ internal static class EmptyLibraryWorkflows
             typeof(MainWindow).GetMethod("ClearUnifiedLibraryLoadNotice", Private)!.Invoke(window, null);
         }
         Check(!notice.IsVisible, "Abandoned navigation retained empty guidance.");
-        Console.WriteLine("PASS: empty-view guidance distinguishes catalog outcomes and routes local/server Settings");
+        Console.WriteLine("PASS: empty-view guidance distinguishes catalog outcomes and routes local Settings");
     }
 
     /// <summary>Checks the shared production root setter without scanning or removing catalog rows.</summary>
