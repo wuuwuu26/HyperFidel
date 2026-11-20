@@ -453,7 +453,6 @@ internal partial class SettingsView : UserControl
     }
 
 
-    private CancellationTokenSource? _hyperfidelStatusCts;
 
 
 
@@ -478,7 +477,6 @@ internal partial class SettingsView : UserControl
         _metadataDeactivated = true;
         foreach (var cts in _activeScans.Values)
             cts.Cancel();
-        _hyperfidelStatusCts?.Cancel();
         _metadataAnalysisCts?.Cancel();
         _replayGainCalculationCts?.Cancel();
         _audioFeatureAnalysisCts?.Cancel();
