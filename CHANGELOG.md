@@ -142,6 +142,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Removed
 
+- The Settings window no longer offers any server, streaming or online-metadata
+  configuration. The HyperFidel Server, Plex, Qobuz, Last.fm, Fanart.tv and
+  artist-image download sections, their dialogs, credentials and localized labels
+  are gone. Library, playback, queue, playlists, equalizer and local scheduled
+  backup settings remain. Dormant data contracts are retained so existing local
+  settings still load.
 - HyperFidel is now a local-only offline player. All network-facing features have
   been removed: the HyperFidel Server client and backend, Plex, AI Chat, the
   embedded MCP server, the mobile web remote, browser/remote audio streaming,

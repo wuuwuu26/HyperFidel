@@ -1323,15 +1323,6 @@
                                 Click="LibrarySetupButton_OnClick">
                             <TextBlock Text="{DynamicResource L_Directories}" TextWrapping="Wrap"/>
                         </Button>
-                        <Button x:Name="LibraryServerSetupButton"
-                                Classes="setupAction"
-                                AutomationProperties.Name="{DynamicResource L_HyperFidelServersSettings}"
-                                Theme="{StaticResource HeaderFilterButtonTheme}"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Left"
-                                Click="LibraryServerSetupButton_OnClick">
-                            <TextBlock Text="{DynamicResource L_HyperFidelServersSettings}" TextWrapping="Wrap"/>
-                        </Button>
                         <Button x:Name="LibraryOutputSetupButton"
                                 Classes="setupAction"
                                 AutomationProperties.Name="{DynamicResource L_OutputDevice}"

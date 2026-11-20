@@ -137,13 +137,6 @@ public sealed record LocalizedStrings(
     string ArtistInfoImageLoadError,
     string ArtistInfoSource,
     string ArtistInfoSourceLastFm,
-    string ArtistInfoSourceSetting,
-    string LastFmApiKey,
-    string LastFmCredentialsHint,
-    string FanartTvApiKey,
-    string FanartTvApiKeyHint,
-    string DownloadMissingArtistImages,
-    string DownloadMissingArtistImagesHint,
     string MissingArtistImageDownloading,
     string MissingArtistImagesDownloaded,
     string MissingArtistImagesDownloadFailed,
@@ -282,8 +275,6 @@ public sealed record LocalizedStrings(
     public string ClearGenreCloudCache { get; init; } = "";
     /// <summary>Gets the normal-case Appearance navigation item label.</summary>
     public string AppearanceNavItem { get; init; } = "";
-    /// <summary>Gets the normal-case artist information navigation item label.</summary>
-    public string ArtistInfoNavItem { get; init; } = "";
     public string NormalizeArtists { get; init; } = "";
     public string NormalizeArtistsHint { get; init; } = "";
     public string ArtistsNormalizing { get; init; } = "";
@@ -694,26 +685,6 @@ public sealed record LocalizedStrings(
     public string RefreshView { get; init; } = "";
     /// <summary>Gets the tooltip explaining that fresh library data is available for the current view.</summary>
     public string LibraryDataAvailable { get; init; } = "";
-    /// <summary>Gets the server status label shown when a remote server cannot be reached.</summary>
-    public string ServerUnreachable { get; init; } = "";
-    /// <summary>Gets the last-successful-connection line for a server ({0} = timestamp).</summary>
-    public string ServerLastConnected { get; init; } = "";
-    /// <summary>Gets the status line shown when a server has never successfully connected.</summary>
-    public string ServerNeverConnected { get; init; } = "";
-    /// <summary>Gets the per-server compatibility line listing unsupported features ({0} = comma-separated list).</summary>
-    public string ServerMissingFeatures { get; init; } = "";
-    /// <summary>Gets the label for the track-facets server feature.</summary>
-    public string CapabilityTrackFacets { get; init; } = "";
-    /// <summary>Gets the label for the recent-albums server feature.</summary>
-    public string CapabilityRecentAlbums { get; init; } = "";
-    /// <summary>Gets the label for the waveforms server feature.</summary>
-    public string CapabilityWaveforms { get; init; } = "";
-    /// <summary>Gets the remote-cache settings section heading.</summary>
-    public string RemoteCache { get; init; } = "";
-    /// <summary>Gets the remote-cache size line ({0} = formatted size).</summary>
-    public string RemoteCacheSize { get; init; } = "";
-    /// <summary>Gets the button label for clearing all remote-server caches.</summary>
-    public string ClearRemoteCacheAll { get; init; } = "";
     /// <summary>Gets the per-server "clear cache" button label.</summary>
     public string ClearCache { get; init; } = "";
     /// <summary>Gets the sidebar status shown while a remote server is scanning ({0} = server name).</summary>
@@ -858,7 +829,6 @@ public sealed record LocalizedStrings(
     public string StatusEnabled { get; init; } = "";
     public string StatusDisabled { get; init; } = "";
     public string StatusReady { get; init; } = "";
-    public string StatusChecking { get; init; } = "";
     public string LanguageGerman { get; init; } = "";
     public string LanguageEnglish { get; init; } = "";
     public string LanguageFrench { get; init; } = "";
@@ -876,12 +846,6 @@ public sealed record LocalizedStrings(
     public string NativeDsdWordFormat { get; init; } = "";
     public string CountEntrySingular { get; init; } = "";
     public string CountTrackSingular { get; init; } = "";
-    public string Streaming { get; init; } = "";
-    public string StreamingServices { get; init; } = "";
-    public string Qobuz { get; init; } = "";
-    public string QobuzApplicationId { get; init; } = "";
-    public string QobuzIntegrationHint { get; init; } = "";
-    public string QobuzCredentialsHint { get; init; } = "";
     public string SearchArtistImage { get; init; } = "";
     public string UploadArtistImage { get; init; } = "";
     public string DeleteArtistImage { get; init; } = "";
@@ -931,10 +895,6 @@ public sealed record LocalizedStrings(
     public string SidebarSections { get; init; } = "";
     public string SidebarSectionsHint { get; init; } = "";
     public string PlexServers { get; init; } = "";
-    public string PlexServersSettings { get; init; } = "";
-    public string PlexServersHint { get; init; } = "";
-    public string AddPlexServer { get; init; } = "";
-    public string PlexServerDialogTitle { get; init; } = "";
     public string PlexServerName { get; init; } = "";
     public string PlexServerUrl { get; init; } = "";
     public string PlexToken { get; init; } = "";
@@ -944,8 +904,6 @@ public sealed record LocalizedStrings(
     public string PlexConnectionFailed { get; init; } = "";
     public string PlexServerFieldsRequired { get; init; } = "";
     public string PlexServerUrlInvalid { get; init; } = "";
-    public string PlexEditServer { get; init; } = "";
-    public string PlexRemoveServer { get; init; } = "";
     public string PlexNoAudioLibraries { get; init; } = "";
     public string PlexLoading { get; init; } = "";
     /// <summary>Gets the HyperFidel Server sidebar section header label.</summary>
@@ -954,15 +912,6 @@ public sealed record LocalizedStrings(
     public string SourceColumn { get; init; } = "";
     /// <summary>Gets the display label for local library rows in source filters and tooltips.</summary>
     public string LocalSource { get; init; } = "";
-    /// <summary>Gets the short badge text for local library rows in source columns.</summary>
-    /// <summary>Gets the Settings label for configured HyperFidel Server connections.</summary>
-    public string HyperFidelServersSettings { get; init; } = "";
-    /// <summary>Gets the hint text below the HyperFidel Server section header in Settings.</summary>
-    public string HyperFidelServersHint { get; init; } = "";
-    /// <summary>Gets the label for the Add HyperFidel Server button.</summary>
-    public string AddHyperFidelServer { get; init; } = "";
-    /// <summary>Gets the title for the Add/Edit HyperFidel Server dialog.</summary>
-    public string HyperFidelServerDialogTitle { get; init; } = "";
     /// <summary>Gets the name field label in the HyperFidel Server dialog.</summary>
     public string HyperFidelServerName { get; init; } = "";
     /// <summary>Gets the URL field label in the HyperFidel Server dialog.</summary>
@@ -979,10 +928,6 @@ public sealed record LocalizedStrings(
     public string HyperFidelConnectionFailed { get; init; } = "";
     /// <summary>Gets the validation message shown when required fields are empty.</summary>
     public string HyperFidelServerFieldsRequired { get; init; } = "";
-    /// <summary>Gets the Edit button label for HyperFidel Server rows in Settings.</summary>
-    public string HyperFidelEditServer { get; init; } = "";
-    /// <summary>Gets the Remove button label for HyperFidel Server rows in Settings.</summary>
-    public string HyperFidelRemoveServer { get; init; } = "";
     /// <summary>Gets the loading status message while an HyperFidel Server view loads.</summary>
     public string HyperFidelLoading { get; init; } = "";
     /// <summary>Gets the heading for remote server library directories.</summary>
@@ -1294,8 +1239,6 @@ public sealed record LocalizedStrings(
     public string AiChatEmptyResponse { get; init; } = "";
     /// <summary>Gets the prefix shown before a tool result when the model returns no final answer.</summary>
     public string AiChatToolResultFallback { get; init; } = "";
-    /// <summary>Gets the option for automatically accepting Fanart.tv artist-image results.</summary>
-    public string AutoAcceptFanartTvImages { get; init; } = "";
     /// <summary>Gets the bulk genre input watermark.</summary>
     public string BulkGenre { get; init; } = "";
     /// <summary>Gets the bulk genre input tooltip.</summary>
@@ -1446,24 +1389,6 @@ public sealed record LocalizedStrings(
     public string BulkRatingUpdated { get; init; } = "";
     /// <summary>Gets the bulk rating failure format string.</summary>
     public string BulkRatingPartiallyFailed { get; init; } = "";
-    /// <summary>Gets the Last.fm scrobbling settings label.</summary>
-    public string LastFmScrobbling { get; init; } = "";
-    /// <summary>Gets the label for enabling Last.fm scrobbling.</summary>
-    public string LastFmScrobblingEnabled { get; init; } = "";
-    /// <summary>Gets the Last.fm API secret field label.</summary>
-    public string LastFmApiSecret { get; init; } = "";
-    /// <summary>Gets the Last.fm connect action label.</summary>
-    public string LastFmConnect { get; init; } = "";
-    /// <summary>Gets the Last.fm disconnect action label.</summary>
-    public string LastFmDisconnect { get; init; } = "";
-    /// <summary>Gets the connected Last.fm username status format.</summary>
-    public string LastFmScrobblingConnected { get; init; } = "";
-    /// <summary>Gets the not-connected Last.fm status text.</summary>
-    public string LastFmScrobblingNotConnected { get; init; } = "";
-    /// <summary>Gets the hint shown after opening the Last.fm authorization page.</summary>
-    public string LastFmScrobblingAuthorizeHint { get; init; } = "";
-    /// <summary>Gets the Last.fm connection failure message.</summary>
-    public string LastFmScrobblingConnectFailed { get; init; } = "";
     /// <summary>Gets the per-server streaming-quality field label.</summary>
     public string StreamingQuality { get; init; } = "";
     /// <summary>Gets the streaming-quality option for the original stream.</summary>

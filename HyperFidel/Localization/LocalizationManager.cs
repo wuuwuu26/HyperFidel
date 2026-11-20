@@ -145,7 +145,6 @@ public static class LocalizationManager
         resources["L_OutputDevice"] = Current.OutputDevice;
         resources["L_ReleaseOutputDevice"] = Current.ReleaseOutputDevice;
         resources["L_AppearanceNavItem"] = Current.AppearanceNavItem;
-        resources["L_ArtistInfoNavItem"] = Current.ArtistInfoNavItem;
         resources["L_Library"] = Current.Library;
         resources["L_Directories"] = Current.Directories;
         resources["L_AddDirectory"] = Current.AddDirectory;
@@ -248,18 +247,6 @@ public static class LocalizationManager
         resources["L_CloseArtistInfo"] = Current.CloseArtistInfo;
         resources["L_ArtistInfoSource"] = Current.ArtistInfoSource;
         resources["L_ArtistInfoSourceLastFm"] = Current.ArtistInfoSourceLastFm;
-        resources["L_ArtistInfoSourceSetting"] = Current.ArtistInfoSourceSetting;
-        resources["L_LastFmApiKey"] = Current.LastFmApiKey;
-        resources["L_LastFmCredentialsHint"] = Current.LastFmCredentialsHint;
-        resources["L_LastFmScrobbling"] = Current.LastFmScrobbling;
-        resources["L_LastFmScrobblingEnabled"] = Current.LastFmScrobblingEnabled;
-        resources["L_LastFmApiSecret"] = Current.LastFmApiSecret;
-        resources["L_LastFmConnect"] = Current.LastFmConnect;
-        resources["L_LastFmDisconnect"] = Current.LastFmDisconnect;
-        resources["L_LastFmScrobblingConnected"] = Current.LastFmScrobblingConnected;
-        resources["L_LastFmScrobblingNotConnected"] = Current.LastFmScrobblingNotConnected;
-        resources["L_LastFmScrobblingAuthorizeHint"] = Current.LastFmScrobblingAuthorizeHint;
-        resources["L_LastFmScrobblingConnectFailed"] = Current.LastFmScrobblingConnectFailed;
         resources["L_StreamingQuality"] = Current.StreamingQuality;
         resources["L_StreamingQualityOriginal"] = Current.StreamingQualityOriginal;
         resources["L_StreamingQualityOpus"] = Current.StreamingQualityOpus;
@@ -282,13 +269,8 @@ public static class LocalizationManager
         resources["L_DuplicateResolutionConfirmDeleteFiles"] = Current.DuplicateResolutionConfirmDeleteFiles;
         resources["L_DuplicateResolutionNoneFound"] = Current.DuplicateResolutionNoneFound;
         resources["L_DuplicateResolutionRemoved"] = Current.DuplicateResolutionRemoved;
-        resources["L_FanartTvApiKey"] = Current.FanartTvApiKey;
-        resources["L_FanartTvApiKeyHint"] = Current.FanartTvApiKeyHint;
-        resources["L_DownloadMissingArtistImages"] = Current.DownloadMissingArtistImages;
-        resources["L_DownloadMissingArtistImagesHint"] = Current.DownloadMissingArtistImagesHint;
         resources["L_ArtistImageSuggestionTitle"] = Current.ArtistImageSuggestionTitle;
         resources["L_ArtistImageSuggestionHint"] = Current.ArtistImageSuggestionHint;
-        resources["L_AutoAcceptFanartTvImages"] = Current.AutoAcceptFanartTvImages;
         resources["L_BulkGenre"] = Current.BulkGenre;
         resources["L_BulkGenreTooltip"] = Current.BulkGenreTooltip;
         resources["L_BulkGenreApply"] = Current.BulkGenreApply;
@@ -453,12 +435,6 @@ public static class LocalizationManager
         resources["L_SearchIndexRebuilding"] = Current.SearchIndexRebuilding;
         resources["L_SearchIndexReady"] = Current.SearchIndexReady;
         resources["L_SearchIndexFailed"] = Current.SearchIndexFailed;
-        resources["L_Streaming"] = Current.Streaming;
-        resources["L_StreamingServices"] = Current.StreamingServices;
-        resources["L_Qobuz"] = Current.Qobuz;
-        resources["L_QobuzApplicationId"] = Current.QobuzApplicationId;
-        resources["L_QobuzIntegrationHint"] = Current.QobuzIntegrationHint;
-        resources["L_QobuzCredentialsHint"] = Current.QobuzCredentialsHint;
         resources["L_SearchArtistImage"] = Current.SearchArtistImage;
         resources["L_UploadArtistImage"] = Current.UploadArtistImage;
         resources["L_DeleteArtistImage"] = Current.DeleteArtistImage;
@@ -486,20 +462,12 @@ public static class LocalizationManager
         resources["L_SidebarSections"] = Current.SidebarSections;
         resources["L_SidebarSectionsHint"] = Current.SidebarSectionsHint;
         resources["L_PlexServers"] = Current.PlexServers;
-        resources["L_PlexServersSettings"] = Current.PlexServersSettings;
-        resources["L_PlexServersHint"] = Current.PlexServersHint;
-        resources["L_AddPlexServer"] = Current.AddPlexServer;
-        resources["L_PlexServerDialogTitle"] = Current.PlexServerDialogTitle;
         resources["L_PlexServerName"] = Current.PlexServerName;
         resources["L_PlexServerUrl"] = Current.PlexServerUrl;
         resources["L_PlexToken"] = Current.PlexToken;
         resources["L_PlexTestConnection"] = Current.PlexTestConnection;
         resources["L_HyperFidelServers"] = Current.HyperFidelServers;
         resources["L_SourceColumn"] = Current.SourceColumn;
-        resources["L_HyperFidelServersSettings"] = Current.HyperFidelServersSettings;
-        resources["L_HyperFidelServersHint"] = Current.HyperFidelServersHint;
-        resources["L_AddHyperFidelServer"] = Current.AddHyperFidelServer;
-        resources["L_HyperFidelServerDialogTitle"] = Current.HyperFidelServerDialogTitle;
         resources["L_HyperFidelServerName"] = Current.HyperFidelServerName;
         resources["L_HyperFidelServerUrl"] = Current.HyperFidelServerUrl;
         resources["L_HyperFidelServerApiKey"] = Current.HyperFidelServerApiKey;
@@ -583,8 +551,6 @@ public static class LocalizationManager
         resources["L_AiChatClear"]             = Current.AiChatClear;
         resources["L_AiChatCopy"]              = Current.AiChatCopy;
         resources["L_AiChatNotEnabled"]        = Current.AiChatNotEnabled;
-        resources["L_RemoteCache"]             = Current.RemoteCache;
-        resources["L_ClearRemoteCacheAll"]     = Current.ClearRemoteCacheAll;
         resources["L_RestoreQueue"]            = Current.RestoreQueue;
         resources["L_RestoreQueueTooltip"]     = Current.RestoreQueueTooltip;
         resources["L_ClearQueue"]              = Current.ClearQueue;
@@ -646,12 +612,12 @@ public static class LocalizationManager
         "Keine Künstlerinfo gefunden.", "Künstlerinfo konnte nicht heruntergeladen werden.",
         "Kein Bild heruntergeladen", "Bilddatei fehlt", "Bild konnte nicht geladen werden",
         "Quelle: Wikipedia", "Quelle: Last.fm",
-        "Quelle für Künstlerinfos", "Last.fm API-Schlüssel",
-        "API-Schlüssel und API-Geheimnis der kostenlosen Last.fm-Anwendung eintragen: last.fm/api/account/create",
-        "Fanart.tv API-Schlüssel",
-        "Bevorzugt kuratierte Künstlerbilder. Der Schlüssel wird verschlüsselt im benutzergebundenen Zugangsdaten-Tresor gespeichert; alternativ kann FANART_TV_API_KEY gesetzt werden. Für bereits geladene Künstler »Künstlerinfo neu laden« wählen. Schlüssel unter fanart.tv/get-an-api-key/ erstellen.",
-        "Fehlende Künstlerbilder herunterladen",
-        "Durchsucht die lokale Bibliothek und alle konfigurierten HyperFidel Server sequentiell. Pro Künstler wird zuerst Fanart.tv (mit API-Schlüssel), danach Wikimedia versucht. Fanart.tv-Funde können automatisch übernommen werden; Wikimedia-Funde müssen immer bestätigt werden.",
+         
+        
+        
+        
+        
+        
         "Künstlerbild {0}/{1} wird gesucht: {2} · {3}",
         "{0:N0} Künstlerbilder angenommen, {1:N0} abgelehnt; {2:N0} Abfragen fehlgeschlagen.",
         "Künstlerbild-Download fehlgeschlagen: {0}",
@@ -670,7 +636,6 @@ public static class LocalizationManager
         "Ein unerwarteter Fehler ist aufgetreten. Ein Fehlerbericht wurde hier gespeichert:\n\n{0}\n\nHyperFidel wird beendet.",
         "Ein unerwarteter Fehler ist aufgetreten. Der Fehlerbericht konnte nicht gespeichert werden. HyperFidel wird beendet.")
     {
-        AutoAcceptFanartTvImages = "Fanart.tv-Funde automatisch übernehmen",
         BulkGenre = "Genre",
         BulkGenreTooltip = "Genre für die ausgewählten lokalen Titel setzen (nur Bibliothek, Dateien bleiben unverändert)",
         BulkGenreApply = "Genre anwenden",
@@ -774,15 +739,6 @@ public static class LocalizationManager
         CrossfeedLight = "Leicht",
         CrossfeedMedium = "Mittel",
         CrossfeedStrong = "Stark",
-        LastFmScrobbling = "Last.fm-Scrobbling",
-        LastFmScrobblingEnabled = "Gehörte Titel scrobbeln",
-        LastFmApiSecret = "API-Geheimnis",
-        LastFmConnect = "Verbinden",
-        LastFmDisconnect = "Trennen",
-        LastFmScrobblingConnected = "Verbunden als {0}",
-        LastFmScrobblingNotConnected = "Nicht verbunden",
-        LastFmScrobblingAuthorizeHint = "HyperFidel im Browser autorisieren und dann erneut auf „Verbinden“ klicken.",
-        LastFmScrobblingConnectFailed = "Verbindung zu Last.fm fehlgeschlagen.",
         OutputType = "Ausgabeart",
         AsioOutputDevice = "ASIO-Ausgabegerät",
         CwAsioOutputDevice = "cwASIO-Ausgabegerät",
@@ -824,7 +780,6 @@ public static class LocalizationManager
         GenreCloudVisibility = "Sichtbarkeit der Bilder",
         ClearGenreCloudCache = "Hintergrund-Cache leeren",
         AppearanceNavItem = "Darstellung",
-        ArtistInfoNavItem = "Künstlerinfo",
         AsioBridgeMissing = "Dieser Build enthält keine ASIO-Unterstützung. Bitte WASAPI verwenden.",
         KernelStreamingUnavailable = "Kernel Streaming ist auswählbar, aber noch nicht als Wiedergabe-Backend implementiert.",
         AddMusicDirectory = "Musikverzeichnis hinzufügen",
@@ -1004,16 +959,6 @@ public static class LocalizationManager
         LibraryUpdatingWithCount = "Bibliothek wird aktualisiert… {0} / {1} Dateien",
         RefreshView = "Aktualisieren",
         LibraryDataAvailable = "Neue Bibliotheksdaten verfügbar",
-        ServerUnreachable = "Nicht erreichbar",
-        ServerLastConnected = "Zuletzt verbunden: {0}",
-        ServerNeverConnected = "Noch nie verbunden",
-        ServerMissingFeatures = "Server unterstützt nicht: {0}",
-        CapabilityTrackFacets = "Track-Facets",
-        CapabilityRecentAlbums = "Recent Albums",
-        CapabilityWaveforms = "Waveforms",
-        RemoteCache = "Remote-Cache",
-        RemoteCacheSize = "Cache-Größe: {0}",
-        ClearRemoteCacheAll = "Gesamten Cache leeren",
         ClearCache = "Cache leeren",
         RemoteScanning = "{0} wird aktualisiert…",
         RemoteScanningWithCount = "{0} wird aktualisiert… {1} / {2} Dateien",
@@ -1075,7 +1020,6 @@ public static class LocalizationManager
         Dashboard = "Dashboard", ThemeLight = "Hell", ThemeDark = "Dunkel",
         StatusAvailable = "Verfügbar", StatusUnavailable = "Nicht verfügbar",
         StatusEnabled = "Aktiviert", StatusDisabled = "Deaktiviert", StatusReady = "Bereit",
-        StatusChecking = "Prüfe …",
         DashboardIntroTitle = "Dein Hörüberblick",
         DashboardIntroHint = "Sieh zuletzt hinzugefügte Alben, Hörzeiten im Kalender und deine meistgehörten Genres auf einen Blick.",
         LanguageGerman = "Deutsch", LanguageEnglish = "Englisch", LanguageFrench = "Französisch", LanguageSpanish = "Spanisch",
@@ -1093,12 +1037,6 @@ public static class LocalizationManager
         , ArtistsNormalizing = "Künstlernamen werden normalisiert und der Suchindex wird neu aufgebaut …"
         , ArtistsNormalized = "{0:N0} Künstlervarianten zusammengeführt, {1:N0} Tracks aktualisiert."
         , ArtistNormalizationFailed = "Künstlernormalisierung fehlgeschlagen: {0}"
-        , Streaming = "STREAMING"
-        , StreamingServices = "Streamingdienste"
-        , Qobuz = "Qobuz"
-        , QobuzApplicationId = "Qobuz-Anwendungs-ID"
-        , QobuzIntegrationHint = "Die Qobuz-Integration ist vorbereitet. Katalog und Wiedergabe werden aktiviert, sobald ein genehmigter Partnerzugang und die offizielle API-Dokumentation vorliegen."
-        , QobuzCredentialsHint = "Geheime Schlüssel und Anmeldetokens werden nicht in settings.json gespeichert, sondern benutzergebunden durch Windows geschützt."
         , SearchArtistImage = "Künstlerbild suchen"
         , UploadArtistImage = "Künstlerbild hochladen"
         , DeleteArtistImage = "Künstlerbild löschen"
@@ -1146,10 +1084,6 @@ public static class LocalizationManager
         , Close = "Schließen"
         , DailyHistoryNoEntries = "Für diesen Tag sind keine Wiedergaben vorhanden."
         , PlexServers = "PLEX-SERVER"
-        , PlexServersSettings = "Plex-Server"
-        , PlexServersHint = "Richte einen oder mehrere Plex Media Server ein. Zugriffstokens werden geschützt für das aktuelle Windows-Benutzerkonto gespeichert."
-        , AddPlexServer = "Plex-Server hinzufügen"
-        , PlexServerDialogTitle = "Plex-Server"
         , PlexServerName = "Anzeigename"
         , PlexServerUrl = "Server-URL"
         , PlexToken = "X-Plex-Token (optional)"
@@ -1159,8 +1093,6 @@ public static class LocalizationManager
         , PlexConnectionFailed = "Verbindung fehlgeschlagen: {0}"
         , PlexServerFieldsRequired = "Name und Server-URL sind erforderlich."
         , PlexServerUrlInvalid = "Bitte eine gültige HTTP- oder HTTPS-URL eingeben."
-        , PlexEditServer = "Bearbeiten"
-        , PlexRemoveServer = "Entfernen"
         , PlexNoAudioLibraries = "Keine Audio-Bibliotheken gefunden."
         , PlexLoading = "Plex-Inhalte werden geladen …"
         , HyperFidelServers = "HYPERFIDEL-SERVER"
@@ -1194,10 +1126,6 @@ public static class LocalizationManager
         , ServerUpdatesFailedContinue = "Folgende Server konnten nicht aktualisiert werden: {0}. Desktop-Update trotzdem fortsetzen?"
         , SourceColumn = "Quelle"
         , LocalSource = "Lokal"
-        , HyperFidelServersSettings = "HyperFidel-Server"
-        , HyperFidelServersHint = "Verbinde den Player mit einem oder mehreren HyperFidel-Server-Instanzen im lokalen Netzwerk. Der API-Key wird verschlüsselt im benutzergebundenen Zugangsdaten-Tresor gespeichert."
-        , AddHyperFidelServer = "Server hinzufügen"
-        , HyperFidelServerDialogTitle = "HyperFidel-Server"
         , HyperFidelServerName = "Anzeigename"
         , HyperFidelServerUrl = "Server-URL (z. B. http://192.168.1.10:5280)"
         , HyperFidelServerApiKey = "API-Key"
@@ -1206,8 +1134,6 @@ public static class LocalizationManager
         , HyperFidelConnectionSuccessful = "Verbindung erfolgreich. Server: {0} v{1}"
         , HyperFidelConnectionFailed = "Verbindung fehlgeschlagen. URL und API-Key prüfen."
         , HyperFidelServerFieldsRequired = "Name, URL und API-Key sind erforderlich."
-        , HyperFidelEditServer = "Bearbeiten"
-        , HyperFidelRemoveServer = "Entfernen"
         , HyperFidelLoading = "Server-Inhalte werden geladen …"
         , HyperFidelServerDirectories = "Server-Musikverzeichnisse"
         , HyperFidelLoadServerDirectories = "Vom Server laden"
@@ -1433,12 +1359,12 @@ public static class LocalizationManager
         "No artist information found.", "Artist information could not be downloaded.",
         "No image downloaded", "Image file missing", "Failed to load image",
         "Source: Wikipedia", "Source: Last.fm",
-        "Artist info source", "Last.fm API key",
-        "Enter the API key and API secret of your free Last.fm application: last.fm/api/account/create",
-        "Fanart.tv API key",
-        "Prefers curated artist images. The key is stored encrypted in the current user's credential vault; alternatively set FANART_TV_API_KEY. Use “Refresh artist information” for existing artists. Create a key at fanart.tv/get-an-api-key/.",
-        "Download missing artist images",
-        "Searches the local library and all configured HyperFidel Servers sequentially. For each artist it tries Fanart.tv first (with an API key), then Wikimedia. Fanart.tv results can be accepted automatically; Wikimedia results always require confirmation.",
+         
+        
+        
+        
+        
+        
         "Searching for artist image {0}/{1}: {2} · {3}",
         "Accepted {0:N0} artist images, rejected {1:N0}; {2:N0} requests failed.",
         "Artist image download failed: {0}",
@@ -1457,7 +1383,6 @@ public static class LocalizationManager
         "An unexpected error occurred. A crash report was saved here:\n\n{0}\n\nHyperFidel will now close.",
         "An unexpected error occurred. The crash report could not be saved. HyperFidel will now close.")
     {
-        AutoAcceptFanartTvImages = "Automatically accept Fanart.tv results",
         BulkGenre = "Genre",
         BulkGenreTooltip = "Set the genre for the selected local tracks (library only, files stay unchanged)",
         BulkGenreApply = "Apply genre",
@@ -1561,15 +1486,6 @@ public static class LocalizationManager
         CrossfeedLight = "Light",
         CrossfeedMedium = "Medium",
         CrossfeedStrong = "Strong",
-        LastFmScrobbling = "Last.fm scrobbling",
-        LastFmScrobblingEnabled = "Scrobble played tracks",
-        LastFmApiSecret = "API secret",
-        LastFmConnect = "Connect",
-        LastFmDisconnect = "Disconnect",
-        LastFmScrobblingConnected = "Connected as {0}",
-        LastFmScrobblingNotConnected = "Not connected",
-        LastFmScrobblingAuthorizeHint = "Authorize HyperFidel in the browser, then click Connect again.",
-        LastFmScrobblingConnectFailed = "Could not connect to Last.fm.",
         OutputType = "Output type", AsioOutputDevice = "ASIO output device", WasapiOutputDevice = "WASAPI output device",
         CwAsioOutputDevice = "cwASIO output device", SteinbergAsio = "Steinberg ASIO", CwAsio = "cwASIO",
         OpenAl = "OpenAL", OpenAlOutputDevice = "OpenAL output device",
@@ -1603,8 +1519,7 @@ public static class LocalizationManager
         GenreCloudBackgroundArtists = "Artist images",
         GenreCloudVisibility = "Image visibility",
         ClearGenreCloudCache = "Clear background cache",
-        AppearanceNavItem = "Appearance", ArtistInfoNavItem = "Artist information",
-        AsioBridgeMissing = "This build does not include ASIO support. Please use WASAPI.",
+        AppearanceNavItem = "Appearance", AsioBridgeMissing = "This build does not include ASIO support. Please use WASAPI.",
         KernelStreamingUnavailable = "Kernel Streaming can be selected but is not implemented as a playback backend yet.",
         AddMusicDirectory = "Add music directory", TrackCountTooltip = "Number of tracks in the database",
         Scan = "Scan",
@@ -1776,16 +1691,6 @@ public static class LocalizationManager
         LibraryUpdatingWithCount = "Updating library… {0} / {1} files",
         RefreshView = "Refresh",
         LibraryDataAvailable = "New library data available",
-        ServerUnreachable = "Unreachable",
-        ServerLastConnected = "Last connected: {0}",
-        ServerNeverConnected = "Never connected",
-        ServerMissingFeatures = "Server does not support: {0}",
-        CapabilityTrackFacets = "Track facets",
-        CapabilityRecentAlbums = "Recent albums",
-        CapabilityWaveforms = "Waveforms",
-        RemoteCache = "Remote cache",
-        RemoteCacheSize = "Cache size: {0}",
-        ClearRemoteCacheAll = "Clear entire cache",
         ClearCache = "Clear cache",
         RemoteScanning = "Updating {0}…",
         RemoteScanningWithCount = "Updating {0}… {1} / {2} files",
@@ -1843,7 +1748,6 @@ public static class LocalizationManager
         Dashboard = "Dashboard", ThemeLight = "Light", ThemeDark = "Dark",
         StatusAvailable = "Available", StatusUnavailable = "Unavailable",
         StatusEnabled = "Enabled", StatusDisabled = "Disabled", StatusReady = "Ready",
-        StatusChecking = "Checking …",
         DashboardIntroTitle = "Your listening overview",
         DashboardIntroHint = "See recently added albums, calendar listening time, and your top genres at a glance.",
         LanguageGerman = "German", LanguageEnglish = "English", LanguageFrench = "French", LanguageSpanish = "Spanish",
@@ -1861,12 +1765,6 @@ public static class LocalizationManager
         , ArtistsNormalizing = "Normalizing artist names and rebuilding the search index …"
         , ArtistsNormalized = "Merged {0:N0} artist variants and updated {1:N0} tracks."
         , ArtistNormalizationFailed = "Artist normalization failed: {0}"
-        , Streaming = "STREAMING"
-        , StreamingServices = "Streaming services"
-        , Qobuz = "Qobuz"
-        , QobuzApplicationId = "Qobuz application ID"
-        , QobuzIntegrationHint = "The Qobuz integration is prepared. Catalog and playback will be enabled when approved partner access and the official API documentation are available."
-        , QobuzCredentialsHint = "Secrets and sign-in tokens are not stored in settings.json. Windows protects them for the current user."
         , SearchArtistImage = "Search artist image"
         , UploadArtistImage = "Upload artist image"
         , DeleteArtistImage = "Delete artist image"
@@ -1914,10 +1812,6 @@ public static class LocalizationManager
         , Close = "Close"
         , DailyHistoryNoEntries = "There are no playback entries for this day."
         , PlexServers = "PLEX SERVERS"
-        , PlexServersSettings = "Plex servers"
-        , PlexServersHint = "Configure one or more Plex Media Servers. Access tokens are protected for the current Windows user account."
-        , AddPlexServer = "Add Plex server"
-        , PlexServerDialogTitle = "Plex server"
         , PlexServerName = "Display name"
         , PlexServerUrl = "Server URL"
         , PlexToken = "X-Plex-Token (optional)"
@@ -1927,8 +1821,6 @@ public static class LocalizationManager
         , PlexConnectionFailed = "Connection failed: {0}"
         , PlexServerFieldsRequired = "Name and server URL are required."
         , PlexServerUrlInvalid = "Enter a valid HTTP or HTTPS URL."
-        , PlexEditServer = "Edit"
-        , PlexRemoveServer = "Remove"
         , PlexNoAudioLibraries = "No audio libraries found."
         , PlexLoading = "Loading Plex content…"
         , HyperFidelServers = "HYPERFIDEL SERVER"
@@ -1962,10 +1854,6 @@ public static class LocalizationManager
         , ServerUpdatesFailedContinue = "The following servers could not be updated: {0}. Continue with the desktop update?"
         , SourceColumn = "Source"
         , LocalSource = "Local"
-        , HyperFidelServersSettings = "HyperFidel servers"
-        , HyperFidelServersHint = "Connect the player to one or more HyperFidel Server instances on your local network. The API key is stored encrypted in the current user's credential vault."
-        , AddHyperFidelServer = "Add server"
-        , HyperFidelServerDialogTitle = "HyperFidel Server"
         , HyperFidelServerName = "Display name"
         , HyperFidelServerUrl = "Server URL (e.g. http://192.168.1.10:5280)"
         , HyperFidelServerApiKey = "API key"
@@ -1974,8 +1862,6 @@ public static class LocalizationManager
         , HyperFidelConnectionSuccessful = "Connected. Server: {0} v{1}"
         , HyperFidelConnectionFailed = "Connection failed. Check URL and API key."
         , HyperFidelServerFieldsRequired = "Name, URL and API key are required."
-        , HyperFidelEditServer = "Edit"
-        , HyperFidelRemoveServer = "Remove"
         , HyperFidelLoading = "Loading server content…"
         , HyperFidelServerDirectories = "Server music directories"
         , HyperFidelLoadServerDirectories = "Load from server"
@@ -2204,12 +2090,12 @@ public static class LocalizationManager
         "Impossible de télécharger les informations sur l’artiste.",
         "Aucune image téléchargée", "Fichier image introuvable", "Échec du chargement de l’image",
         "Source : Wikipédia", "Source : Last.fm",
-        "Source des informations artiste", "Clé API Last.fm",
-        "Saisissez la clé API et le secret de l'API de votre application Last.fm gratuite : last.fm/api/account/create",
-        "Clé API Fanart.tv",
-        "Préfère les images d’artistes sélectionnées. La clé est chiffrée dans le coffre d’identifiants de l’utilisateur actuel ; vous pouvez aussi définir FANART_TV_API_KEY. Utilisez « Actualiser les informations artiste » pour les artistes existants. Créez une clé sur fanart.tv/get-an-api-key/.",
-        "Télécharger les images d’artistes manquantes",
-        "Parcourt séquentiellement la bibliothèque locale et tous les serveurs HyperFidel configurés. Pour chaque artiste, Fanart.tv est essayé en premier (avec une clé API), puis Wikimedia. Les résultats Fanart.tv peuvent être acceptés automatiquement ; ceux de Wikimedia doivent toujours être confirmés.",
+         
+        
+        
+        
+        
+        
         "Recherche de l’image d’artiste {0}/{1} : {2} · {3}",
         "{0:N0} images d’artistes acceptées, {1:N0} refusées ; {2:N0} requêtes ont échoué.",
         "Échec du téléchargement des images d’artistes : {0}",
@@ -2228,7 +2114,6 @@ public static class LocalizationManager
         "Une erreur inattendue s’est produite. Un rapport a été enregistré ici :\n\n{0}\n\nHyperFidel va maintenant se fermer.",
         "Une erreur inattendue s’est produite. Le rapport n’a pas pu être enregistré. HyperFidel va maintenant se fermer.")
     {
-        AutoAcceptFanartTvImages = "Accepter automatiquement les résultats Fanart.tv",
         BulkGenre = "Genre",
         BulkGenreTooltip = "Définir le genre des pistes locales sélectionnées (bibliothèque uniquement, fichiers inchangés)",
         BulkGenreApply = "Appliquer le genre",
@@ -2332,15 +2217,6 @@ public static class LocalizationManager
         CrossfeedLight = "Léger",
         CrossfeedMedium = "Moyen",
         CrossfeedStrong = "Fort",
-        LastFmScrobbling = "Scrobbling Last.fm",
-        LastFmScrobblingEnabled = "Scrobbler les titres écoutés",
-        LastFmApiSecret = "Secret de l'API",
-        LastFmConnect = "Connecter",
-        LastFmDisconnect = "Déconnecter",
-        LastFmScrobblingConnected = "Connecté en tant que {0}",
-        LastFmScrobblingNotConnected = "Non connecté",
-        LastFmScrobblingAuthorizeHint = "Autorisez HyperFidel dans le navigateur, puis cliquez à nouveau sur Connecter.",
-        LastFmScrobblingConnectFailed = "Impossible de se connecter à Last.fm.",
         OutputType = "Type de sortie", AsioOutputDevice = "Périphérique de sortie ASIO", WasapiOutputDevice = "Périphérique de sortie WASAPI",
         CwAsioOutputDevice = "Périphérique de sortie cwASIO", SteinbergAsio = "Steinberg ASIO", CwAsio = "cwASIO",
         OpenAl = "OpenAL", OpenAlOutputDevice = "Périphérique de sortie OpenAL",
@@ -2374,8 +2250,7 @@ public static class LocalizationManager
         GenreCloudBackgroundArtists = "Images d’artistes",
         GenreCloudVisibility = "Visibilité des images",
         ClearGenreCloudCache = "Vider le cache d’arrière-plan",
-        AppearanceNavItem = "Apparence", ArtistInfoNavItem = "Informations sur l’artiste",
-        AsioBridgeMissing = "Cette version ne comprend pas la prise en charge ASIO. Utilisez WASAPI.",
+        AppearanceNavItem = "Apparence", AsioBridgeMissing = "Cette version ne comprend pas la prise en charge ASIO. Utilisez WASAPI.",
         KernelStreamingUnavailable = "Kernel Streaming peut être sélectionné, mais ce mode de lecture n’est pas encore implémenté.",
         AddMusicDirectory = "Ajouter un dossier musical", TrackCountTooltip = "Nombre de titres dans la base",
         Scan = "Analyser",
@@ -2547,16 +2422,6 @@ public static class LocalizationManager
         LibraryUpdatingWithCount = "Mise à jour de la bibliothèque… {0} / {1} fichiers",
         RefreshView = "Actualiser",
         LibraryDataAvailable = "Nouvelles données de bibliothèque disponibles",
-        ServerUnreachable = "Injoignable",
-        ServerLastConnected = "Dernière connexion : {0}",
-        ServerNeverConnected = "Jamais connecté",
-        ServerMissingFeatures = "Le serveur ne prend pas en charge : {0}",
-        CapabilityTrackFacets = "Facettes de pistes",
-        CapabilityRecentAlbums = "Albums récents",
-        CapabilityWaveforms = "Formes d’onde",
-        RemoteCache = "Cache distant",
-        RemoteCacheSize = "Taille du cache : {0}",
-        ClearRemoteCacheAll = "Vider tout le cache",
         ClearCache = "Vider le cache",
         RemoteScanning = "Mise à jour de {0}…",
         RemoteScanningWithCount = "Mise à jour de {0}… {1} / {2} fichiers",
@@ -2614,7 +2479,6 @@ public static class LocalizationManager
         Dashboard = "Tableau de bord", ThemeLight = "Clair", ThemeDark = "Sombre",
         StatusAvailable = "Disponible", StatusUnavailable = "Indisponible",
         StatusEnabled = "Activé", StatusDisabled = "Désactivé", StatusReady = "Prêt",
-        StatusChecking = "Vérification …",
         DashboardIntroTitle = "Vue d'ensemble d'écoute",
         DashboardIntroHint = "Consultez les albums récemment ajoutés, le temps d’écoute dans le calendrier et vos genres principaux.",
         LanguageGerman = "Allemand", LanguageEnglish = "Anglais", LanguageFrench = "Français", LanguageSpanish = "Espagnol",
@@ -2632,12 +2496,6 @@ public static class LocalizationManager
         , ArtistsNormalizing = "Normalisation des artistes et reconstruction de l’index de recherche …"
         , ArtistsNormalized = "{0:N0} variantes d’artistes fusionnées, {1:N0} titres mis à jour."
         , ArtistNormalizationFailed = "Échec de la normalisation des artistes : {0}"
-        , Streaming = "STREAMING"
-        , StreamingServices = "Services de streaming"
-        , Qobuz = "Qobuz"
-        , QobuzApplicationId = "Identifiant d’application Qobuz"
-        , QobuzIntegrationHint = "L’intégration Qobuz est préparée. Le catalogue et la lecture seront activés dès qu’un accès partenaire approuvé et la documentation officielle de l’API seront disponibles."
-        , QobuzCredentialsHint = "Les secrets et jetons de connexion ne sont pas stockés dans settings.json. Windows les protège pour l’utilisateur actuel."
         , SearchArtistImage = "Rechercher une image d’artiste"
         , UploadArtistImage = "Importer une image d’artiste"
         , DeleteArtistImage = "Supprimer l’image d’artiste"
@@ -2685,10 +2543,6 @@ public static class LocalizationManager
         , Close = "Fermer"
         , DailyHistoryNoEntries = "Aucune lecture n’est enregistrée pour ce jour."
         , PlexServers = "SERVEURS PLEX"
-        , PlexServersSettings = "Serveurs Plex"
-        , PlexServersHint = "Configurez un ou plusieurs serveurs Plex Media Server. Les jetons d’accès sont protégés pour le compte Windows actuel."
-        , AddPlexServer = "Ajouter un serveur Plex"
-        , PlexServerDialogTitle = "Serveur Plex"
         , PlexServerName = "Nom affiché"
         , PlexServerUrl = "URL du serveur"
         , PlexToken = "X-Plex-Token (facultatif)"
@@ -2698,8 +2552,6 @@ public static class LocalizationManager
         , PlexConnectionFailed = "Échec de la connexion : {0}"
         , PlexServerFieldsRequired = "Le nom et l’URL du serveur sont obligatoires."
         , PlexServerUrlInvalid = "Saisissez une URL HTTP ou HTTPS valide."
-        , PlexEditServer = "Modifier"
-        , PlexRemoveServer = "Supprimer"
         , PlexNoAudioLibraries = "Aucune bibliothèque audio trouvée."
         , PlexLoading = "Chargement du contenu Plex…"
         , HyperFidelServers = "SERVEURS HYPERFIDEL"
@@ -2733,10 +2585,6 @@ public static class LocalizationManager
         , ServerUpdatesFailedContinue = "Les serveurs suivants n’ont pas pu être mis à jour : {0}. Continuer la mise à jour de l’application ?"
         , SourceColumn = "Source"
         , LocalSource = "Local"
-        , HyperFidelServersSettings = "Serveurs HyperFidel"
-        , HyperFidelServersHint = "Connectez le lecteur à une ou plusieurs instances HyperFidel Server sur votre réseau local. La clé API est chiffrée dans le coffre d'identifiants de l'utilisateur actuel."
-        , AddHyperFidelServer = "Ajouter un serveur"
-        , HyperFidelServerDialogTitle = "HyperFidel Server"
         , HyperFidelServerName = "Nom d'affichage"
         , HyperFidelServerUrl = "URL du serveur (ex. http://192.168.1.10:5280)"
         , HyperFidelServerApiKey = "Clé API"
@@ -2745,8 +2593,6 @@ public static class LocalizationManager
         , HyperFidelConnectionSuccessful = "Connexion réussie. Serveur : {0} v{1}"
         , HyperFidelConnectionFailed = "Connexion échouée. Vérifiez l'URL et la clé API."
         , HyperFidelServerFieldsRequired = "Le nom, l'URL et la clé API sont requis."
-        , HyperFidelEditServer = "Modifier"
-        , HyperFidelRemoveServer = "Supprimer"
         , HyperFidelLoading = "Chargement du contenu du serveur…"
         , HyperFidelServerDirectories = "Dossiers musicaux du serveur"
         , HyperFidelLoadServerDirectories = "Charger depuis le serveur"
@@ -2972,12 +2818,12 @@ public static class LocalizationManager
         "No se encontró información del artista.", "No se pudo descargar la información del artista.",
         "Ninguna imagen descargada", "Archivo de imagen faltante", "Error al cargar la imagen",
         "Fuente: Wikipedia", "Fuente: Last.fm",
-        "Fuente de información del artista", "Clave de API de Last.fm",
-        "Introduce la clave de API y el secreto de la API de tu aplicación gratuita de Last.fm: last.fm/api/account/create",
-        "Clave API de Fanart.tv",
-        "Da prioridad a imágenes de artistas seleccionadas. La clave se guarda cifrada en el almacén de credenciales del usuario actual; también puedes definir FANART_TV_API_KEY. Usa «Actualizar información del artista» para artistas existentes. Crea una clave en fanart.tv/get-an-api-key/.",
-        "Descargar imágenes de artistas que faltan",
-        "Busca secuencialmente en la biblioteca local y en todos los servidores HyperFidel configurados. Para cada artista intenta primero Fanart.tv (con una clave API) y después Wikimedia. Los resultados de Fanart.tv pueden aceptarse automáticamente; los de Wikimedia siempre requieren confirmación.",
+         
+        
+        
+        
+        
+        
         "Buscando imagen del artista {0}/{1}: {2} · {3}",
         "Se aceptaron {0:N0} imágenes de artistas y se rechazaron {1:N0}; fallaron {2:N0} solicitudes.",
         "Error al descargar imágenes de artistas: {0}",
@@ -2996,7 +2842,6 @@ public static class LocalizationManager
         "Se produjo un error inesperado. Se guardó un informe aquí:\n\n{0}\n\nHyperFidel se cerrará ahora.",
         "Se produjo un error inesperado. No se pudo guardar el informe. HyperFidel se cerrará ahora.")
     {
-        AutoAcceptFanartTvImages = "Aceptar automáticamente los resultados de Fanart.tv",
         BulkGenre = "Género",
         BulkGenreTooltip = "Define el género de las pistas locales seleccionadas (solo biblioteca, los archivos no cambian)",
         BulkGenreApply = "Aplicar género",
@@ -3100,15 +2945,6 @@ public static class LocalizationManager
         CrossfeedLight = "Suave",
         CrossfeedMedium = "Media",
         CrossfeedStrong = "Fuerte",
-        LastFmScrobbling = "Scrobbling de Last.fm",
-        LastFmScrobblingEnabled = "Scrobble de las pistas escuchadas",
-        LastFmApiSecret = "Secreto de la API",
-        LastFmConnect = "Conectar",
-        LastFmDisconnect = "Desconectar",
-        LastFmScrobblingConnected = "Conectado como {0}",
-        LastFmScrobblingNotConnected = "No conectado",
-        LastFmScrobblingAuthorizeHint = "Autoriza HyperFidel en el navegador y vuelve a pulsar Conectar.",
-        LastFmScrobblingConnectFailed = "No se pudo conectar con Last.fm.",
         OutputType = "Tipo de salida", AsioOutputDevice = "Dispositivo de salida ASIO", WasapiOutputDevice = "Dispositivo de salida WASAPI",
         CwAsioOutputDevice = "Dispositivo de salida cwASIO", SteinbergAsio = "Steinberg ASIO", CwAsio = "cwASIO",
         OpenAl = "OpenAL", OpenAlOutputDevice = "Dispositivo de salida OpenAL",
@@ -3142,8 +2978,7 @@ public static class LocalizationManager
         GenreCloudBackgroundArtists = "Imágenes de artistas",
         GenreCloudVisibility = "Visibilidad de las imágenes",
         ClearGenreCloudCache = "Vaciar caché de fondos",
-        AppearanceNavItem = "Apariencia", ArtistInfoNavItem = "Información del artista",
-        AsioBridgeMissing = "Esta compilación no incluye compatibilidad con ASIO. Utiliza WASAPI.",
+        AppearanceNavItem = "Apariencia", AsioBridgeMissing = "Esta compilación no incluye compatibilidad con ASIO. Utiliza WASAPI.",
         KernelStreamingUnavailable = "Kernel Streaming se puede seleccionar, pero todavía no está implementado como backend de reproducción.",
         AddMusicDirectory = "Agregar directorio de música", TrackCountTooltip = "Número de pistas en la base de datos",
         Scan = "Analizar",
@@ -3315,16 +3150,6 @@ public static class LocalizationManager
         LibraryUpdatingWithCount = "Actualizando biblioteca… {0} / {1} archivos",
         RefreshView = "Actualizar",
         LibraryDataAvailable = "Nuevos datos de biblioteca disponibles",
-        ServerUnreachable = "No accesible",
-        ServerLastConnected = "Última conexión: {0}",
-        ServerNeverConnected = "Nunca conectado",
-        ServerMissingFeatures = "El servidor no admite: {0}",
-        CapabilityTrackFacets = "Facetas de pistas",
-        CapabilityRecentAlbums = "Álbumes recientes",
-        CapabilityWaveforms = "Formas de onda",
-        RemoteCache = "Caché remota",
-        RemoteCacheSize = "Tamaño de caché: {0}",
-        ClearRemoteCacheAll = "Vaciar toda la caché",
         ClearCache = "Vaciar caché",
         RemoteScanning = "Actualizando {0}…",
         RemoteScanningWithCount = "Actualizando {0}… {1} / {2} archivos",
@@ -3382,7 +3207,6 @@ public static class LocalizationManager
         Dashboard = "Panel", ThemeLight = "Claro", ThemeDark = "Oscuro",
         StatusAvailable = "Disponible", StatusUnavailable = "No disponible",
         StatusEnabled = "Activado", StatusDisabled = "Desactivado", StatusReady = "Listo",
-        StatusChecking = "Comprobando …",
         DashboardIntroTitle = "Resumen de escucha",
         DashboardIntroHint = "Consulta álbumes añadidos recientemente, tiempo de escucha en el calendario y tus géneros principales.",
         LanguageGerman = "Alemán", LanguageEnglish = "Inglés", LanguageFrench = "Francés", LanguageSpanish = "Español",
@@ -3400,12 +3224,6 @@ public static class LocalizationManager
         , ArtistsNormalizing = "Normalizando artistas y reconstruyendo el índice de búsqueda …"
         , ArtistsNormalized = "Se combinaron {0:N0} variantes de artistas y se actualizaron {1:N0} pistas."
         , ArtistNormalizationFailed = "Error al normalizar artistas: {0}"
-        , Streaming = "STREAMING"
-        , StreamingServices = "Servicios de streaming"
-        , Qobuz = "Qobuz"
-        , QobuzApplicationId = "ID de aplicación de Qobuz"
-        , QobuzIntegrationHint = "La integración con Qobuz está preparada. El catálogo y la reproducción se activarán cuando estén disponibles un acceso de socio aprobado y la documentación oficial de la API."
-        , QobuzCredentialsHint = "Los secretos y tokens de inicio de sesión no se guardan en settings.json. Windows los protege para el usuario actual."
         , SearchArtistImage = "Buscar imagen del artista"
         , UploadArtistImage = "Subir imagen del artista"
         , DeleteArtistImage = "Eliminar imagen del artista"
@@ -3453,10 +3271,6 @@ public static class LocalizationManager
         , Close = "Cerrar"
         , DailyHistoryNoEntries = "No hay reproducciones registradas para este día."
         , PlexServers = "SERVIDORES PLEX"
-        , PlexServersSettings = "Servidores Plex"
-        , PlexServersHint = "Configura uno o varios Plex Media Server. Los tokens de acceso se protegen para la cuenta actual de Windows."
-        , AddPlexServer = "Añadir servidor Plex"
-        , PlexServerDialogTitle = "Servidor Plex"
         , PlexServerName = "Nombre para mostrar"
         , PlexServerUrl = "URL del servidor"
         , PlexToken = "X-Plex-Token (opcional)"
@@ -3466,8 +3280,6 @@ public static class LocalizationManager
         , PlexConnectionFailed = "Error de conexión: {0}"
         , PlexServerFieldsRequired = "El nombre y la URL del servidor son obligatorios."
         , PlexServerUrlInvalid = "Introduce una URL HTTP o HTTPS válida."
-        , PlexEditServer = "Editar"
-        , PlexRemoveServer = "Eliminar"
         , PlexNoAudioLibraries = "No se encontraron bibliotecas de audio."
         , PlexLoading = "Cargando contenido de Plex…"
         , HyperFidelServers = "SERVIDORES HYPERFIDEL"
@@ -3501,10 +3313,6 @@ public static class LocalizationManager
         , ServerUpdatesFailedContinue = "No se pudieron actualizar los siguientes servidores: {0}. ¿Continuar con la actualización de la aplicación?"
         , SourceColumn = "Origen"
         , LocalSource = "Local"
-        , HyperFidelServersSettings = "Servidores HyperFidel"
-        , HyperFidelServersHint = "Conecta el reproductor a una o varias instancias de HyperFidel Server en tu red local. La clave API se guarda cifrada en el almacén de credenciales del usuario actual."
-        , AddHyperFidelServer = "Agregar servidor"
-        , HyperFidelServerDialogTitle = "HyperFidel Server"
         , HyperFidelServerName = "Nombre para mostrar"
         , HyperFidelServerUrl = "URL del servidor (p. ej. http://192.168.1.10:5280)"
         , HyperFidelServerApiKey = "Clave API"
@@ -3513,8 +3321,6 @@ public static class LocalizationManager
         , HyperFidelConnectionSuccessful = "Conexión exitosa. Servidor: {0} v{1}"
         , HyperFidelConnectionFailed = "Conexión fallida. Comprueba la URL y la clave API."
         , HyperFidelServerFieldsRequired = "El nombre, la URL y la clave API son obligatorios."
-        , HyperFidelEditServer = "Editar"
-        , HyperFidelRemoveServer = "Eliminar"
         , HyperFidelLoading = "Cargando contenido del servidor…"
         , HyperFidelServerDirectories = "Directorios de música del servidor"
         , HyperFidelLoadServerDirectories = "Cargar del servidor"
@@ -3820,13 +3626,13 @@ private static readonly LocalizedStrings Russian = new(
         "Не удалось загрузить изображение",
         "Источник: Wikipedia",
         "Источник: Last.fm",
-        "Источник информации об исполнителе",
-        "API-ключ Last.fm",
-        "Укажите ключ API и секрет API вашего бесплатного приложения Last.fm: last.fm/api/account/create",
-        "API-ключ Fanart.tv",
-        "Предпочитает отобранные изображения исполнителей. Ключ хранится зашифрованным в хранилище учётных данных текущего пользователя; также можно задать FANART_TV_API_KEY. Для уже загруженных исполнителей используйте «Обновить информацию». Создайте ключ на fanart.tv/get-an-api-key/.",
-        "Загрузить отсутствующие изображения исполнителей",
-        "Поочерёдно проверяет локальную библиотеку и все настроенные серверы HyperFidel. Для каждого исполнителя сначала выполняется поиск на Fanart.tv (с API-ключом), затем в Wikimedia. Результаты Fanart.tv можно принимать автоматически; результаты Wikimedia всегда требуют подтверждения.",
+        
+        
+        
+        
+        
+        
+        
         "Поиск изображения исполнителя {0}/{1}: {2} · {3}",
         "Принято изображений: {0:N0}, отклонено: {1:N0}; ошибок запросов: {2:N0}.",
         "Ошибка загрузки изображений исполнителей: {0}",
@@ -3909,7 +3715,6 @@ private static readonly LocalizedStrings Russian = new(
         GenreCloudVisibility = "Видимость изображений",
         ClearGenreCloudCache = "Очистить кэш фона",
         AppearanceNavItem = "Внешний вид",
-        ArtistInfoNavItem = "Информация об исполнителе",
         NormalizeArtists = "Нормализовать имена исполнителей",
         NormalizeArtistsHint = "Удаляет добавления «feat.» и объединяет однозначные варианты пунктуации и пробелов. Аудиофайлы не изменяются.",
         ArtistsNormalizing = "Нормализация имён исполнителей и перестроение поискового индекса …",
@@ -4127,16 +3932,6 @@ private static readonly LocalizedStrings Russian = new(
         LibraryUpdatingWithCount = "Обновление библиотеки… {0} / {1} файлов",
         RefreshView = "Обновить",
         LibraryDataAvailable = "Доступны новые данные библиотеки",
-        ServerUnreachable = "Недоступен",
-        ServerLastConnected = "Последнее подключение: {0}",
-        ServerNeverConnected = "Подключений ещё не было",
-        ServerMissingFeatures = "Сервер не поддерживает: {0}",
-        CapabilityTrackFacets = "Фильтры треков",
-        CapabilityRecentAlbums = "Недавние альбомы",
-        CapabilityWaveforms = "Звуковые волны",
-        RemoteCache = "Удалённый кэш",
-        RemoteCacheSize = "Размер кэша: {0}",
-        ClearRemoteCacheAll = "Очистить весь кэш",
         ClearCache = "Очистить кэш",
         RemoteScanning = "Обновление {0}…",
         RemoteScanningWithCount = "Обновление {0}… {1} / {2} файлов",
@@ -4220,7 +4015,6 @@ private static readonly LocalizedStrings Russian = new(
         StatusEnabled = "Включено",
         StatusDisabled = "Отключено",
         StatusReady = "Готово",
-        StatusChecking = "Проверка …",
         LanguageGerman = "Немецкий",
         LanguageEnglish = "Английский",
         LanguageFrench = "Французский",
@@ -4236,12 +4030,6 @@ private static readonly LocalizedStrings Russian = new(
         NativeDsdWordFormat = "Нативный DSD, 8-битные слова без значимого порядка байтов ({0})",
         CountEntrySingular = "Записей: {0:N0}",
         CountTrackSingular = "Треков: {0:N0}",
-        Streaming = "Потоковое воспроизведение",
-        StreamingServices = "Сервисы потоковой передачи",
-        Qobuz = "Qobuz",
-        QobuzApplicationId = "Идентификатор приложения Qobuz",
-        QobuzIntegrationHint = "Интеграция Qobuz подготовлена. Каталог и воспроизведение будут доступны после утверждения доступа партнёра.",
-        QobuzCredentialsHint = "Секретные данные и токены входа не хранятся в settings.json. Windows защищает их для текущего пользователя.",
         SearchArtistImage = "Найти изображение исполнителя",
         UploadArtistImage = "Загрузить изображение исполнителя",
         DeleteArtistImage = "Удалить изображение исполнителя",
@@ -4289,10 +4077,6 @@ private static readonly LocalizedStrings Russian = new(
         SidebarSections = "Разделы боковой панели",
         SidebarSectionsHint = "Выберите сворачиваемые разделы, отображаемые в главной навигации.",
         PlexServers = "PLEX-СЕРВЕРЫ",
-        PlexServersSettings = "Серверы Plex",
-        PlexServersHint = "Настройте один или несколько Plex Media Server.",
-        AddPlexServer = "Добавить сервер Plex",
-        PlexServerDialogTitle = "Сервер Plex",
         PlexServerName = "Название сервера",
         PlexServerUrl = "URL сервера",
         PlexToken = "Токен Plex",
@@ -4302,17 +4086,11 @@ private static readonly LocalizedStrings Russian = new(
         PlexConnectionFailed = "Ошибка подключения: {0}",
         PlexServerFieldsRequired = "Укажите имя и URL сервера.",
         PlexServerUrlInvalid = "Введите корректный URL HTTP или HTTPS.",
-        PlexEditServer = "Изменить",
-        PlexRemoveServer = "Удалить",
         PlexNoAudioLibraries = "Аудиобиблиотеки не найдены.",
         PlexLoading = "Загрузка содержимого Plex…",
         HyperFidelServers = "Серверы HyperFidel",
         SourceColumn = "Источник",
         LocalSource = "Локально",
-        HyperFidelServersSettings = "Серверы HyperFidel",
-        HyperFidelServersHint = "Подключите проигрыватель к одному или нескольким серверам HyperFidel в локальной сети.",
-        AddHyperFidelServer = "Добавить сервер",
-        HyperFidelServerDialogTitle = "Сервер HyperFidel",
         HyperFidelServerName = "Отображаемое имя",
         HyperFidelServerUrl = "URL сервера (например, http://192.168.1.10:5280)",
         HyperFidelServerApiKey = "API-ключ",
@@ -4321,8 +4099,6 @@ private static readonly LocalizedStrings Russian = new(
         HyperFidelConnectionSuccessful = "Подключено. Сервер: {0} v{1}",
         HyperFidelConnectionFailed = "Ошибка подключения. Проверьте URL и API-ключ.",
         HyperFidelServerFieldsRequired = "Укажите имя, URL и API-ключ.",
-        HyperFidelEditServer = "Изменить",
-        HyperFidelRemoveServer = "Удалить",
         HyperFidelLoading = "Загрузка содержимого сервера…",
         HyperFidelServerDirectories = "Папки с музыкой на сервере",
         HyperFidelLoadServerDirectories = "Загрузить с сервера",
@@ -4490,7 +4266,6 @@ private static readonly LocalizedStrings Russian = new(
         AiChatNotEnabled = "Чат с ИИ отключён. Включите его в настройках.",
         AiChatEmptyResponse = "Модель вернула пустой ответ.",
         AiChatToolResultFallback = "После вызова инструмента модель не вернула окончательный ответ. Результат инструмента:",
-        AutoAcceptFanartTvImages = "Автоматически принимать результаты Fanart.tv",
         BulkGenre = "Жанр",
         BulkGenreTooltip = "Задать жанр для выбранных локальных треков (только библиотека, файлы не изменяются)",
         BulkGenreApply = "Применить жанр",
@@ -4594,16 +4369,7 @@ private static readonly LocalizedStrings Russian = new(
         CrossfeedLight = "Слабое",
         CrossfeedMedium = "Среднее",
         CrossfeedStrong = "Сильное",
-        LastFmScrobbling = "Скробблинг Last.fm",
-        LastFmScrobblingEnabled = "Скробблить прослушанные треки",
-        LastFmApiSecret = "Секрет API",
-        LastFmConnect = "Подключить",
-        LastFmDisconnect = "Отключить",
-        LastFmScrobblingConnected = "Подключено как {0}",
-        LastFmScrobblingNotConnected = "Не подключено",
-        LastFmScrobblingAuthorizeHint = "Авторизуйте HyperFidel в браузере, затем снова нажмите «Подключить».",
-        LastFmScrobblingConnectFailed = "Не удалось подключиться к Last.fm.",
-    };
+        };
 
 private static readonly LocalizedStrings ChineseSimplified = new(
         "本地媒体库",
@@ -4738,13 +4504,13 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         "无法加载图片",
         "来源：Wikipedia",
         "来源：Last.fm",
-        "艺术家信息来源",
-        "Last.fm API 密钥",
-        "请输入免费 Last.fm 应用的 API Key 和 API Secret：last.fm/api/account/create",
-        "Fanart.tv API 密钥",
-        "优先使用精选艺术家图片。密钥加密保存在当前用户的凭据存储中；也可设置 FANART_TV_API_KEY。对于现有艺术家，请使用“刷新艺术家信息”。在 fanart.tv/get-an-api-key/ 创建密钥。",
-        "下载缺失的艺术家图片",
-        "依次搜索本地媒体库和所有已配置的 HyperFidel 服务器。每位艺术家先在 Fanart.tv（需 API 密钥）中搜索，再搜索 Wikimedia。Fanart.tv 的结果可自动接受；Wikimedia 的结果始终需要确认。",
+        
+        
+        
+        
+        
+        
+        
         "正在搜索艺术家图片 {0}/{1}：{2} · {3}",
         "已接受 {0:N0} 张艺术家图片，拒绝 {1:N0} 张；{2:N0} 个请求失败。",
         "艺术家图片下载失败：{0}",
@@ -4827,7 +4593,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         GenreCloudVisibility = "图片可见度",
         ClearGenreCloudCache = "清空背景缓存",
         AppearanceNavItem = "外观",
-        ArtistInfoNavItem = "艺术家信息",
         NormalizeArtists = "规范化艺术家名称",
         NormalizeArtistsHint = "移除主要艺术家名称中的“feat.”并合并明确的标点和空格变体。不修改音频文件。",
         ArtistsNormalizing = "正在规范化艺术家名称并重建搜索索引…",
@@ -5045,16 +4810,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         LibraryUpdatingWithCount = "正在更新媒体库… {0} / {1} 个文件",
         RefreshView = "刷新",
         LibraryDataAvailable = "有新的媒体库数据可用",
-        ServerUnreachable = "无法连接",
-        ServerLastConnected = "上次连接：{0}",
-        ServerNeverConnected = "从未连接",
-        ServerMissingFeatures = "服务器不支持：{0}",
-        CapabilityTrackFacets = "曲目筛选",
-        CapabilityRecentAlbums = "最近添加的专辑",
-        CapabilityWaveforms = "波形",
-        RemoteCache = "远程缓存",
-        RemoteCacheSize = "缓存大小：{0}",
-        ClearRemoteCacheAll = "清空全部缓存",
         ClearCache = "清除缓存",
         RemoteScanning = "正在更新 {0}…",
         RemoteScanningWithCount = "正在更新 {0}… {1} / {2} 个文件",
@@ -5138,7 +4893,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         StatusEnabled = "已启用",
         StatusDisabled = "已禁用",
         StatusReady = "就绪",
-        StatusChecking = "正在检查…",
         LanguageGerman = "德语",
         LanguageEnglish = "英语",
         LanguageFrench = "法语",
@@ -5154,12 +4908,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         NativeDsdWordFormat = "原生 DSD，8 位字，无字节序差异（{0}）",
         CountEntrySingular = "{0:N0} 个条目",
         CountTrackSingular = "{0:N0} 首曲目",
-        Streaming = "流媒体播放",
-        StreamingServices = "流媒体服务",
-        Qobuz = "Qobuz",
-        QobuzApplicationId = "Qobuz 应用程序 ID",
-        QobuzIntegrationHint = "Qobuz 集成已准备就绪。合作方访问权限和官方 API 文档可用后将启用目录和播放。",
-        QobuzCredentialsHint = "密钥和登录令牌不存储在 settings.json 中。Windows 会为当前用户保护这些数据。",
         SearchArtistImage = "搜索艺术家图片",
         UploadArtistImage = "上传艺术家图片",
         DeleteArtistImage = "删除艺术家图片",
@@ -5207,10 +4955,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         SidebarSections = "侧栏分区",
         SidebarSectionsHint = "选择主导航中显示的可折叠分区。",
         PlexServers = "PLEX 服务器",
-        PlexServersSettings = "Plex 服务器",
-        PlexServersHint = "配置一个或多个 Plex Media Server。",
-        AddPlexServer = "添加 Plex 服务器",
-        PlexServerDialogTitle = "Plex 服务器",
         PlexServerName = "服务器名称",
         PlexServerUrl = "服务器 URL",
         PlexToken = "Plex 令牌",
@@ -5220,17 +4964,11 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         PlexConnectionFailed = "连接失败：{0}",
         PlexServerFieldsRequired = "名称和服务器 URL 为必填项。",
         PlexServerUrlInvalid = "请输入有效的 HTTP 或 HTTPS URL。",
-        PlexEditServer = "编辑",
-        PlexRemoveServer = "移除",
         PlexNoAudioLibraries = "未找到音频库。",
         PlexLoading = "正在加载 Plex 内容…",
         HyperFidelServers = "HyperFidel 服务器",
         SourceColumn = "来源",
         LocalSource = "本地",
-        HyperFidelServersSettings = "HyperFidel 服务器",
-        HyperFidelServersHint = "将播放器连接到本地网络中的一个或多个 HyperFidel 服务器。",
-        AddHyperFidelServer = "添加服务器",
-        HyperFidelServerDialogTitle = "HyperFidel 服务器",
         HyperFidelServerName = "显示名称",
         HyperFidelServerUrl = "服务器 URL（例如 http://192.168.1.10:5280）",
         HyperFidelServerApiKey = "API 密钥",
@@ -5239,8 +4977,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         HyperFidelConnectionSuccessful = "已连接。服务器：{0} v{1}",
         HyperFidelConnectionFailed = "连接失败。请检查 URL 和 API 密钥。",
         HyperFidelServerFieldsRequired = "名称、URL 和 API 密钥为必填项。",
-        HyperFidelEditServer = "编辑",
-        HyperFidelRemoveServer = "移除",
         HyperFidelLoading = "正在加载服务器内容…",
         HyperFidelServerDirectories = "服务器音乐文件夹",
         HyperFidelLoadServerDirectories = "从服务器加载",
@@ -5408,7 +5144,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         AiChatNotEnabled = "AI 聊天未启用。请在设置中启用。",
         AiChatEmptyResponse = "模型返回了空响应。",
         AiChatToolResultFallback = "调用工具后，模型未返回最终答复。工具结果：",
-        AutoAcceptFanartTvImages = "自动接受 Fanart.tv 的结果",
         BulkGenre = "流派",
         BulkGenreTooltip = "为所选本地曲目设置流派（仅资料库，文件不变）",
         BulkGenreApply = "应用流派",
@@ -5512,16 +5247,7 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         CrossfeedLight = "轻",
         CrossfeedMedium = "中",
         CrossfeedStrong = "强",
-        LastFmScrobbling = "Last.fm 记录",
-        LastFmScrobblingEnabled = "记录已播放的曲目",
-        LastFmApiSecret = "API 密钥",
-        LastFmConnect = "连接",
-        LastFmDisconnect = "断开连接",
-        LastFmScrobblingConnected = "已连接为 {0}",
-        LastFmScrobblingNotConnected = "未连接",
-        LastFmScrobblingAuthorizeHint = "在浏览器中授权 HyperFidel，然后再次点击“连接”。",
-        LastFmScrobblingConnectFailed = "无法连接到 Last.fm。",
-    };
+        };
 
     private static readonly LocalizedStrings Hindi = new(
         "संग्रह",
@@ -5656,13 +5382,13 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         "चित्र लोड नहीं हुआ",
         "स्रोत: Wikipedia",
         "स्रोत: Last.fm",
-        "कलाकार की जानकारी का स्रोत",
-        "Last.fm API कुंजी",
-        "अपने निःशुल्क Last.fm एप्लिकेशन की API कुंजी और API सीक्रेट दर्ज करें: last.fm/api/account/create",
-        "Fanart.tv API कुंजी",
-        "चुने हुए कलाकार चित्रों को प्राथमिकता देता है। कुंजी वर्तमान उपयोगकर्ता के क्रेडेंशियल भंडार में एन्क्रिप्ट की जाती है; वैकल्पिक रूप से FANART_TV_API_KEY सेट करें। मौजूदा कलाकारों के लिए “कलाकार की जानकारी रीफ़्रेश करें” चुनें। fanart.tv/get-an-api-key/ पर कुंजी बनाएँ।",
-        "अनुपलब्ध कलाकार चित्र डाउनलोड करें",
-        "स्थानीय संग्रह और सभी कॉन्फ़िगर किए गए HyperFidel सर्वर में क्रम से खोजता है। हर कलाकार के लिए पहले Fanart.tv (API कुंजी के साथ), फिर Wikimedia आज़माता है। Fanart.tv परिणाम स्वतः स्वीकार किए जा सकते हैं; Wikimedia परिणामों की हमेशा पुष्टि ज़रूरी है।",
+        
+        
+        
+        
+        
+        
+        
         "कलाकार चित्र {0}/{1} खोजा जा रहा है: {2} · {3}",
         "{0:N0} कलाकार चित्र स्वीकार किए गए, {1:N0} अस्वीकार किए गए; {2:N0} अनुरोध विफल।",
         "कलाकार चित्र डाउनलोड विफल: {0}",
@@ -5745,7 +5471,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         GenreCloudVisibility = "चित्र की दृश्यता",
         ClearGenreCloudCache = "पृष्ठभूमि कैश हटाएँ",
         AppearanceNavItem = "दिखावट",
-        ArtistInfoNavItem = "कलाकार की जानकारी",
         NormalizeArtists = "कलाकार नाम सामान्यीकृत करें",
         NormalizeArtistsHint = "मुख्य कलाकार से “feat.” जैसे जोड़ हटाता है और स्पष्ट विराम-चिह्न व स्पेसिंग भिन्नताएँ मिलाता है। ऑडियो फ़ाइलें नहीं बदलतीं।",
         ArtistsNormalizing = "कलाकार नाम सामान्यीकृत और सर्च इंडेक्स पुनर्निर्मित हो रहा है …",
@@ -5963,16 +5688,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         LibraryUpdatingWithCount = "संग्रह अपडेट हो रहा है… {0} / {1} फ़ाइलें",
         RefreshView = "रीफ़्रेश करें",
         LibraryDataAvailable = "संग्रह का नया डेटा उपलब्ध है",
-        ServerUnreachable = "पहुँच से बाहर",
-        ServerLastConnected = "अंतिम कनेक्शन: {0}",
-        ServerNeverConnected = "कभी कनेक्ट नहीं हुआ",
-        ServerMissingFeatures = "सर्वर इनका समर्थन नहीं करता: {0}",
-        CapabilityTrackFacets = "ट्रैक फ़िल्टर",
-        CapabilityRecentAlbums = "हाल के एल्बम",
-        CapabilityWaveforms = "वेवफ़ॉर्म",
-        RemoteCache = "रिमोट कैश",
-        RemoteCacheSize = "कैश आकार: {0}",
-        ClearRemoteCacheAll = "पूरा कैश हटाएँ",
         ClearCache = "कैश हटाएँ",
         RemoteScanning = "{0} अपडेट हो रहा है…",
         RemoteScanningWithCount = "{0} अपडेट हो रहा है… {1} / {2} फ़ाइलें",
@@ -6056,7 +5771,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         StatusEnabled = "सक्षम",
         StatusDisabled = "अक्षम",
         StatusReady = "तैयार",
-        StatusChecking = "जाँच हो रही है …",
         LanguageGerman = "जर्मन",
         LanguageEnglish = "अंग्रेज़ी",
         LanguageFrench = "फ़्रेंच",
@@ -6071,12 +5785,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         NativeDsdWordFormat = "नेटिव DSD, 8-बिट वर्ड, एंडियन क्रम अप्रासंगिक ({0})",
         CountEntrySingular = "{0:N0} प्रविष्टि",
         CountTrackSingular = "{0:N0} ट्रैक",
-        Streaming = "स्ट्रीमिंग",
-        StreamingServices = "स्ट्रीमिंग सेवाएँ",
-        Qobuz = "Qobuz",
-        QobuzApplicationId = "Qobuz एप्लिकेशन ID",
-        QobuzIntegrationHint = "Qobuz एकीकरण तैयार है। स्वीकृत साझेदार पहुँच और आधिकारिक API दस्तावेज़ उपलब्ध होने पर कैटलॉग और प्लेबैक सक्षम होंगे।",
-        QobuzCredentialsHint = "गोपनीय मान और साइन-इन टोकन settings.json में नहीं रखे जाते। Windows इन्हें वर्तमान उपयोगकर्ता के लिए सुरक्षित रखता है।",
         SearchArtistImage = "कलाकार चित्र खोजें",
         UploadArtistImage = "कलाकार चित्र अपलोड करें",
         DeleteArtistImage = "कलाकार चित्र हटाएँ",
@@ -6124,10 +5832,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         SidebarSections = "साइडबार अनुभाग",
         SidebarSectionsHint = "चुनें कि मुख्य नेविगेशन में कौन-से संकुचित किए जा सकने वाले अनुभाग दिखें।",
         PlexServers = "PLEX सर्वर",
-        PlexServersSettings = "Plex सर्वर",
-        PlexServersHint = "एक या अधिक Plex Media Server कॉन्फ़िगर करें। एक्सेस टोकन वर्तमान Windows उपयोगकर्ता खाते के लिए सुरक्षित हैं।",
-        AddPlexServer = "Plex सर्वर जोड़ें",
-        PlexServerDialogTitle = "Plex सर्वर",
         PlexServerName = "दिखने वाला नाम",
         PlexServerUrl = "सर्वर URL",
         PlexToken = "X-Plex-Token (वैकल्पिक)",
@@ -6137,17 +5841,11 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         PlexConnectionFailed = "कनेक्शन विफल: {0}",
         PlexServerFieldsRequired = "नाम और सर्वर URL आवश्यक हैं।",
         PlexServerUrlInvalid = "मान्य HTTP या HTTPS URL दर्ज करें।",
-        PlexEditServer = "संपादित करें",
-        PlexRemoveServer = "हटाएँ",
         PlexNoAudioLibraries = "कोई ऑडियो संग्रह नहीं मिला।",
         PlexLoading = "Plex सामग्री लोड हो रही है…",
         HyperFidelServers = "HYPERFIDEL सर्वर",
         SourceColumn = "स्रोत",
         LocalSource = "स्थानीय",
-        HyperFidelServersSettings = "HyperFidel सर्वर",
-        HyperFidelServersHint = "प्लेयर को स्थानीय नेटवर्क पर एक या अधिक HyperFidel सर्वर से जोड़ें। API कुंजी वर्तमान उपयोगकर्ता के क्रेडेंशियल भंडार में एन्क्रिप्ट करके रखी जाती है।",
-        AddHyperFidelServer = "सर्वर जोड़ें",
-        HyperFidelServerDialogTitle = "HyperFidel सर्वर",
         HyperFidelServerName = "दिखने वाला नाम",
         HyperFidelServerUrl = "सर्वर URL (जैसे http://192.168.1.10:5280)",
         HyperFidelServerApiKey = "API कुंजी",
@@ -6156,8 +5854,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         HyperFidelConnectionSuccessful = "कनेक्ट हुआ। सर्वर: {0} v{1}",
         HyperFidelConnectionFailed = "कनेक्शन विफल। URL और API कुंजी जाँचें।",
         HyperFidelServerFieldsRequired = "नाम, URL और API कुंजी आवश्यक हैं।",
-        HyperFidelEditServer = "संपादित करें",
-        HyperFidelRemoveServer = "हटाएँ",
         HyperFidelLoading = "सर्वर सामग्री लोड हो रही है…",
         HyperFidelServerDirectories = "सर्वर के संगीत फ़ोल्डर",
         HyperFidelLoadServerDirectories = "सर्वर से लोड करें",
@@ -6325,7 +6021,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         AiChatNotEnabled = "AI चैट सक्षम नहीं है। इसे सेटिंग्स › AI चैट में सक्षम करें।",
         AiChatEmptyResponse = "मॉडल ने खाली उत्तर दिया।",
         AiChatToolResultFallback = "टूल कॉल के बाद मॉडल ने अंतिम उत्तर नहीं दिया। टूल परिणाम:",
-        AutoAcceptFanartTvImages = "Fanart.tv परिणाम स्वतः स्वीकार करें",
         BulkGenre = "शैली",
         BulkGenreTooltip = "चयनित स्थानीय ट्रैक के लिए शैली सेट करें (केवल लाइब्रेरी, फ़ाइलें अपरिवर्तित)",
         BulkGenreApply = "शैली लागू करें",
@@ -6429,15 +6124,6 @@ private static readonly LocalizedStrings ChineseSimplified = new(
         CrossfeedLight = "हल्का",
         CrossfeedMedium = "मध्यम",
         CrossfeedStrong = "तेज़",
-        LastFmScrobbling = "Last.fm स्क्रॉबलिंग",
-        LastFmScrobblingEnabled = "सुने गए ट्रैक स्क्रॉबल करें",
-        LastFmApiSecret = "API सीक्रेट",
-        LastFmConnect = "कनेक्ट करें",
-        LastFmDisconnect = "डिस्कनेक्ट करें",
-        LastFmScrobblingConnected = "{0} के रूप में जुड़ा हुआ",
-        LastFmScrobblingNotConnected = "जुड़ा नहीं है",
-        LastFmScrobblingAuthorizeHint = "ब्राउज़र में HyperFidel को अधिकृत करें, फिर कनेक्ट पर दोबारा क्लिक करें।",
-        LastFmScrobblingConnectFailed = "Last.fm से कनेक्ट नहीं हो सका।",
         LanguageHindi = "हिन्दी",
     };
 

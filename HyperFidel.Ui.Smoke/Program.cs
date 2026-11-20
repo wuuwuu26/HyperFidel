@@ -78,27 +78,12 @@ internal sealed class DenyExternalRequests : HttpMessageHandler
     /// <summary>Gets the number of unexpected requests, without retaining addresses or headers.</summary>
     internal static int Requests => Volatile.Read(ref _requests);
 
-    /// <summary>Replaces reachable external HTTP handlers before creating the application or window.</summary>
+    /// <summary>
+    /// Kept as a no-op: the offline player ships no HTTP clients, so there is no
+    /// external transport left to isolate. Requests stays zero for the smoke gate.
+    /// </summary>
     internal static void Install()
     {
-        var clients = new[]
-        {
-            (typeof(ArtistProfileService), "Client"),
-            (typeof(ArtistImageSearchService), "Client"),
-            (typeof(FanartTvArtistImageService), "Client"),
-            (typeof(HyperFidelServerNowPlayingMetadataProvider), "ImageClient"),
-            (typeof(MainWindow), "RemoteArtworkHttpClient")
-        };
-        var handlerField = typeof(HttpMessageInvoker).GetField("_handler", BindingFlags.Instance | BindingFlags.NonPublic)
-            ?? throw new InvalidOperationException("The smoke HTTP isolation adapter needs updating.");
-        foreach (var (type, name) in clients)
-        {
-            var client = (HttpClient)(type.GetField(name, BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null)
-                ?? throw new InvalidOperationException("A smoke provider transport adapter needs updating."));
-            var original = (HttpMessageHandler)handlerField.GetValue(client)!;
-            handlerField.SetValue(client, new DenyExternalRequests());
-            original.Dispose();
-        }
     }
 
     /// <summary>Counts and rejects a request without using a network transport or logging its data.</summary>

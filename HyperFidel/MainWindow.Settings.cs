@@ -322,8 +322,6 @@ public partial class MainWindow : Window
             if (_player is IEqualizerAudioPlayer equalizerPlayer)
                 equalizerPlayer.UpdateEqualizer(enabled, profile);
         });
-        view.ArtistImageWriter = new MissingArtistImageWriter(_artistImageWriteQueue, AdmitArtistImageWrite);
-        view.ArtistImagesChanged += InvalidateUnifiedLibraryViewCache;
         var completionHandled = false;
         view.RunScheduledBackup = async force =>
         {
@@ -525,9 +523,6 @@ public partial class MainWindow : Window
     /// <summary>Opens server setup through the shared embedded settings path.</summary>
     /// <param name="sender">The empty-library server setup button.</param>
     /// <param name="e">The button activation event.</param>
-    private void LibraryServerSetupButton_OnClick(object? sender, RoutedEventArgs e) =>
-        OpenSettingsAt("HyperFidelServers");
-
     private void OpenSettingsAt(string sectionTag, bool scrollToEqualizer = false)
     {
         if (!SettingsViewHost.IsVisible)
@@ -816,29 +811,11 @@ public partial class MainWindow : Window
             var replayGainChanged =
                 _settings.ReplayGainMode != window.SelectedReplayGainMode ||
                 _settings.PcmOutputBoostEnabled != window.PcmOutputBoostEnabled;
-            var artistInfoChanged =
-                _settings.ArtistInfoSource != window.SelectedArtistInfoSource ||
-                !string.Equals(
-                    _settings.LastFmApiKey,
-                    window.SelectedLastFmApiKey,
-                    StringComparison.Ordinal) ||
-                !string.Equals(
-                    _settings.FanartTvApiKey,
-                    window.SelectedFanartTvApiKey,
-                    StringComparison.Ordinal);
             var sidebarChanged =
                 _settings.ShowQueueItem != window.ShowQueueItem ||
-                _settings.ShowLocalLibrarySection != window.ShowLocalLibrarySection ||
-                _settings.ShowPlexSection != window.ShowPlexSection;
+                _settings.ShowLocalLibrarySection != window.ShowLocalLibrarySection;
             var motionChanged = _settings.ReduceMotion != window.ReduceMotionValue;
-            var plexServersChanged = !PlexServerSettingsEqual(
-                _settings.PlexServers,
-                window.SelectedPlexServers);
-            var hyperfidelServersChanged = !LibraryCatalogConfiguration.MatchesServers(
-                _settings.HyperFidelServers,
-                window.SelectedHyperFidelServers);
             var libraryPathsChanged = !(_settings.LibraryPaths ?? []).SequenceEqual(window.SelectedLibraryPaths);
-            var hadHyperFidelServers = _settings.HyperFidelServers.Count > 0;
             var outputChanged =
                 _settings.OutputBackend != window.SelectedOutputBackend ||
                 _settings.DsdOverPcmEnabled != window.DsdOverPcmEnabled ||
@@ -881,20 +858,8 @@ public partial class MainWindow : Window
             _settings.Language               = window.SelectedLanguage;
             _settings.GenreCloudBackground   = window.SelectedGenreCloudBackground;
             _settings.GenreCloudBackgroundOpacity = window.SelectedGenreCloudBackgroundOpacity;
-            _settings.ArtistInfoSource       = window.SelectedArtistInfoSource;
-            _settings.LastFmApiKey           = window.SelectedLastFmApiKey;
-            _settings.LastFmApiSecret        = window.SelectedLastFmApiSecret;
-            _settings.LastFmScrobblingEnabled = window.SelectedLastFmScrobblingEnabled;
             _settings.CrossfeedEnabled       = window.SelectedCrossfeedEnabled;
             _settings.CrossfeedStrength      = window.SelectedCrossfeedStrength;
-            _settings.FanartTvApiKey         = window.SelectedFanartTvApiKey;
-            _settings.QobuzApplicationId      = window.SelectedQobuzApplicationId;
-            _settings.PlexServers             = window.SelectedPlexServers.ToList();
-            _settings.HyperFidelServers          = window.SelectedHyperFidelServers.ToList();
-            if (hyperfidelServersChanged)
-                InvalidateCatalogConfiguration();
-            if (!hadHyperFidelServers && _settings.HyperFidelServers.Count > 0)
-                _settings.IsLocalLibrarySectionExpanded = true;
             _settings.ScheduledBackup.Enabled        = window.ScheduledBackupEnabledValue;
             _settings.ScheduledBackup.IntervalDays   = window.ScheduledBackupIntervalValue;
             _settings.ScheduledBackup.RetentionCount = window.ScheduledBackupRetentionValue;
@@ -904,20 +869,6 @@ public partial class MainWindow : Window
             StartAppLogoGlow();
             _settings.StartMaximized           = window.StartMaximized;
             _settings.ShowLocalLibrarySection = window.ShowLocalLibrarySection;
-            _settings.ShowPlexSection              = window.ShowPlexSection;
-            if (window.PlexCredentialsChanged)
-            {
-                try
-                {
-                    var plexTokens = window.SelectedPlexTokens.ToDictionary(
-                        static pair => pair.Key,
-                        static pair => pair.Value);
-                    await Task.Run(() => new WindowsPlexCredentialStore().SaveAll(plexTokens));
-                }
-                catch
-                {
-                }
-            }
             await Task.Run(() => _settingsStore.Save(_settings));
             ApplyCrossfeedSettings(_player);
             ApplyLoudnessNormalizationSettings(_player);
@@ -950,16 +901,10 @@ public partial class MainWindow : Window
             {
                 await BuildDashboardAsync();
             }
-            if (artistInfoChanged)
-                ApplyArtistInfoSettings();
             if (outputChanged)
                 RefreshSelectedDriverText();
-            if (plexServersChanged || window.PlexCredentialsChanged)
-                LoadNavPlaylists();
-            else if (sidebarChanged || libraryPathsChanged)
+            if (sidebarChanged || libraryPathsChanged)
                 ApplySidebarNavigationSettings();
-            if (hyperfidelServersChanged)
-                LoadHyperFidelServerNavigation();
             if (replayGainChanged && _player is not null)
             {
                 var currentFilePath = _currentFilePath;

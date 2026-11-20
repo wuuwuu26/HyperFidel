@@ -51,18 +51,7 @@ public partial class MainWindow : Window
     private static string FormatTime(TimeSpan value) =>
         value.TotalHours >= 1 ? value.ToString(@"h\:mm\:ss") : value.ToString(@"m\:ss");
 
-    private static bool PlexServerSettingsEqual(
-        IReadOnlyList<PlexServerSettings>? left,
-        IReadOnlyList<PlexServerSettings>? right)
-    {
-        left ??= [];
-        right ??= [];
-        return left.Count == right.Count &&
-               left.Zip(right).All(pair =>
-                   string.Equals(pair.First.Id, pair.Second.Id, StringComparison.Ordinal) &&
-                   string.Equals(pair.First.Name, pair.Second.Name, StringComparison.Ordinal) &&
-                   string.Equals(pair.First.BaseUrl, pair.Second.BaseUrl, StringComparison.Ordinal));
-    }
+
 
     /// <summary>Invalidates catalog snapshots and abandons pending catalog, search, playlist and playback work before replacing the local library.</summary>
     internal void PrepareForLibraryImport()

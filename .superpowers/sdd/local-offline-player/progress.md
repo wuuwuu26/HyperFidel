@@ -377,3 +377,25 @@ Ruling: work on branch local-offline-player in-place (not a separate worktree) �
 - CHANGELOG / PROJECT-REFERENCE 已更新。
 - 验证：5 项目 build 0 CS/0 AXN；Core 测试 394 全过（含新增 2）；桌面 357 过 /
   1 已知预存 YearInReviewPdfExporter 失败。
+
+## Task: 移除设置界面残留的联网功能 (2026-11-20)
+- SettingsView.axaml：删除 HyperFidelServers / Streaming / ArtistInfo 导航项与
+  section header、HyperFidelServersSettingsPanel / StreamingPanel /
+  ArtistInfoPanel 三个面板；MainWindow.axaml 删除空库"配置服务器"按钮。
+- SettingsView.axaml.cs：删除服务器/Plex/Qobuz/Last.fm/Fanart.tv/缺失艺人图片
+  的字段、属性、构造回调、初始化、事件处理器与辅助方法（约 930 行）；保留通用
+  CreateStyledButton；裁剪 LoadMetadataProblemsAsync / AnalyzeAudioFeatures /
+  CalculateReplayGain 的服务器循环为纯本地；更新导航路由与 Deactivate。
+  注意：位置构造器 record 参数需按索引删（首次按名字删导致 parity 失败，已回退重做）。
+- MainWindow.Settings.cs：删除 ApplySettingsAsync 中的 artistInfo/server/plex
+  变更标志与赋值、Plex 凭据保存、服务器导航刷新；删除 LibraryServerSetupButton。
+- AppSettings.cs：删除仅设置 UI 用的 LastFmScrobblingEnabled/LastFmUsername/
+  QobuzApplicationId；休眠凭据/服务器数据契约保留（与既有决定一致）。
+- 删除死代码：HyperFidelServerDialog / PlexServerDialog / ServerConnectionStore /
+  PlexServerSettingsEqual。
+- 本地化：Strings.cs + 7 语言 LocalizationManager.cs 删除 47 个设置联网字符串；
+  verify-localization.cjs PASS（7 语言 x 867 键）。
+- Ui.Smoke：EmptyLibraryWorkflows 删除 servers setup 断言；Program.cs 的
+  DenyExternalRequests.Install 改为 no-op（无 HttpClient 可隔离）。
+- 验证：5 项目 build 0 CS/0 AXN；Core 测试 394 全过；桌面 357 过 / 1 已知预存
+  YearInReviewPdfExporter 失败。CHANGELOG 已更新。

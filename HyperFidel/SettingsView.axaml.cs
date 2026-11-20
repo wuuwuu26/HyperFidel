@@ -17,7 +17,6 @@ using HyperFidel.Audio;
 using HyperFidel.Controls;
 using HyperFidel.Library;
 using HyperFidel.Localization;
-using HyperFidel.Streaming;
 using AvaloniaApp = Avalonia.Application;
 using UiLanguage = HyperFidel.Localization.Language;
 
@@ -34,46 +33,16 @@ internal partial class SettingsView : UserControl
     }
 
 
-    /// <summary>A missing-image identity with its original source ownership.</summary>
-    /// <param name="ArtistId">Source-local artist identifier.</param>
-    /// <param name="ArtistName">Original artist name.</param>
-    /// <param name="MusicBrainzArtistId">Optional provider lookup identifier.</param>
-    /// <param name="SourceName">Source display label.</param>
-    /// <param name="Server">Copied remote connection, or null for local artists.</param>
-    /// <param name="IsSourceCurrent">Original source configuration guard.</param>
-    private sealed record MissingArtistImageTarget(
-        long ArtistId, string ArtistName, string? MusicBrainzArtistId,
-        string SourceName, HyperFidelServerSettings? Server, Func<bool> IsSourceCurrent);
-
-    /// <summary>Gets or sets ordered persistence shared with the owning window.</summary>
-    internal MissingArtistImageWriter ArtistImageWriter { get; set; } = new(new ArtistImageWriteQueue());
-
-    /// <summary>Raised after an admitted artist image mutation invalidates catalog snapshots.</summary>
-    internal event Action? ArtistImagesChanged;
-
-    private sealed record HyperFidelServerScanAction(
-        HyperFidelServerSettings Server,
-        TextBlock Detail,
-        StatusBadge StatusBadge,
-        CancellationToken CancellationToken,
-        bool ReplayGainOnly);
 
     private readonly AppSettings _settings;
     private readonly SettingsStore _settingsStore = new();
     private readonly List<string> _libraryPaths = [];
     private string _scheduledBackupDirectory = string.Empty;
     private long _scheduledBackupLastRunUnix;
-    private readonly List<PlexServerSettings> _plexServers = [];
-    private readonly Dictionary<string, string> _plexTokens = [];
-    private readonly List<HyperFidelServerSettings> _hyperfidelServers = [];
     /// <summary>Owns active directory scans through completion, including cancellation after removal.</summary>
     private readonly Dictionary<string, CancellationTokenSource> _activeScans = new(StringComparer.OrdinalIgnoreCase);
     private readonly Action<List<string>>? _onLibraryPathsChanged;
     private readonly Action<bool, EqualizerProfile?>? _onEqualizerPreviewChanged;
-    private readonly Func<Task<string?>>? _onLastFmBeginAuthorization;
-    private readonly Func<Task<string?>>? _onLastFmCompleteAuthorization;
-    private readonly Action? _onLastFmDisconnect;
-    private string? _lastFmPendingAuthorization;
     private readonly bool _originalEqualizerEnabled;
     private readonly EqualizerProfile? _originalEqualizerProfile;
     private readonly List<EqualizerProfile> _equalizerProfiles = [];
@@ -101,15 +70,12 @@ internal partial class SettingsView : UserControl
     internal event Action? DuplicateResolutionRequested;
     /// <summary>Raised after the active user profile changes.</summary>
     internal event Action<string>? ProfileChanged;
-    private bool _plexCredentialsChanged;
     private bool _metadataAnalysisLoaded;
     private IReadOnlyList<MetadataProblemRow> _metadataDoctorRows = [];
-    private int _metadataDoctorUnavailableServers;
     private CancellationTokenSource? _metadataAnalysisCts;
     private bool _metadataAnalysisRunning;
     private bool _metadataRepairRunning;
     private bool _metadataDeactivated;
-    private CancellationTokenSource? _missingArtistImagesCts;
     private CancellationTokenSource? _replayGainCalculationCts;
     private CancellationTokenSource? _audioFeatureAnalysisCts;
 
@@ -125,25 +91,16 @@ internal partial class SettingsView : UserControl
     /// <param name="settings">Settings displayed and edited by the window.</param>
     /// <param name="onLibraryPathsChanged">Optional callback for immediate library-path updates.</param>
     /// <param name="onEqualizerPreviewChanged">Optional callback for live equalizer preview changes.</param>
-    /// <param name="onLastFmBeginAuthorization">Optional callback returning the Last.fm authorization URL.</param>
-    /// <param name="onLastFmCompleteAuthorization">Optional callback completing Last.fm authorization and returning the username.</param>
-    /// <param name="onLastFmDisconnect">Optional callback clearing the Last.fm session.</param>
     public SettingsView(
         AppSettings settings,
         Action<List<string>>? onLibraryPathsChanged = null,
-        Action<bool, EqualizerProfile?>? onEqualizerPreviewChanged = null,
-        Func<Task<string?>>? onLastFmBeginAuthorization = null,
-        Func<Task<string?>>? onLastFmCompleteAuthorization = null,
-        Action? onLastFmDisconnect = null)
+        Action<bool, EqualizerProfile?>? onEqualizerPreviewChanged = null)
     {
         InitializeComponent();
         _settings = settings;
         _profileManager = new UserProfileManager(settings);
         _onLibraryPathsChanged = onLibraryPathsChanged;
         _onEqualizerPreviewChanged = onEqualizerPreviewChanged;
-        _onLastFmBeginAuthorization = onLastFmBeginAuthorization;
-        _onLastFmCompleteAuthorization = onLastFmCompleteAuthorization;
-        _onLastFmDisconnect = onLastFmDisconnect;
         _originalEqualizerEnabled = settings.EqualizerEnabled;
         _originalEqualizerProfile = settings.EqualizerProfile?.Clone();
         _outputProfiles.AddRange((settings.OutputProfiles ?? []).Select(CloneOutputProfile));
@@ -257,15 +214,6 @@ internal partial class SettingsView : UserControl
         ReduceMotionCheckBox.IsChecked          = settings.ReduceMotion;
         StartMaximizedCheckBox.IsChecked             = settings.StartMaximized;
         ShowLocalLibrarySectionCheckBox.IsChecked = settings.ShowLocalLibrarySection;
-        ShowPlexSectionCheckBox.IsChecked          = settings.ShowPlexSection;
-        ArtistInfoSourceComboBox.ItemsSource = Enum.GetValues<ArtistInfoSource>();
-        ArtistInfoSourceComboBox.SelectedItem = settings.ArtistInfoSource;
-        LastFmApiKeyTextBox.Text = settings.LastFmApiKey ?? string.Empty;
-        LastFmApiSecretTextBox.Text = settings.LastFmApiSecret ?? string.Empty;
-        LastFmScrobblingEnabledCheckBox.IsChecked = settings.LastFmScrobblingEnabled;
-        FanartTvApiKeyTextBox.Text = settings.FanartTvApiKey ?? string.Empty;
-        QobuzApplicationIdTextBox.Text = settings.QobuzApplicationId ?? string.Empty;
-        UpdateLastFmScrobblingStatus();
         _libraryPaths.AddRange(settings.LibraryPaths);
         _scheduledBackupDirectory = settings.ScheduledBackup.ResolveDirectory();
         _scheduledBackupLastRunUnix = settings.ScheduledBackup.LastRunAtUnix;
@@ -273,20 +221,10 @@ internal partial class SettingsView : UserControl
         ScheduledBackupIntervalInput.Value = Math.Clamp(settings.ScheduledBackup.IntervalDays, 1, 365);
         ScheduledBackupRetentionInput.Value = Math.Clamp(settings.ScheduledBackup.RetentionCount, 1, 50);
         UpdateScheduledBackupStatus();
-        _plexServers.AddRange((settings.PlexServers ?? []).Select(ClonePlexServer));
-        _hyperfidelServers.AddRange((settings.HyperFidelServers ?? []).Select(CloneHyperFidelServer));
         UserProfileComboBox.ItemsSource = _profileManager.Profiles;
         UserProfileComboBox.DisplayMemberBinding = new Avalonia.Data.Binding(nameof(UserProfile.DisplayName));
         UserProfileComboBox.SelectedItem = _profileManager.ActiveProfile;
-        try
-        {
-            foreach (var credential in new WindowsPlexCredentialStore().LoadAll())
-                _plexTokens[credential.Key] = credential.Value;
-        }
-        catch { }
         RebuildDirectoryList();
-        RebuildPlexServerList();
-        RebuildHyperFidelServerList();
         _initializing = false;
         RefreshOutputProfileButtons();
         NavListBox.SelectedIndex = 1;
@@ -480,24 +418,6 @@ internal partial class SettingsView : UserControl
     /// <summary>Gets the selected Genre Cloud tile opacity from zero to one.</summary>
     public double SelectedGenreCloudBackgroundOpacity =>
         Math.Clamp(GenreCloudVisibilitySlider.Value / 100d, 0, 1);
-    public ArtistInfoSource SelectedArtistInfoSource =>
-        ArtistInfoSourceComboBox.SelectedItem is ArtistInfoSource src ? src : ArtistInfoSource.Wikipedia;
-    public string SelectedLastFmApiKey => LastFmApiKeyTextBox.Text?.Trim() ?? string.Empty;
-    /// <summary>Gets the entered Last.fm API secret without surrounding whitespace.</summary>
-    public string SelectedLastFmApiSecret => LastFmApiSecretTextBox.Text?.Trim() ?? string.Empty;
-    /// <summary>Gets a value indicating whether Last.fm scrobbling is enabled.</summary>
-    public bool SelectedLastFmScrobblingEnabled => LastFmScrobblingEnabledCheckBox.IsChecked == true;
-    /// <summary>Gets the configured Fanart.tv API key without surrounding whitespace.</summary>
-    public string SelectedFanartTvApiKey => FanartTvApiKeyTextBox.Text?.Trim() ?? string.Empty;
-    public string SelectedQobuzApplicationId => QobuzApplicationIdTextBox.Text?.Trim() ?? string.Empty;
-    public IReadOnlyList<PlexServerSettings> SelectedPlexServers =>
-        _plexServers.Select(ClonePlexServer).ToList().AsReadOnly();
-    public IReadOnlyDictionary<string, string> SelectedPlexTokens => _plexTokens;
-    /// <summary>Gets a value indicating whether Plex credentials were edited in this window.</summary>
-    public bool PlexCredentialsChanged => _plexCredentialsChanged;
-    /// <summary>Gets independent copies of all configured HyperFidel Server connections.</summary>
-    public IReadOnlyList<HyperFidelServerSettings> SelectedHyperFidelServers =>
-        _hyperfidelServers.Select(CloneHyperFidelServer).ToList().AsReadOnly();
     /// <summary>Gets a value indicating whether the Up Next sidebar item should be visible.</summary>
     public bool ShowQueueItem => ShowQueueItemCheckBox.IsChecked == true;
 
@@ -507,29 +427,7 @@ internal partial class SettingsView : UserControl
     public bool StartMaximized => StartMaximizedCheckBox.IsChecked == true;
     /// <summary>Gets a value indicating whether the Library sidebar section should be visible.</summary>
     public bool ShowLocalLibrarySection => ShowLocalLibrarySectionCheckBox.IsChecked == true;
-    /// <summary>Gets a value indicating whether the Plex sidebar section should be visible.</summary>
-    public bool ShowPlexSection => ShowPlexSectionCheckBox.IsChecked == true;
 
-    private static PlexServerSettings ClonePlexServer(PlexServerSettings server) => new()
-    {
-        Id = server.Id,
-        Name = server.Name,
-        BaseUrl = server.BaseUrl
-    };
-
-    /// <summary>Copies the complete in-memory server connection and streaming preferences.</summary>
-    /// <param name="server">Original server configuration.</param>
-    /// <returns>An independent connection retaining profile and streaming identity.</returns>
-    private static HyperFidelServerSettings CloneHyperFidelServer(HyperFidelServerSettings server) => new()
-    {
-        Id = server.Id,
-        Name = server.Name,
-        BaseUrl = server.BaseUrl,
-        ApiKey = server.ApiKey,
-        ProfileId = server.ProfileId,
-        StreamingFormat = server.StreamingFormat,
-        StreamingBitrateKbps = server.StreamingBitrateKbps
-    };
 
     private static OutputProfile CloneOutputProfile(OutputProfile profile) => new()
     {
@@ -554,592 +452,25 @@ internal partial class SettingsView : UserControl
         return btn;
     }
 
+
     private CancellationTokenSource? _hyperfidelStatusCts;
-    private CancellationTokenSource? _plexStatusCts;
 
-    /// <summary>
-    /// Probes a server's reachability off the UI thread and updates its badge, so opening Settings
-    /// never blocks on network calls. Stale results are ignored once the list is rebuilt or closed.
-    /// </summary>
-    /// <param name="badge">The badge to update with the outcome.</param>
-    /// <param name="probe">The asynchronous connectivity probe returning success.</param>
-    /// <param name="cancellationToken">Token cancelling a superseded or closed check.</param>
-    private async void CheckServerStatusAsync(
-        StatusBadge badge,
-        TextBlock detail,
-        string serverId,
-        Func<CancellationToken, Task<bool>> probe,
-        CancellationToken cancellationToken)
-    {
-        bool ok;
-        try { ok = await probe(cancellationToken); }
-        catch { ok = false; }
-        if (cancellationToken.IsCancellationRequested)
-            return;
-        var loc = LocalizationManager.Current;
-        if (ok)
-        {
-            ServerConnectionStore.RecordSuccess(serverId);
-            badge.State = StatusBadgeState.Ok;
-            badge.Text = loc.StatusAvailable;
-            detail.IsVisible = false;
-            return;
-        }
 
-        // Unreachable: show a clear status plus the last successful connection so the
-        // user can tell a transient outage apart from a server that never worked.
-        badge.State = StatusBadgeState.Warning;
-        badge.Text = loc.ServerUnreachable;
-        var last = ServerConnectionStore.GetLastConnected(serverId);
-        detail.Text = last is long ts
-            ? string.Format(
-                loc.ServerLastConnected,
-                DateTimeOffset.FromUnixTimeSeconds(ts).LocalDateTime.ToString("g", CultureInfo.CurrentCulture))
-            : loc.ServerNeverConnected;
-        detail.IsVisible = true;
-    }
 
-    /// <summary>Creates the muted per-server status-detail line shown when a server is unreachable.</summary>
-    /// <returns>A collapsed detail text block.</returns>
-    private static TextBlock CreateServerStatusDetail() => new()
-    {
-        FontSize = 11,
-        IsVisible = false,
-        Foreground = AvaloniaApp.Current!.Resources["AppMutedTextBrush"] as IBrush,
-        TextTrimming = TextTrimming.CharacterEllipsis,
-        Margin = new Thickness(0, 2, 0, 0)
-    };
 
-    /// <summary>Tests whether a Plex server responds to a music-library listing.</summary>
-    /// <param name="server">The server to probe.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns><see langword="true"/> when the server responds successfully.</returns>
-    private async Task<bool> ProbePlexServerAsync(PlexServerSettings server, CancellationToken cancellationToken)
-    {
-        var token = _plexTokens.GetValueOrDefault(server.Id);
-        await new PlexServerClient().GetAudioLibrariesAsync(server, token, cancellationToken);
-        return true;
-    }
 
-    /// <summary>Creates a live connection-status badge for a server row.</summary>
-    /// <returns>A badge in the pending "checking" state.</returns>
-    private static StatusBadge CreateServerStatusBadge() => new()
-    {
-        State = StatusBadgeState.Off,
-        Text = LocalizationManager.Current.StatusChecking,
-        Margin = new Thickness(8, 0, 0, 0),
-        VerticalAlignment = VerticalAlignment.Center
-    };
 
-    /// <summary>Creates the initially hidden badge that displays an HyperFidel Server version.</summary>
-    /// <returns>A collapsed version badge.</returns>
-    private static StatusBadge CreateServerVersionBadge() => new()
-    {
-        State = StatusBadgeState.Off,
-        IsVisible = false,
-        Margin = new Thickness(8, 0, 0, 0),
-        VerticalAlignment = VerticalAlignment.Center
-    };
 
-    /// <summary>Probes an HyperFidel Server and updates its connection and version badges.</summary>
-    /// <param name="statusBadge">Connection-status badge.</param>
-    /// <param name="versionBadge">Badge that displays the returned server version.</param>
-    /// <param name="detail">Muted failure detail.</param>
-    /// <param name="server">Server configuration to probe.</param>
-    /// <param name="cancellationToken">Token cancelling a superseded list probe.</param>
-    private async void CheckHyperFidelServerStatusAsync(
-        StatusBadge statusBadge,
-        StatusBadge versionBadge,
-        TextBlock detail,
-        HyperFidelServerSettings server,
-        CancellationToken cancellationToken)
-    {
-        HyperFidelServerInfo? info;
-        try
-        {
-            using var client = new HyperFidelServerClient();
-            info = await client.TestConnectionAsync(server, cancellationToken);
-        }
-        catch
-        {
-            info = null;
-        }
-        if (cancellationToken.IsCancellationRequested)
-            return;
 
-        if (info is not null)
-        {
-            ServerConnectionStore.RecordSuccess(server.Id);
-            statusBadge.State = StatusBadgeState.Ok;
-            statusBadge.Text = LocalizationManager.Current.StatusAvailable;
-            versionBadge.Text = string.Format(LocalizationManager.Current.VersionLabel, info.Version);
-            versionBadge.IsVisible = true;
-            detail.IsVisible = false;
-            return;
-        }
 
-        statusBadge.State = StatusBadgeState.Warning;
-        statusBadge.Text = LocalizationManager.Current.ServerUnreachable;
-        versionBadge.IsVisible = false;
-        var last = ServerConnectionStore.GetLastConnected(server.Id);
-        detail.Text = last is long timestamp
-            ? string.Format(
-                LocalizationManager.Current.ServerLastConnected,
-                DateTimeOffset.FromUnixTimeSeconds(timestamp).ToLocalTime().ToString("g", CultureInfo.CurrentCulture))
-            : LocalizationManager.Current.ServerNeverConnected;
-        detail.IsVisible = true;
-    }
 
-    private void RebuildPlexServerList()
-    {
-        PlexServersPanel.Children.Clear();
-        _plexStatusCts?.Cancel();
-        _plexStatusCts?.Dispose();
-        _plexStatusCts = new CancellationTokenSource();
-        var statusToken = _plexStatusCts.Token;
-        var primaryBrush = AvaloniaApp.Current!.Resources["AppPrimaryTextBrush"] as IBrush;
-        var mutedBrush = AvaloniaApp.Current!.Resources["AppMutedTextBrush"] as IBrush;
-        foreach (var server in _plexServers)
-        {
-            var row = new Grid { Margin = new Thickness(0, 0, 0, 8) };
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            var description = new StackPanel();
-            description.Children.Add(new TextBlock
-            {
-                Text = server.Name,
-                FontWeight = FontWeight.SemiBold,
-                Foreground = primaryBrush,
-                TextTrimming = TextTrimming.CharacterEllipsis
-            });
-            description.Children.Add(new TextBlock
-            {
-                Text = server.BaseUrl,
-                FontSize = 11,
-                Foreground = mutedBrush,
-                TextTrimming = TextTrimming.CharacterEllipsis
-            });
-            var statusDetail = CreateServerStatusDetail();
-            description.Children.Add(statusDetail);
-            row.Children.Add(description);
 
-            var statusBadge = CreateServerStatusBadge();
-            Grid.SetColumn(statusBadge, 1);
-            row.Children.Add(statusBadge);
 
-            var editButton = CreateStyledButton(LocalizationManager.Current.PlexEditServer, 80, 28, new Thickness(8, 0, 0, 0));
-            editButton.Tag = server.Id;
-            editButton.Click += EditPlexServerButton_OnClick;
-            Grid.SetColumn(editButton, 2);
-            row.Children.Add(editButton);
 
-            var removeButton = CreateStyledButton(LocalizationManager.Current.PlexRemoveServer, 80, 28, new Thickness(8, 0, 0, 0));
-            removeButton.Tag = server.Id;
-            removeButton.Click += RemovePlexServerButton_OnClick;
-            Grid.SetColumn(removeButton, 3);
-            row.Children.Add(removeButton);
 
-            PlexServersPanel.Children.Add(row);
 
-            var plexServer = server;
-            CheckServerStatusAsync(statusBadge, statusDetail, plexServer.Id, ct => ProbePlexServerAsync(plexServer, ct), statusToken);
-        }
-    }
 
-    private async void AddPlexServerButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        var dialog = new PlexServerDialog();
-        if (await dialog.ShowDialog<bool?>(GetHostWindow()) != true)
-            return;
-        _plexServers.Add(dialog.Server);
-        _plexTokens[dialog.Server.Id] = dialog.Token;
-        _plexCredentialsChanged = true;
-        RebuildPlexServerList();
-    }
-
-    private async void EditPlexServerButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Button { Tag: string id })
-            return;
-        var index = _plexServers.FindIndex(server => server.Id == id);
-        if (index < 0)
-            return;
-        var dialog = new PlexServerDialog(_plexServers[index], _plexTokens.GetValueOrDefault(id));
-        if (await dialog.ShowDialog<bool?>(GetHostWindow()) != true)
-            return;
-        _plexServers[index] = dialog.Server;
-        _plexTokens[id] = dialog.Token;
-        _plexCredentialsChanged = true;
-        RebuildPlexServerList();
-    }
-
-    private void RemovePlexServerButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Button { Tag: string id })
-            return;
-        _plexServers.RemoveAll(server => server.Id == id);
-        _plexTokens.Remove(id);
-        _plexCredentialsChanged = true;
-        RebuildPlexServerList();
-    }
-
-    private void RebuildHyperFidelServerList()
-    {
-        HyperFidelServersPanel.Children.Clear();
-        _hyperfidelStatusCts?.Cancel();
-        _hyperfidelStatusCts?.Dispose();
-        _hyperfidelStatusCts = new CancellationTokenSource();
-        var statusToken = _hyperfidelStatusCts.Token;
-        var primaryBrush = AvaloniaApp.Current!.Resources["AppPrimaryTextBrush"] as IBrush;
-        var mutedBrush   = AvaloniaApp.Current!.Resources["AppMutedTextBrush"]   as IBrush;
-        foreach (var server in _hyperfidelServers)
-        {
-            var row = new Grid { Margin = new Thickness(0, 0, 0, 8) };
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            var description = new StackPanel();
-            description.Children.Add(new TextBlock
-            {
-                Text = server.Name,
-                FontWeight = FontWeight.SemiBold,
-                Foreground = primaryBrush,
-                TextTrimming = TextTrimming.CharacterEllipsis
-            });
-            description.Children.Add(new TextBlock
-            {
-                Text = server.BaseUrl,
-                FontSize = 11,
-                Foreground = mutedBrush,
-                TextTrimming = TextTrimming.CharacterEllipsis
-            });
-            var statusDetail = CreateServerStatusDetail();
-            description.Children.Add(statusDetail);
-            var capabilityDetail = CreateServerStatusDetail();
-            description.Children.Add(capabilityDetail);
-            row.Children.Add(description);
-
-            var statusBadge = CreateServerStatusBadge();
-            Grid.SetColumn(statusBadge, 1);
-            row.Children.Add(statusBadge);
-
-            var versionBadge = CreateServerVersionBadge();
-            Grid.SetColumn(versionBadge, 2);
-            row.Children.Add(versionBadge);
-
-            var scanDetail = CreateServerStatusDetail();
-            description.Children.Add(scanDetail);
-
-            var scanButton = CreateStyledButton(
-                LocalizationManager.Current.HyperFidelStartServerScan,
-                double.NaN,
-                28,
-                new Thickness(8, 0, 0, 0));
-            scanButton.Tag = new HyperFidelServerScanAction(server, scanDetail, statusBadge, statusToken, false);
-            scanButton.Click += ScanHyperFidelServerButton_OnClick;
-            Grid.SetColumn(scanButton, 3);
-            row.Children.Add(scanButton);
-
-            var replayGainButton = CreateStyledButton(
-                LocalizationManager.Current.HyperFidelCalculateServerReplayGain,
-                double.NaN,
-                28,
-                new Thickness(8, 0, 0, 0));
-            replayGainButton.Tag = new HyperFidelServerScanAction(server, scanDetail, statusBadge, statusToken, true);
-            replayGainButton.Click += ScanHyperFidelServerButton_OnClick;
-            Grid.SetColumn(replayGainButton, 4);
-            row.Children.Add(replayGainButton);
-
-            var editButton = CreateStyledButton(LocalizationManager.Current.HyperFidelEditServer, 80, 28, new Thickness(8, 0, 0, 0));
-            editButton.Tag    = server.Id;
-            editButton.Click += EditHyperFidelServerButton_OnClick;
-            Grid.SetColumn(editButton, 5);
-            row.Children.Add(editButton);
-
-            var cacheButton = CreateStyledButton(LocalizationManager.Current.ClearCache, 90, 28, new Thickness(8, 0, 0, 0));
-            cacheButton.Tag    = server.Id;
-            cacheButton.Click += ClearHyperFidelServerCacheButton_OnClick;
-            Grid.SetColumn(cacheButton, 6);
-            row.Children.Add(cacheButton);
-
-            var removeButton = CreateStyledButton(LocalizationManager.Current.HyperFidelRemoveServer, 80, 28, new Thickness(8, 0, 0, 0));
-            removeButton.Tag    = server.Id;
-            removeButton.Click += RemoveHyperFidelServerButton_OnClick;
-            Grid.SetColumn(removeButton, 7);
-            row.Children.Add(removeButton);
-
-            HyperFidelServersPanel.Children.Add(row);
-
-            var hyperfidelServer = server;
-            CheckHyperFidelServerStatusAsync(statusBadge, versionBadge, statusDetail, hyperfidelServer, statusToken);
-            CheckServerCapabilitiesAsync(capabilityDetail, hyperfidelServer, statusToken);
-        }
-
-        RefreshRemoteCacheSize();
-    }
-
-    private async void ScanHyperFidelServerButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Button
-            {
-                Tag: HyperFidelServerScanAction action
-            } button)
-        {
-            return;
-        }
-
-        SetHyperFidelServerOperationButtonsEnabled(button, false);
-        action.Detail.IsVisible = true;
-        action.Detail.Text = action.ReplayGainOnly
-            ? LocalizationManager.Current.ReplayGainCalculating
-            : LocalizationManager.Current.HyperFidelServerScanStarting;
-        action.StatusBadge.State = StatusBadgeState.Off;
-        action.StatusBadge.Text = LocalizationManager.Current.ScanRunning;
-        try
-        {
-            using var client = new HyperFidelServerClient();
-            var started = action.ReplayGainOnly
-                ? await client.TriggerReplayGainCalculationAsync(
-                    action.Server,
-                    action.CancellationToken)
-                : await client.TriggerScanAsync(
-                    action.Server,
-                    cancellationToken: action.CancellationToken);
-            if (!started)
-            {
-                action.Detail.Text = LocalizationManager.Current.HyperFidelServerScanStartFailed;
-                action.StatusBadge.State = StatusBadgeState.Warning;
-                action.StatusBadge.Text = LocalizationManager.Current.ServerUnreachable;
-                return;
-            }
-
-            while (!action.CancellationToken.IsCancellationRequested)
-            {
-                var status = await client.GetScanStatusAsync(
-                    action.Server,
-                    action.CancellationToken);
-                if (status is null)
-                {
-                    action.Detail.Text = LocalizationManager.Current.HyperFidelServerScanStartFailed;
-                    action.StatusBadge.State = StatusBadgeState.Warning;
-                    action.StatusBadge.Text = LocalizationManager.Current.ServerUnreachable;
-                    return;
-                }
-
-                action.Detail.Text = action.ReplayGainOnly
-                    ? FormatHyperFidelServerReplayGainStatus(status)
-                    : FormatHyperFidelServerScanStatus(status);
-                if (!status.IsRunning)
-                {
-                    action.StatusBadge.State = string.IsNullOrWhiteSpace(status.Error)
-                        ? StatusBadgeState.Ok
-                        : StatusBadgeState.Warning;
-                    action.StatusBadge.Text = string.IsNullOrWhiteSpace(status.Error)
-                        ? LocalizationManager.Current.StatusAvailable
-                        : LocalizationManager.Current.ServerUnreachable;
-                    return;
-                }
-
-                await Task.Delay(1000, action.CancellationToken);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        finally
-        {
-            if (!action.CancellationToken.IsCancellationRequested)
-                SetHyperFidelServerOperationButtonsEnabled(button, true);
-        }
-    }
-
-    private static void SetHyperFidelServerOperationButtonsEnabled(Button source, bool enabled)
-    {
-        if (source.Parent is not Grid row)
-        {
-            source.IsEnabled = enabled;
-            return;
-        }
-
-        foreach (var operationButton in row.Children
-                     .OfType<Button>()
-                     .Where(static candidate => candidate.Tag is HyperFidelServerScanAction))
-        {
-            operationButton.IsEnabled = enabled;
-        }
-    }
-
-    private static string FormatHyperFidelServerScanStatus(HyperFidelScanStatus status)
-    {
-        var localization = LocalizationManager.Current;
-        if (!string.IsNullOrWhiteSpace(status.Error))
-            return string.Format(localization.HyperFidelServerScanFailed, status.Error);
-        if (status.IsRunning)
-        {
-            return status.Total > 0
-                ? string.Format(
-                    localization.HyperFidelServerScanProgress,
-                    status.Current,
-                    status.Total,
-                    Path.GetFileName(status.CurrentFile) is { Length: > 0 } name
-                        ? name
-                        : status.Path ?? string.Empty)
-                : string.Format(
-                    localization.HyperFidelServerScanDiscovering,
-                    status.Path ?? status.CurrentFile ?? string.Empty);
-        }
-
-        return status.LastResult is { } result
-            ? string.Format(
-                localization.HyperFidelServerScanCompleted,
-                result.Total,
-                result.Added,
-                result.Updated,
-                result.Removed,
-                result.Failed)
-            : localization.HyperFidelServerScanIdle;
-    }
-
-    private static string FormatHyperFidelServerReplayGainStatus(HyperFidelScanStatus status)
-    {
-        var localization = LocalizationManager.Current;
-        if (!string.IsNullOrWhiteSpace(status.Error))
-            return string.Format(localization.ReplayGainCalculationFailed, status.Error);
-        if (status.IsRunning)
-        {
-            return status.Total > 0
-                ? $"{localization.ReplayGainCalculating} {status.Current}/{status.Total} – {Path.GetFileName(status.CurrentFile)}"
-                : localization.ReplayGainCalculating;
-        }
-
-        return string.Format(
-            localization.ReplayGainCalculated,
-            status.LastResult?.Updated ?? 0);
-    }
-
-    /// <summary>
-    /// Probes the server's newer feature endpoints and, if any are missing, shows a concrete
-    /// "server does not support …" line so older servers are clearly identified.
-    /// </summary>
-    /// <param name="target">The detail text block to populate.</param>
-    /// <param name="server">The server to probe.</param>
-    /// <param name="cancellationToken">Cancellation token tied to the server-list rebuild.</param>
-    private async void CheckServerCapabilitiesAsync(
-        TextBlock target,
-        HyperFidelServerSettings server,
-        CancellationToken cancellationToken)
-    {
-        HyperFidelServerCapabilities caps;
-        try
-        {
-            using var client = new HyperFidelServerClient();
-            caps = await client.GetCapabilitiesAsync(server, cancellationToken);
-        }
-        catch { return; }
-        if (cancellationToken.IsCancellationRequested)
-            return;
-
-        var loc = LocalizationManager.Current;
-        var missing = new List<string>();
-        if (caps.TrackFacets == false) missing.Add(loc.CapabilityTrackFacets);
-        if (caps.RecentAlbums == false) missing.Add(loc.CapabilityRecentAlbums);
-        if (caps.Waveforms == false) missing.Add(loc.CapabilityWaveforms);
-
-        if (missing.Count > 0)
-        {
-            target.Text = string.Format(loc.ServerMissingFeatures, string.Join(", ", missing));
-            target.IsVisible = true;
-        }
-        else
-        {
-            target.IsVisible = false;
-        }
-    }
-
-    /// <summary>Recomputes the combined remote-server cache size off the UI thread and updates the label.</summary>
-    private async void RefreshRemoteCacheSize()
-    {
-        long bytes = 0;
-        try { bytes = await Task.Run(RemoteServerCache.GetTotalSizeBytes); }
-        catch { /* Size reporting is best-effort. */ }
-        RemoteCacheSizeText.Text = string.Format(
-            LocalizationManager.Current.RemoteCacheSize, FormatCacheSize(bytes));
-    }
-
-    /// <summary>Formats a byte count as a compact human-readable size.</summary>
-    /// <param name="bytes">The size in bytes.</param>
-    /// <returns>A localized-invariant size string (e.g. "12.3 MB").</returns>
-    private static string FormatCacheSize(long bytes)
-    {
-        string[] units = ["B", "KB", "MB", "GB", "TB"];
-        double size = bytes;
-        var unit = 0;
-        while (size >= 1024 && unit < units.Length - 1)
-        {
-            size /= 1024;
-            unit++;
-        }
-        return unit == 0
-            ? $"{bytes} {units[unit]}"
-            : string.Create(CultureInfo.CurrentCulture, $"{size:0.0} {units[unit]}");
-    }
-
-    private void ClearAllRemoteCacheButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        RemoteServerCache.ClearAll();
-        RefreshRemoteCacheSize();
-    }
-
-    private void ClearHyperFidelServerCacheButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Button { Tag: string id })
-            return;
-        var server = _hyperfidelServers.FirstOrDefault(item => item.Id == id);
-        if (server is null)
-            return;
-        RemoteServerCache.ClearServer(server);
-        RefreshRemoteCacheSize();
-    }
-
-    private async void AddHyperFidelServerButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        var dialog = new HyperFidelServerDialog();
-        if (await dialog.ShowDialog<bool?>(GetHostWindow()) != true)
-            return;
-        _hyperfidelServers.Add(dialog.Server);
-        RebuildHyperFidelServerList();
-    }
-
-    private async void EditHyperFidelServerButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Button { Tag: string id })
-            return;
-        var index = _hyperfidelServers.FindIndex(s => s.Id == id);
-        if (index < 0)
-            return;
-        var dialog = new HyperFidelServerDialog(_hyperfidelServers[index]);
-        if (await dialog.ShowDialog<bool?>(GetHostWindow()) != true)
-            return;
-        _hyperfidelServers[index] = dialog.Server;
-        RebuildHyperFidelServerList();
-    }
-
-    private void RemoveHyperFidelServerButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Button { Tag: string id })
-            return;
-        _hyperfidelServers.RemoveAll(s => s.Id == id);
-        RebuildHyperFidelServerList();
-    }
 
     /// <summary>Stops background work and restores the original live equalizer preview when needed.</summary>
     internal void Deactivate()
@@ -1148,8 +479,6 @@ internal partial class SettingsView : UserControl
         foreach (var cts in _activeScans.Values)
             cts.Cancel();
         _hyperfidelStatusCts?.Cancel();
-        _plexStatusCts?.Cancel();
-        _missingArtistImagesCts?.Cancel();
         _metadataAnalysisCts?.Cancel();
         _replayGainCalculationCts?.Cancel();
         _audioFeatureAnalysisCts?.Cancel();
@@ -1179,23 +508,17 @@ internal partial class SettingsView : UserControl
             return;
         AudioDevicePanel.IsVisible             = tag == "AudioDevice";
         LibraryPanel.IsVisible                 = tag == "Library";
-        HyperFidelServersSettingsPanel.IsVisible  = tag == "HyperFidelServers";
         MetadataPanel.IsVisible                = tag == "Metadata";
-        StreamingPanel.IsVisible               = tag == "Streaming";
         AppearancePanel.IsVisible              = tag == "Appearance";
         UserProfilesPanel.IsVisible            = tag == "UserProfiles";
-        ArtistInfoPanel.IsVisible              = tag == "ArtistInfo";
         SettingsContentScrollViewer.Offset = new Vector(0, 0);
         AnimateSettingsSection(tag switch
         {
             "AudioDevice" => AudioDevicePanel,
             "Library" => LibraryPanel,
-            "HyperFidelServers" => HyperFidelServersSettingsPanel,
             "Metadata" => MetadataPanel,
-            "Streaming" => StreamingPanel,
             "Appearance" => AppearancePanel,
             "UserProfiles" => UserProfilesPanel,
-            "ArtistInfo" => ArtistInfoPanel,
             _ => null
         });
         if (tag == "Metadata" && !_metadataAnalysisLoaded)
@@ -1355,7 +678,6 @@ internal partial class SettingsView : UserControl
         CancelMetadataAnalysisButton.IsEnabled = true;
         MetadataInspectFilesCheckBox.IsEnabled = false;
         _metadataDoctorRows = [];
-        _metadataDoctorUnavailableServers = 0;
         ApplyMetadataDoctorFilter();
         try
         {
@@ -1366,10 +688,6 @@ internal partial class SettingsView : UserControl
                     database.GetMetadataRepairTracks(), cancellationToken: cancellationToken,
                     inspectFiles: inspectFiles, progress: activity);
             }, cancellationToken);
-            using var serverClient = new HyperFidelServerClient();
-            var remoteTasks = _hyperfidelServers.Select(async server =>
-                (Server: server, Candidates: await serverClient.GetLibraryDoctorAsync(server, cancellationToken, inspectFiles)))
-                .ToList();
             var localCandidates = await localTask;
             cancellationToken.ThrowIfCancellationRequested();
             var rows = localCandidates.Select(candidate => CreateMetadataProblemRow(
@@ -1383,26 +701,6 @@ internal partial class SettingsView : UserControl
                 .ToList();
             _metadataDoctorRows = rows;
             ApplyMetadataDoctorFilter();
-            activity.Report(new("servers", 0, 0));
-            while (remoteTasks.Count > 0)
-            {
-                var finished = await Task.WhenAny(remoteTasks);
-                remoteTasks.Remove(finished);
-                var result = await finished;
-                cancellationToken.ThrowIfCancellationRequested();
-                if (result.Candidates is null)
-                    _metadataDoctorUnavailableServers++;
-                else
-                    rows.AddRange(result.Candidates.Select(candidate => CreateMetadataProblemRow(
-                    result.Server.Name,
-                    candidate.FolderPath,
-                    candidate.TrackCount,
-                    candidate.HighestSeverity,
-                    candidate.Findings.Select(finding => (Code: finding.Code, Count: finding.Count)),
-                    null)));
-                _metadataDoctorRows = rows.ToList();
-                ApplyMetadataDoctorFilter();
-            }
             _metadataDoctorRows = rows;
             ApplyMetadataDoctorFilter();
         }
@@ -1416,7 +714,6 @@ internal partial class SettingsView : UserControl
             _metadataAnalysisLoaded = false;
             CrashLogger.Log(ex, "Library Doctor analysis");
             _metadataDoctorRows = [];
-            _metadataDoctorUnavailableServers = 0;
             MetadataProblemsDataGrid.ItemsSource = null;
             MetadataStatusTextBlock.Text = LocalizationManager.Current.MetadataAnalysisFailed;
         }
@@ -1496,9 +793,7 @@ internal partial class SettingsView : UserControl
                 candidates.Count(candidate => candidate.SeverityValue == LibraryDoctorSeverity.Error),
                 candidates.Count(candidate => candidate.SeverityValue == LibraryDoctorSeverity.Warning),
                 candidates.Count(candidate => candidate.SeverityValue == LibraryDoctorSeverity.Information));
-        MetadataStatusTextBlock.Text = _metadataDoctorUnavailableServers == 0
-            ? summary
-            : $"{summary} · {string.Format(CultureInfo.CurrentCulture, strings.MetadataDoctorServersUnavailable, _metadataDoctorUnavailableServers)}";
+        MetadataStatusTextBlock.Text = summary;
     }
 
     private void MetadataSeverityFilter_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -1646,63 +941,7 @@ internal partial class SettingsView : UserControl
     private void ResolveDuplicatesButton_OnClick(object? sender, RoutedEventArgs e)
         => DuplicateResolutionRequested?.Invoke();
 
-    /// <summary>Refreshes the Last.fm scrobbling connection status text.</summary>
-    private void UpdateLastFmScrobblingStatus()
-    {
-        var username = _settings.LastFmUsername;
-        LastFmScrobblingStatusTextBlock.Text = string.IsNullOrWhiteSpace(username)
-            ? LocalizationManager.Current.LastFmScrobblingNotConnected
-            : string.Format(LocalizationManager.Current.LastFmScrobblingConnected, username);
-    }
 
-    /// <summary>Starts or completes the two-step Last.fm authorization flow.</summary>
-    /// <param name="sender">The connect button.</param>
-    /// <param name="e">The click event data.</param>
-    private async void LastFmConnectButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        try
-        {
-            if (_lastFmPendingAuthorization is null)
-            {
-                var url = _onLastFmBeginAuthorization is null ? null : await _onLastFmBeginAuthorization();
-                if (string.IsNullOrEmpty(url))
-                {
-                    LastFmScrobblingStatusTextBlock.Text = LocalizationManager.Current.LastFmScrobblingConnectFailed;
-                    return;
-                }
-
-                _lastFmPendingAuthorization = url;
-                if (TopLevel.GetTopLevel(this)?.Launcher is { } launcher)
-                    await launcher.LaunchUriAsync(new Uri(url));
-                LastFmScrobblingStatusTextBlock.Text = LocalizationManager.Current.LastFmScrobblingAuthorizeHint;
-                return;
-            }
-
-            var username = _onLastFmCompleteAuthorization is null ? null : await _onLastFmCompleteAuthorization();
-            _lastFmPendingAuthorization = null;
-            if (string.IsNullOrEmpty(username))
-            {
-                LastFmScrobblingStatusTextBlock.Text = LocalizationManager.Current.LastFmScrobblingConnectFailed;
-                return;
-            }
-
-            UpdateLastFmScrobblingStatus();
-        }
-        catch
-        {
-            LastFmScrobblingStatusTextBlock.Text = LocalizationManager.Current.LastFmScrobblingConnectFailed;
-        }
-    }
-
-    /// <summary>Clears the Last.fm session.</summary>
-    /// <param name="sender">The disconnect button.</param>
-    /// <param name="e">The click event data.</param>
-    private void LastFmDisconnectButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        _lastFmPendingAuthorization = null;
-        _onLastFmDisconnect?.Invoke();
-        UpdateLastFmScrobblingStatus();
-    }
 
     // ------------------------------------------------------------------
     // Ausgabeprofile
@@ -2581,237 +1820,10 @@ internal partial class SettingsView : UserControl
         }
     }
 
-    /// <summary>Reviews missing-image candidates and persists accepted eligible targets in artist write order.</summary>
-    /// <param name="sender">Download or cancellation action source.</param>
-    /// <param name="e">Button activation event.</param>
-    private async void DownloadMissingArtistImagesButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (_missingArtistImagesCts is not null)
-        {
-            _missingArtistImagesCts.Cancel();
-            return;
-        }
-
-        var cancellation = new CancellationTokenSource();
-        _missingArtistImagesCts = cancellation;
-        DownloadMissingArtistImagesButton.Content = LocalizationManager.Current.Cancel;
-        var downloaded = 0;
-        var rejected = 0;
-        var failed = 0;
-        var completedSearchDuration = TimeSpan.Zero;
-        var hasFanartTvApiKey = !string.IsNullOrWhiteSpace(SelectedFanartTvApiKey);
-        var autoAcceptFanartTv = false;
-
-        try
-        {
-            MissingArtistImagesStatusTextBlock.Text =
-                LocalizationManager.Current.MissingArtistImagesLoadingSources;
-            var artists = await Task.Run(() =>
-            {
-                using var db = AudioDatabase.OpenDefault();
-                return db.GetArtistsLite()
-                    .Where(artist =>
-                        !artist.ImageIsManual &&
-                        (string.IsNullOrWhiteSpace(artist.ImagePath) || !File.Exists(artist.ImagePath)))
-                    .Select(artist => db.GetArtistById(artist.Id))
-                    .OfType<ArtistInfo>()
-                    .Select(artist => new MissingArtistImageTarget(
-                        artist.Id,
-                        artist.Artist,
-                        artist.MusicBrainzArtistId,
-                        LocalizationManager.Current.LocalSource,
-                        null, () => true))
-                    .ToList();
-            }, cancellation.Token);
-
-            using var serverClient = new HyperFidelServerClient();
-            foreach (var original in _hyperfidelServers.ToArray())
-            {
-                cancellation.Token.ThrowIfCancellationRequested();
-                var server = CloneHyperFidelServer(original);
-                bool IsCurrent() => _hyperfidelServers.Any(candidate => ReferenceEquals(candidate, original) &&
-                    candidate.Id == server.Id && candidate.Name == server.Name &&
-                    candidate.BaseUrl == server.BaseUrl && candidate.ApiKey == server.ApiKey &&
-                    candidate.ProfileId == server.ProfileId);
-                var remoteArtists = await serverClient.GetArtistsAsync(server, cancellation.Token);
-                if (!IsCurrent()) continue;
-                artists.AddRange(remoteArtists
-                    .Where(artist => !artist.HasImage && !artist.ImageIsManual)
-                    .Select(artist => new MissingArtistImageTarget(
-                        artist.Id, artist.Name, null, server.Name, server, IsCurrent)));
-            }
-
-            for (var index = 0; index < artists.Count; index++)
-            {
-                cancellation.Token.ThrowIfCancellationRequested();
-                var artist = artists[index];
-                var estimatedRemaining = index == 0
-                    ? LocalizationManager.Current.RemainingTimeEstimating
-                    : string.Format(
-                        LocalizationManager.Current.RemainingTimeEstimate,
-                        FormatRemainingTime(TimeSpan.FromTicks(
-                            completedSearchDuration.Ticks / index * (artists.Count - index))));
-                MissingArtistImagesStatusTextBlock.Text = string.Format(
-                    LocalizationManager.Current.MissingArtistImageDownloading,
-                    index + 1,
-                    artists.Count,
-                    $"{artist.ArtistName} · {artist.SourceName}",
-                    estimatedRemaining);
-
-                var searchStarted = DateTimeOffset.UtcNow;
-                byte[]? imageData = null;
-                string? mimeType = null;
-                var sourceName = string.Empty;
-                var isFanartTvResult = false;
-                if (hasFanartTvApiKey)
-                {
-                    try
-                    {
-                        var fanartResult = await FanartTvArtistImageService.FindBestAsync(
-                            artist.ArtistName,
-                            artist.MusicBrainzArtistId,
-                            SelectedFanartTvApiKey,
-                            cancellation.Token);
-                        if (fanartResult is not null)
-                        {
-                            imageData = fanartResult.ImageData;
-                            mimeType = fanartResult.MimeType;
-                            sourceName = "Fanart.tv";
-                            isFanartTvResult = true;
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        throw;
-                    }
-                    catch
-                    {
-                        failed++;
-                    }
-                }
-
-                if (imageData is null)
-                {
-                    try
-                    {
-                        var wikimediaResult = await ArtistImageSearchService.FindBestAsync(
-                            artist.ArtistName,
-                            cancellation.Token);
-                        if (wikimediaResult is not null)
-                        {
-                            imageData = wikimediaResult.ImageData;
-                            mimeType = wikimediaResult.MimeType;
-                            sourceName = "Wikimedia Commons";
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        throw;
-                    }
-                    catch
-                    {
-                        failed++;
-                    }
-                }
-                completedSearchDuration += DateTimeOffset.UtcNow - searchStarted;
-
-                if (imageData is null)
-                    continue;
-
-                var reviewRemaining = string.Format(
-                    LocalizationManager.Current.RemainingTimeEstimate,
-                    FormatRemainingTime(TimeSpan.FromTicks(
-                        completedSearchDuration.Ticks / (index + 1) * (artists.Count - index - 1))));
-                MissingArtistImagesStatusTextBlock.Text = string.Format(
-                    LocalizationManager.Current.MissingArtistImageReviewing,
-                    index + 1,
-                    artists.Count,
-                    $"{artist.ArtistName} · {artist.SourceName}",
-                    reviewRemaining);
-                var accepted = isFanartTvResult && autoAcceptFanartTv;
-                if (!accepted)
-                {
-                    var suggestionDialog = new ArtistImageSuggestionDialog(
-                        $"{artist.ArtistName} · {artist.SourceName}",
-                        sourceName,
-                        MissingArtistImagesStatusTextBlock.Text ?? string.Empty,
-                        imageData,
-                        hasFanartTvApiKey,
-                        autoAcceptFanartTv);
-                    accepted = await suggestionDialog.ShowDialog<bool>(GetHostWindow());
-                    autoAcceptFanartTv = suggestionDialog.AutoAcceptFanartTv;
-                    if (suggestionDialog.WasCancelled)
-                    {
-                        cancellation.Cancel();
-                        cancellation.Token.ThrowIfCancellationRequested();
-                    }
-                    if (!accepted)
-                    {
-                        rejected++;
-                        continue;
-                    }
-                }
-
-                var stored = await ArtistImageWriter.StoreAsync(artist.ArtistId, artist.ArtistName,
-                    artist.Server, imageData, mimeType, serverClient, cancellation.Token,
-                    () => ReferenceEquals(_missingArtistImagesCts, cancellation) && artist.IsSourceCurrent(),
-                    () =>
-                    {
-                        if (artist.Server is not null && artist.IsSourceCurrent())
-                            MainWindow.DeleteHyperFidelArtistListCache(artist.Server);
-                        ArtistImagesChanged?.Invoke();
-                    });
-                cancellation.Token.ThrowIfCancellationRequested();
-                if (stored is null) continue;
-                if (stored == false)
-                {
-                    failed++;
-                    continue;
-                }
-                downloaded++;
-            }
-
-            MissingArtistImagesStatusTextBlock.Text = string.Format(
-                LocalizationManager.Current.MissingArtistImagesDownloaded,
-                downloaded,
-                rejected,
-                failed);
-        }
-        catch (OperationCanceledException)
-        {
-            MissingArtistImagesStatusTextBlock.Text =
-                LocalizationManager.Current.MissingArtistImagesDownloadCancelled;
-        }
-        catch (Exception ex)
-        {
-            MissingArtistImagesStatusTextBlock.Text = string.Format(
-                LocalizationManager.Current.MissingArtistImagesDownloadFailed,
-                ex.Message);
-        }
-        finally
-        {
-            cancellation.Dispose();
-            if (ReferenceEquals(_missingArtistImagesCts, cancellation))
-                _missingArtistImagesCts = null;
-            DownloadMissingArtistImagesButton.Content =
-                LocalizationManager.Current.DownloadMissingArtistImages;
-        }
-    }
-
-    private static string FormatRemainingTime(TimeSpan remaining)
-    {
-        if (remaining <= TimeSpan.Zero)
-            return "00:00";
-
-        remaining = TimeSpan.FromSeconds(Math.Ceiling(remaining.TotalSeconds));
-        return remaining.TotalHours >= 1
-            ? remaining.ToString(@"h\:mm\:ss", CultureInfo.InvariantCulture)
-            : remaining.ToString(@"m\:ss", CultureInfo.InvariantCulture);
-    }
 
     /// <summary>
     /// Runs the optional acoustic descriptor and musical-key analysis for the
-    /// complete local library and every configured HyperFidel Server. The operation
+    /// complete local library. The operation
     /// is cancellable, never modifies source media, and leaves failed sources on
     /// their normal retry cooldown.
     /// </summary>
@@ -2846,35 +1858,8 @@ internal partial class SettingsView : UserControl
                     break;
             }
 
-            var unsupportedServers = new List<string>();
-            using var client = new HyperFidelServerClient();
-            foreach (var server in _hyperfidelServers)
-            {
-                cancellation.Token.ThrowIfCancellationRequested();
-                AudioFeatureAnalysisStatusTextBlock.Text =
-                    $"{string.Format(LocalizationManager.Current.AudioFeatureAnalyzing, stored)} – {server.Name}";
-                // The endpoint schedules one bounded batch per request, so repeat
-                // until the server declines (busy, unsupported, or finished).
-                for (var batch = 0; batch < 500; batch++)
-                {
-                    if (!await client.TriggerAudioFeatureAnalysisAsync(server, 10, cancellation.Token))
-                    {
-                        if (batch == 0)
-                            unsupportedServers.Add(server.Name);
-                        break;
-                    }
-
-                    await Task.Delay(750, cancellation.Token);
-                }
-            }
-
             AudioFeatureAnalysisStatusTextBlock.Text =
-                unsupportedServers.Count == 0
-                    ? string.Format(LocalizationManager.Current.AudioFeatureAnalysisDone, stored, failed)
-                    : $"{string.Format(LocalizationManager.Current.AudioFeatureAnalysisDone, stored, failed)} " +
-                      string.Format(
-                          LocalizationManager.Current.AudioFeatureAnalysisUnsupported,
-                          string.Join(", ", unsupportedServers));
+                string.Format(LocalizationManager.Current.AudioFeatureAnalysisDone, stored, failed);
         }
         catch (OperationCanceledException)
         {
@@ -2910,46 +1895,8 @@ internal partial class SettingsView : UserControl
             var updated = await LibraryScanner.CalculateMissingReplayGainAsync(
                 progress,
                 cancellation.Token);
-            var failedServers = new List<string>();
-            using var client = new HyperFidelServerClient();
-            foreach (var server in _hyperfidelServers)
-            {
-                cancellation.Token.ThrowIfCancellationRequested();
-                ReplayGainCalculationStatusTextBlock.Text =
-                    $"{LocalizationManager.Current.ReplayGainCalculating} – {server.Name}";
-                if (!await client.TriggerReplayGainCalculationAsync(server, cancellation.Token))
-                {
-                    failedServers.Add(server.Name);
-                    continue;
-                }
-
-                while (true)
-                {
-                    await Task.Delay(750, cancellation.Token);
-                    var status = await client.GetScanStatusAsync(server, cancellation.Token);
-                    if (status is null)
-                    {
-                        failedServers.Add(server.Name);
-                        break;
-                    }
-
-                    ReplayGainCalculationStatusTextBlock.Text = status.Total > 0
-                        ? $"{LocalizationManager.Current.ReplayGainCalculating} – {server.Name}: {status.Current}/{status.Total} – {Path.GetFileName(status.CurrentFile)}"
-                        : $"{LocalizationManager.Current.ReplayGainCalculating} – {server.Name}";
-                    if (status.IsRunning)
-                        continue;
-                    if (!string.IsNullOrWhiteSpace(status.Error))
-                        failedServers.Add(server.Name);
-                    else
-                        updated += status.LastResult?.Updated ?? 0;
-                    break;
-                }
-            }
-
             ReplayGainCalculationStatusTextBlock.Text =
-                failedServers.Count == 0
-                    ? string.Format(LocalizationManager.Current.ReplayGainCalculated, updated)
-                    : $"{string.Format(LocalizationManager.Current.ReplayGainCalculated, updated)} {string.Format(LocalizationManager.Current.ReplayGainCalculationFailed, string.Join(", ", failedServers))}";
+                string.Format(LocalizationManager.Current.ReplayGainCalculated, updated);
         }
         catch (OperationCanceledException)
         {

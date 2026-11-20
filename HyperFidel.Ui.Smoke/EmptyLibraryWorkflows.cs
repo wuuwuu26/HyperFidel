@@ -33,7 +33,6 @@ internal static class EmptyLibraryWorkflows
             !window.FindControl<Button>("NextButton")!.IsEnabled, "Fresh transport exposed unavailable commands.");
         var hint = window.FindControl<ListBoxItem>("LibraryEmptyHintItem")!;
         var folders = window.FindControl<Button>("LibrarySetupButton")!;
-        var servers = window.FindControl<Button>("LibraryServerSetupButton")!;
         var output = window.FindControl<Button>("LibraryOutputSetupButton")!;
         settings.LibraryPaths.Clear();
         settings.HyperFidelServers.Clear();
@@ -77,7 +76,7 @@ internal static class EmptyLibraryWorkflows
                 hint.Measure(new Size(width, 700));
                 hint.Arrange(new Rect(0, 0, width, hint.DesiredSize.Height));
                 Dispatcher.UIThread.RunJobs();
-                foreach (var button in new[] { folders, servers, output })
+                foreach (var button in new[] { folders, output })
                 {
                     var text = (TextBlock)button.Content!;
                     Check(!string.IsNullOrWhiteSpace(text.Text) && text.Bounds.Height > 0 &&
@@ -105,7 +104,6 @@ internal static class EmptyLibraryWorkflows
                 Check(hintText.Text == LocalizationManager.Current.LibraryEmptyHint,
                     "Setup hint failed runtime language refresh.");
                 Check(((TextBlock)folders.Content!).Text == LocalizationManager.Current.Directories &&
-                    ((TextBlock)servers.Content!).Text == LocalizationManager.Current.HyperFidelServersSettings &&
                     ((TextBlock)output.Content!).Text == LocalizationManager.Current.OutputDevice,
                     "Setup actions failed runtime language refresh.");
                 ExportSetupFrame(host, $"library-{theme}-{language}-{(int)width}-{(int)(scaling * 100)}");
@@ -122,11 +120,10 @@ internal static class EmptyLibraryWorkflows
             ThemeManager.Apply(AppTheme.Dark);
         }
 
-        CheckSidebarKeyboard(window, sidebar, hint, folders, servers, output);
+        CheckSidebarKeyboard(window, sidebar, hint, folders, output);
         try
         {
-            foreach (var entry in new[] { (folders, "LibraryPanel"), (servers, "HyperFidelServersSettingsPanel"),
-                         (output, "AudioDevicePanel") })
+            foreach (var entry in new[] { (folders, "LibraryPanel"), (output, "AudioDevicePanel") })
             {
                 entry.Item1.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 var settingsHost = window.FindControl<ContentControl>("SettingsViewHost")!;
@@ -137,7 +134,7 @@ internal static class EmptyLibraryWorkflows
                     "Setup action opened the wrong Settings section.");
                 typeof(MainWindow).GetMethod("CloseEmbeddedSettings", Private)!.Invoke(window, null);
             }
-            Console.WriteLine("PASS: folder, server and output setup actions open their existing Settings sections");
+            Console.WriteLine("PASS: folder and output setup actions open their existing Settings sections");
             var originalProfiles = settings.OutputProfiles;
             var originalSelection = settings.SelectedOutputProfileName;
             try
@@ -197,10 +194,9 @@ internal static class EmptyLibraryWorkflows
     /// <param name="sidebar">The compiled navigation ListBox.</param>
     /// <param name="hint">Its non-leaf setup item.</param>
     /// <param name="folders">The local setup action.</param>
-    /// <param name="servers">The server setup action.</param>
     /// <param name="output">The output setup action.</param>
     private static void CheckSidebarKeyboard(MainWindow window, ListBox sidebar, ListBoxItem hint,
-        Button folders, Button servers, Button output)
+        Button folders, Button output)
     {
         var parent = (Panel)sidebar.Parent!;
         var index = parent.Children.IndexOf(sidebar);
@@ -228,15 +224,11 @@ internal static class EmptyLibraryWorkflows
                     Press(Key.Tab);
                 Check(ReferenceEquals(host.FocusManager!.GetFocusedElement(), folders), "Tab did not reach sidebar folder setup.");
                 CheckSetupFocusVisual(folders);
-                Press(Key.Tab); Check(ReferenceEquals(host.FocusManager.GetFocusedElement(), servers), "Tab skipped server setup.");
-                CheckSetupFocusVisual(servers);
                 Press(Key.Tab); Check(ReferenceEquals(host.FocusManager.GetFocusedElement(), output), "Tab skipped output setup.");
                 CheckSetupFocusVisual(output);
                 Press(Key.Tab); Check(ReferenceEquals(host.FocusManager.GetFocusedElement(), after), "Sidebar trapped forward Tab.");
                 Press(Key.Tab, RawInputModifiers.Shift);
                 Check(ReferenceEquals(host.FocusManager.GetFocusedElement(), output), "Reverse Tab did not enter output setup.");
-                Press(Key.Tab, RawInputModifiers.Shift);
-                Check(ReferenceEquals(host.FocusManager.GetFocusedElement(), servers), "Reverse Tab skipped server setup.");
                 Press(Key.Tab, RawInputModifiers.Shift);
                 Check(ReferenceEquals(host.FocusManager.GetFocusedElement(), folders), "Reverse Tab skipped folder setup.");
                 Press(Key.Enter);
