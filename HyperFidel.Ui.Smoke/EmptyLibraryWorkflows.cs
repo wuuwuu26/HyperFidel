@@ -265,7 +265,7 @@ internal static class EmptyLibraryWorkflows
         var notice = window.FindControl<Border>("LibraryEmptyNotice")!;
         var search = window.FindControl<ScrollViewer>("SearchResultsScrollViewer")!;
         search.IsVisible = false;
-        foreach (var name in new[] { "LyricsView", "ArtistInfoView", "PodcastInfoView" })
+        foreach (var name in new[] { "LyricsView", "ArtistInfoView" })
             window.FindControl<Control>(name)!.IsVisible = false;
         var success = new LibraryLoadResult<ContentRow>([], [new("local", LibrarySourceLoadStatus.Success)]);
         var owner = (LibraryCatalogLoadCoordinator<ContentRow>)typeof(MainWindow)
