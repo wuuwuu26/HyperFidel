@@ -35,6 +35,13 @@ public sealed class NoSystemVolumeWritesTests
     [Fact]
     public void LinuxEndpointSynchronizer_IsDisabledForDirectAlsa()
     {
+        // This contract is compiled only on Linux, where the compatibility
+        // synchronizer replaces the Windows implementation. On Windows builds
+        // the Windows implementation is compiled instead and legitimately
+        // supports endpoint volume, so the Linux assertion does not apply.
+        if (OperatingSystem.IsWindows())
+            return;
+
         Assert.False(WindowsEndpointVolumeSynchronizer.SupportsEndpointVolume(
             "alsa:hw:CARD=USB,DEV=0"));
     }
